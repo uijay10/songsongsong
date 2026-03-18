@@ -5,10 +5,26 @@ import { Box, Search, Plus, LogOut, User as UserIcon } from "lucide-react";
 import { cn, truncateAddress, generateGradient } from "@/lib/utils";
 import { useState } from "react";
 
-const NAV_SECTIONS = [
-  "测试网", "IDO/Launchpad", "安全审计", "集成公告", "空投计划", "活动奖励", 
-  "融资公告", "招聘人才", "节点招募", "项目展示", "生态系统", "伙伴招募", 
-  "黑客松", "AMA", "漏洞赏金", "社区聊天", "KOL 合作", "开发者", "KOL"
+const NAV_SECTIONS: { label: string; href: string }[] = [
+  { label: "测试网",        href: "/section/testnet" },
+  { label: "IDO/Launchpad", href: "/section/ido" },
+  { label: "安全审计",      href: "/section/security" },
+  { label: "集成公告",      href: "/section/integration" },
+  { label: "空投计划",      href: "/section/airdrop" },
+  { label: "活动奖励",      href: "/section/events" },
+  { label: "融资公告",      href: "/section/funding" },
+  { label: "招聘人才",      href: "/section/jobs" },
+  { label: "节点招募",      href: "/section/nodes" },
+  { label: "项目展示",      href: "/showcase" },
+  { label: "生态系统",      href: "/section/ecosystem" },
+  { label: "伙伴招募",      href: "/section/partners" },
+  { label: "黑客松",        href: "/section/hackathon" },
+  { label: "AMA",           href: "/section/ama" },
+  { label: "漏洞赏金",      href: "/section/bugbounty" },
+  { label: "社区聊天",      href: "/community" },
+  { label: "KOL 合作",      href: "/kol" },
+  { label: "开发者",        href: "/developer" },
+  { label: "KOL",           href: "/kol" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -102,26 +118,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="border-t border-border/30 bg-muted/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-medium text-muted-foreground justify-center">
-              {NAV_SECTIONS.map((section) => {
-                let href = "/";
-                if (section === "项目展示") href = "/showcase";
-                if (section === "KOL") href = "/kol";
-                if (section === "开发者") href = "/developer";
-                if (section === "社区聊天") href = "/community";
-                
-                return (
-                  <Link 
-                    key={section} 
-                    href={href}
-                    className={cn(
-                      "hover:text-primary transition-colors cursor-pointer whitespace-nowrap",
-                      (location === href && href !== "/") ? "text-primary font-semibold" : ""
-                    )}
-                  >
-                    {section}
-                  </Link>
-                );
-              })}
+              {NAV_SECTIONS.map(({ label, href }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className={cn(
+                    "hover:text-primary transition-colors cursor-pointer whitespace-nowrap py-0.5 px-1 rounded",
+                    location === href ? "text-primary font-semibold" : ""
+                  )}
+                >
+                  {label}
+                </Link>
+              ))}
             </div>
           </div>
         </div>
