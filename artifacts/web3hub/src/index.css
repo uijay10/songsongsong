@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-background: 0 0% 100%;
+  --color-foreground: 222 47% 11%;
+  
+  --color-primary: 221 83% 53%;
+  --color-primary-foreground: 210 40% 98%;
+  
+  --color-accent: 330 81% 60%; /* Pink #FF69B4 equivalent */
+  --color-accent-foreground: 210 40% 98%;
+  
+  --color-secondary: 210 40% 96%;
+  --color-secondary-foreground: 222 47% 11%;
+  
+  --color-muted: 210 40% 96%;
+  --color-muted-foreground: 215 16% 47%;
+  
+  --color-border: 214 32% 91%;
+  --color-input: 214 32% 91%;
+  --color-ring: 221 83% 53%;
+
+  --color-card: 0 0% 100%;
+  --color-card-foreground: 222 47% 11%;
+  --color-card-border: 214 32% 91%;
+
+  --color-popover: 0 0% 100%;
+  --color-popover-foreground: 222 47% 11%;
+  --color-popover-border: 214 32% 91%;
+
+  --color-destructive: 0 84% 60%;
+  --color-destructive-foreground: 210 40% 98%;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --border: 214 32% 91%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --primary: 221 83% 53%;
+  --primary-foreground: 210 40% 98%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 330 81% 60%;
+  --accent-foreground: 210 40% 98%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
+}
+
+@layer utilities {
+  .text-neon {
+    color: #00FF9F;
+    text-shadow: 0 0 5px rgba(0, 255, 159, 0.5), 0 0 10px rgba(0, 255, 159, 0.3);
+  }
+  
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-lg;
+  }
+  
+  .pink-btn {
+    @apply bg-[#FF69B4] text-white hover:bg-[#FF69B4]/90 shadow-md shadow-[#FF69B4]/20 transition-all duration-200 active:scale-95 font-medium;
+  }
+}
+
+@keyframes fade-out {
+  0% { opacity: 1; transform: scale(1); }
+  70% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.9); visibility: hidden; }
+}
+
+.animate-fade-out {
+  animation: fade-out 5s ease-out forwards;
+}

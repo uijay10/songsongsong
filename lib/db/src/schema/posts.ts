@@ -1,0 +1,21 @@
+import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod/v4";
+
+export const postsTable = pgTable("posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  section: text("section").notNull(),
+  authorWallet: text("author_wallet").notNull(),
+  authorName: text("author_name"),
+  authorAvatar: text("author_avatar"),
+  authorType: text("author_type"),
+  likes: integer("likes").notNull().default(0),
+  comments: integer("comments").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPostSchema = createInsertSchema(postsTable).omit({ id: true, createdAt: true });
+export type InsertPost = z.infer<typeof insertPostSchema>;
+export type Post = typeof postsTable.$inferSelect;
