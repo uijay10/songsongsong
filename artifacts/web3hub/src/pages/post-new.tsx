@@ -97,7 +97,7 @@ export default function PostNew() {
           >
             <option value="">{t("postFormSection")}...</option>
             {SECTIONS.map(s => (
-              <option key={s} value={t(SECTION_LABEL_KEYS[s] ?? s)}>
+              <option key={s} value={s}>
                 {t(SECTION_LABEL_KEYS[s] ?? s)}
               </option>
             ))}

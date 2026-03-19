@@ -68,6 +68,8 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     applyDocs: "文档链接 / 白皮书", applyNeedWallet: "请先连接钱包", applyNeedWalletDesc: "申请创建空间需要验证您的钱包地址。",
     applySuccess: "申请提交成功！", applySuccessMsg: "我们正在审核您的申请，审核通过后将为您开通专属空间。即将返回首页...",
     applySubmit: "提交申请", applySubmitting: "提交中...",
+    commentPlaceholder: "写下你的评论...", commentSubmit: "发送",
+    editNameHint: "点击名字旁边的铅笔图标可编辑", connectDesc: "请先连接钱包以查看个人资料。",
   },
   "zh-TW": {
     home: "首頁", profile: "個人資料", connect: "連接錢包", disconnect: "退出登錄",
@@ -131,6 +133,8 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     applyDocs: "文檔鏈接 / 白皮書", applyNeedWallet: "請先連接錢包", applyNeedWalletDesc: "申請創建空間需要驗證您的錢包地址。",
     applySuccess: "申請提交成功！", applySuccessMsg: "我們正在審核您的申請，審核通過後將為您開通專屬空間。即將返回首頁...",
     applySubmit: "提交申請", applySubmitting: "提交中...",
+    commentPlaceholder: "寫下你的評論...", commentSubmit: "發送",
+    editNameHint: "點擊名字旁邊的鉛筆圖標可編輯", connectDesc: "請先連接錢包以查看個人資料。",
   },
   "en": {
     home: "Home", profile: "Profile", connect: "Connect Wallet", disconnect: "Disconnect",
@@ -194,6 +198,8 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     applyDocs: "Docs / Whitepaper", applyNeedWallet: "Connect Wallet First", applyNeedWalletDesc: "Wallet verification is required to apply for space.",
     applySuccess: "Application Submitted!", applySuccessMsg: "We are reviewing your application. Once approved, you will receive your dedicated space. Returning to home...",
     applySubmit: "Submit", applySubmitting: "Submitting...",
+    commentPlaceholder: "Write a comment...", commentSubmit: "Send",
+    editNameHint: "Click the pencil icon next to your name to edit it", connectDesc: "Please connect your wallet to view your profile.",
   },
   "ja": {
     home: "ホーム", profile: "プロフィール", connect: "ウォレット接続", disconnect: "切断",

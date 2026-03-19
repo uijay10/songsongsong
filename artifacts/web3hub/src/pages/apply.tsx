@@ -11,13 +11,13 @@ import { useLang } from "@/lib/i18n";
 
 const schema = z.object({
   type: z.nativeEnum(ApplySpaceRequestType),
-  twitter: z.string().optional().or(z.literal("")),
-  tweetLink: z.string().url().optional().or(z.literal("")),
-  projectName: z.string().optional().or(z.literal("")),
-  projectTwitter: z.string().optional().or(z.literal("")),
-  docsLink: z.string().url().optional().or(z.literal("")),
-  github: z.string().url().optional().or(z.literal("")),
-  linkedin: z.string().url().optional().or(z.literal("")),
+  twitter: z.string().optional(),
+  tweetLink: z.string().optional(),
+  projectName: z.string().optional(),
+  projectTwitter: z.string().optional(),
+  docsLink: z.string().optional(),
+  github: z.string().optional(),
+  linkedin: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;

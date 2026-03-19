@@ -68,7 +68,7 @@ export default function SectionPage() {
   const icon = SECTION_ICONS[slug] ?? "📋";
   const color = SECTION_COLORS[slug] ?? "from-gray-50 to-white border-gray-100";
 
-  const { data, isLoading } = useGetPosts({ section: sectionLabel, limit: 50 });
+  const { data, isLoading, refetch } = useGetPosts({ section: slug, limit: 50 });
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -90,6 +90,7 @@ export default function SectionPage() {
         <PostTimeline
           posts={data?.posts ?? []}
           emptyMessage={`${sectionLabel} — ${t("noLatest")}`}
+          onRefresh={refetch}
         />
       )}
     </div>

@@ -9,6 +9,7 @@ import KOLZone from "@/pages/kol";
 import DeveloperColumn from "@/pages/developer";
 import Community from "@/pages/community";
 import Profile from "@/pages/profile";
+import PublicProfile from "@/pages/profile-public";
 import ApplySpace from "@/pages/apply";
 import PostNew from "@/pages/post-new";
 import ProjectDetail from "@/pages/project-detail";
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/developer" component={DeveloperColumn} />
       <Route path="/community" component={Community} />
       <Route path="/profile" component={Profile} />
+      <Route path="/profile/:wallet" component={PublicProfile} />
       <Route path="/apply" component={ApplySpace} />
       <Route path="/post/new" component={PostNew} />
       <Route path="/project/:id" component={ProjectDetail} />

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -13,6 +13,10 @@ export const postsTable = pgTable("posts", {
   authorType: text("author_type"),
   likes: integer("likes").notNull().default(0),
   comments: integer("comments").notNull().default(0),
+  kolLikePoints: integer("kol_like_points").notNull().default(0),
+  kolCommentPoints: integer("kol_comment_points").notNull().default(0),
+  isPinned: boolean("is_pinned").notNull().default(false),
+  pinnedUntil: timestamp("pinned_until"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

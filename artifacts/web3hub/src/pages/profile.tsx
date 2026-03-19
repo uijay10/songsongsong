@@ -1,16 +1,17 @@
 import { useWeb3Auth } from "@/lib/web3";
-import { useCheckin, useUpsertUser, useGetPosts } from "@workspace/api-client-react";
+import { useCheckin, useUpsertUser, useGetPosts, useGetMe } from "@workspace/api-client-react";
 import { generateGradient, truncateAddress } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import {
   Zap, Star, Copy, Check, AlertCircle, Gift, Clock, Edit2,
-  Twitter, Send, Hash, Pin, Trash2, Save, ShieldCheck, PenSquare
+  Twitter, Send, Hash, Pin, Trash2, Save, ShieldCheck, PenSquare, User
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { useLang } from "@/lib/i18n";
 import { isAdmin, ADMIN_ENERGY, ADMIN_POINTS, ADMIN_PIN_COUNT } from "@/lib/admin";
 import { Link } from "wouter";
+import { PostCard } from "@/components/post-card";
 
 function useCountdown(targetIso: string | null | undefined) {
   const [remaining, setRemaining] = useState("");
@@ -58,8 +59,8 @@ export default function Profile() {
   const checkinMutation = useCheckin();
   const upsertMutation = useUpsertUser();
   const queryClient = useQueryClient();
-  const { data: userPosts } = useGetPosts(
-    { authorType: address ?? "" },
+  const { data: userPosts, refetch: refetchPosts } = useGetPosts(
+    { authorWallet: address ?? "" } as any,
     { query: { enabled: !!address } }
   );
   const { t } = useLang();
@@ -69,6 +70,8 @@ export default function Profile() {
   const [twitter, setTwitter] = useState("");
   const [telegram, setTelegram] = useState("");
   const [discord, setDiscord] = useState("");
+  const [username, setUsername] = useState("");
+  const [editingName, setEditingName] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
 
@@ -83,6 +86,7 @@ export default function Profile() {
       setTwitter(user.twitter ?? "");
       setTelegram(user.telegram ?? "");
       setDiscord(user.discord ?? "");
+      setUsername(user.username ?? "");
     }
   }, [user]);
 
@@ -92,13 +96,14 @@ export default function Profile() {
     if (!address || !dirty) return;
     setSaveStatus("saving");
     upsertMutation.mutate(
-      { data: { wallet: address, twitter, telegram, discord } },
+      { data: { wallet: address, twitter, telegram, discord, username: username.trim() || undefined } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
           setDirty(false);
           setSaveStatus("saved");
           setTimeout(() => setSaveStatus("idle"), 2500);
+          setEditingName(false);
         },
         onError: () => setSaveStatus("idle"),
       }
@@ -126,30 +131,30 @@ export default function Profile() {
     reader.readAsDataURL(file);
   };
 
-  const spaceStatus = () => {
-    const s = user?.spaceStatus;
-    const isApproved = s === "approved" || s === "active";
-    return isApproved
-      ? { label: null, isYes: true }
-      : { label: "No", isYes: false };
-  };
   const isSpaceOwner = user?.spaceStatus === "approved" || user?.spaceStatus === "active";
+  const isSpaceApproved = isSpaceOwner;
+  const spaceType = user?.spaceType;
 
-  const isDev = user?.spaceType === "developer";
+  const isDevOrProject = spaceType === "developer" || spaceType === "project";
+  const isKol = spaceType === "kol";
+  const showCheckin = !isDevOrProject && !isKol;
+  const showPoints = !isDevOrProject;
+
+  const displayUsername = user?.username || truncateAddress(address);
 
   if (!isConnected) {
     return (
       <div className="py-32 text-center max-w-sm mx-auto">
         <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
         <h2 className="text-2xl font-bold mb-2">{t("connect")}</h2>
-        <p className="text-muted-foreground text-sm">请先连接钱包以查看个人资料。</p>
+        <p className="text-muted-foreground text-sm">{t("connectDesc")}</p>
       </div>
     );
   }
 
   if (userLoading) return <div className="py-32 text-center animate-pulse text-muted-foreground">Loading...</div>;
 
-  const ss = spaceStatus();
+  const ss = { isYes: isSpaceApproved };
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
@@ -191,14 +196,39 @@ export default function Profile() {
             </div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
           </div>
-          <div className="text-center">
-            <div className="font-bold text-base font-mono">{user?.username || truncateAddress(address)}</div>
-            {user?.spaceType && (
-              <span className="inline-block mt-1 px-3 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase">
-                {user.spaceType}
+
+          {/* Username editable */}
+          <div className="w-full text-center">
+            {editingName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  value={username}
+                  onChange={e => { setUsername(e.target.value); setDirty(true); }}
+                  placeholder={truncateAddress(address)}
+                  maxLength={32}
+                  className="flex-1 text-sm text-center bg-muted/50 border border-primary/30 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  autoFocus
+                  onKeyDown={e => e.key === "Enter" && handleSave()}
+                />
+                <button onClick={() => setEditingName(false)} className="text-muted-foreground hover:text-foreground">✕</button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2 group">
+                <span className="font-bold text-base">{displayUsername}</span>
+                <button onClick={() => setEditingName(true)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-0.5">{t("editNameHint")}</p>
+            {spaceType && (
+              <span className="inline-block mt-1.5 px-3 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase">
+                {spaceType}
               </span>
             )}
           </div>
+
           {/* Space status */}
           <div className="w-full pt-2 border-t border-border/50">
             <div className="text-xs text-muted-foreground mb-1.5">{t("space")}</div>
@@ -219,7 +249,7 @@ export default function Profile() {
         </div>
 
         {/* Stats grid */}
-        {!isDev && (
+        {showPoints && (
           <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-3">
             <StatBox
               icon={<Star className="w-3.5 h-3.5 text-amber-400" />}
@@ -255,9 +285,9 @@ export default function Profile() {
       </div>
 
       {/* ── Middle row: Check-in + Wallet ─────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Check-in (hidden for dev) */}
-        {!isDev && (
+      <div className={`grid gap-4 ${showCheckin ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+        {/* Check-in (hidden for dev/project and KOL) */}
+        {showCheckin && (
           <div className="bg-card border border-border rounded-2xl p-5">
             <h2 className="text-sm font-bold mb-3 flex items-center gap-1.5">
               <Gift className="w-4 h-4 text-pink-500" /> {t("checkinBtn")}
@@ -364,27 +394,15 @@ export default function Profile() {
         {(!userPosts?.posts || userPosts.posts.length === 0) ? (
           <p className="text-sm text-muted-foreground text-center py-6">{t("noPost")}</p>
         ) : (
-          <div className="divide-y divide-border/50">
+          <div className="space-y-3">
             {userPosts.posts.map((post) => (
-              <div key={post.id} className="flex items-start justify-between gap-4 py-3">
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-sm truncate">{post.title}</div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">#{post.section}</span>
-                    <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(post.createdAt))} ago</span>
-                  </div>
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  {!isDev && (
-                    <button className="p-1.5 rounded-lg hover:bg-violet-100 text-muted-foreground hover:text-violet-600 transition-colors" title={t("pinCount")}>
-                      <Pin className="w-4 h-4" />
-                    </button>
-                  )}
-                  <button className="p-1.5 rounded-lg hover:bg-red-100 text-muted-foreground hover:text-red-500 transition-colors">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+              <PostCard
+                key={post.id}
+                post={post as any}
+                onRefresh={() => refetchPosts()}
+                showPin={isSpaceOwner || admin}
+                compact
+              />
             ))}
           </div>
         )}

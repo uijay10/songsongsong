@@ -20,6 +20,9 @@ export const usersTable = pgTable("users", {
   language: text("language").default("en"),
   isBanned: boolean("is_banned").notNull().default(false),
   pinCount: integer("pin_count").notNull().default(0),
+  dailyLikeCount: integer("daily_like_count").notNull().default(0),
+  dailyCommentCount: integer("daily_comment_count").notNull().default(0),
+  lastInteractionDate: text("last_interaction_date"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
