@@ -12,7 +12,7 @@
   --color-primary: 221 83% 53%;
   --color-primary-foreground: 210 40% 98%;
   
-  --color-accent: 330 81% 60%; /* Pink #FF69B4 equivalent */
+  --color-accent: 330 81% 60%;
   --color-accent-foreground: 210 40% 98%;
   
   --color-secondary: 210 40% 96%;
@@ -54,6 +54,48 @@
   --muted-foreground: 215 16% 47%;
   --accent: 330 81% 60%;
   --accent-foreground: 210 40% 98%;
+}
+
+/* ── Dark mode overrides ── */
+.dark {
+  color-scheme: dark;
+  --background: 222 47% 5%;
+  --foreground: 210 40% 96%;
+  --border: 217 33% 18%;
+  --card: 222 47% 8%;
+  --card-foreground: 210 40% 96%;
+  --primary: 221 83% 63%;
+  --primary-foreground: 222 47% 5%;
+  --muted: 217 33% 14%;
+  --muted-foreground: 215 20% 58%;
+  --accent: 330 81% 60%;
+  --accent-foreground: 210 40% 98%;
+}
+
+.dark body {
+  background-color: hsl(222, 47%, 5%);
+  color: hsl(210, 40%, 96%);
+}
+
+.dark .glass-panel {
+  background: rgba(15, 20, 40, 0.85) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+.dark .bg-white {
+  background-color: hsl(222, 47%, 8%) !important;
+}
+
+.dark .bg-white\/95 {
+  background-color: rgba(15, 20, 40, 0.95) !important;
+}
+
+.dark .bg-card {
+  background-color: hsl(222, 47%, 8%);
+}
+
+.dark footer {
+  background-color: rgba(15, 20, 40, 0.97) !important;
 }
 
 @layer base {
