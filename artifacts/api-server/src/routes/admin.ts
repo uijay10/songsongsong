@@ -188,6 +188,17 @@ router.post("/users/:wallet/ban", requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ error: String(e) }); }
 });
 
+router.post("/users/:wallet/revoke", requireAdmin, async (req, res) => {
+  try {
+    const wallet = req.params.wallet.toLowerCase();
+    await db.update(usersTable).set({
+      spaceStatus: "none",
+      spaceType: null,
+    }).where(eq(usersTable.wallet, wallet));
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: String(e) }); }
+});
+
 router.get("/points-summary", requireAdmin, async (req, res) => {
   try {
     const users = await db.select({

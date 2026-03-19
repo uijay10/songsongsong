@@ -6,7 +6,7 @@ import { useLocation } from "wouter";
 import {
   Users, ClipboardList, Zap, Star, Ban, Download,
   CheckCircle, XCircle, RefreshCw, Pin, Send,
-  ChevronDown, AlertCircle
+  ChevronDown, AlertCircle, ShieldOff
 } from "lucide-react";
 
 function getApiBase() {
@@ -59,6 +59,7 @@ export default function AdminPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [sendState, setSendState] = useState<SendState | null>(null);
   const [sendAll, setSendAll] = useState<{ field: "points" | "energy"; amount: string } | null>(null);
+  const [revokeDialog, setRevokeDialog] = useState<string | null>(null);
 
   const admin = isAdmin(address);
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3000); };
@@ -106,6 +107,12 @@ export default function AdminPage() {
     if (!address) return;
     await adminPost(`/users/${wallet}/ban`, address, { ban });
     flash(ban ? "Banned" : "Unbanned"); loadUsers();
+  };
+
+  const revokeUser = async (wallet: string) => {
+    if (!address) return;
+    await adminPost(`/users/${wallet}/revoke`, address, {});
+    flash("✓ 已撤销身份"); setRevokeDialog(null); loadUsers(); loadApps();
   };
 
   const sendValue = async () => {
@@ -236,8 +243,8 @@ export default function AdminPage() {
                         </div>
                       </div>
                       {/* Right: actions */}
-                      {app.status === "pending" && (
-                        <div className="flex gap-2 shrink-0">
+                      <div className="flex gap-2 shrink-0">
+                        {app.status === "pending" && (<>
                           <button onClick={() => setDialog({ type: "approve", appId: app.id })}
                             className="px-3 py-1.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm font-semibold hover:bg-green-200 transition-colors">
                             ✓ {t("adminConfirm")}
@@ -246,8 +253,14 @@ export default function AdminPage() {
                             className="px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm font-semibold hover:bg-red-200 transition-colors">
                             ✗ {t("adminRejectReason")}
                           </button>
-                        </div>
-                      )}
+                        </>)}
+                        {app.status === "approved" && (
+                          <button onClick={() => setRevokeDialog(app.wallet)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-sm font-semibold hover:bg-orange-200 transition-colors">
+                            <ShieldOff className="w-3.5 h-3.5" /> 撤销
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -346,6 +359,12 @@ export default function AdminPage() {
                             className={`px-2 py-1 rounded-lg text-xs transition-colors ${u.isBanned ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200" : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200"}`}>
                             {u.isBanned ? "Unban" : "Ban"}
                           </button>
+                          {u.spaceType && (
+                            <button onClick={() => setRevokeDialog(u.wallet)}
+                              className="px-2 py-1 rounded-lg text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 transition-colors flex items-center gap-1">
+                              <ShieldOff className="w-3 h-3" /> 撤销
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -479,6 +498,37 @@ export default function AdminPage() {
                 onClick={() => dialog.type === "approve" ? approve(dialog.appId) : reject(dialog.appId)}
                 className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-colors ${dialog.type === "approve" ? "bg-green-500 text-white hover:bg-green-600" : "bg-red-500 text-white hover:bg-red-600"}`}>
                 {t("adminConfirm")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Revoke Confirmation Dialog ─── */}
+      {revokeDialog && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setRevokeDialog(null)}>
+          <div className="bg-card border border-border rounded-2xl p-7 max-w-sm w-full mx-4 shadow-2xl space-y-5"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-14 h-14 rounded-2xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                <ShieldOff className="w-7 h-7 text-orange-500" />
+              </div>
+              <h2 className="text-lg font-bold">撤销用户身份</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                要撤销此用户的身份吗？
+                <br />
+                <span className="font-mono text-xs text-foreground">{revokeDialog.slice(0, 10)}...{revokeDialog.slice(-4)}</span>
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setRevokeDialog(null)}
+                className="flex-1 py-3 rounded-xl border border-border font-semibold text-sm hover:bg-muted transition-colors">
+                取消
+              </button>
+              <button onClick={() => revokeUser(revokeDialog)}
+                className="flex-1 py-3 rounded-xl bg-orange-500 text-white font-bold text-sm hover:bg-orange-600 transition-colors">
+                确定
               </button>
             </div>
           </div>

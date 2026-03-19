@@ -32,14 +32,21 @@ router.get("/", async (req, res) => {
   const section = req.query.section as string | undefined;
   const authorType = req.query.authorType as string | undefined;
   const authorWallet = req.query.authorWallet as string | undefined;
+  const pinnedOnly = req.query.pinned === "1" || req.query.pinned === "true";
   const page = Math.max(1, parseInt(req.query.page as string ?? "1"));
   const limit = Math.min(50, parseInt(req.query.limit as string ?? "20"));
   const offset = (page - 1) * limit;
+
+  // Auto-expire pinned posts (pinnedUntil has passed)
+  await db.update(postsTable)
+    .set({ isPinned: false, pinnedUntil: null })
+    .where(and(eq(postsTable.isPinned, true), sql`${postsTable.pinnedUntil} < now()`));
 
   const conditions = [];
   if (section) conditions.push(eq(postsTable.section, section));
   if (authorType) conditions.push(eq(postsTable.authorType, authorType));
   if (authorWallet) conditions.push(eq(postsTable.authorWallet, authorWallet.toLowerCase()));
+  if (pinnedOnly) conditions.push(eq(postsTable.isPinned, true));
 
   const all = await db.select().from(postsTable).where(conditions.length ? and(...conditions) : undefined);
   const posts = await db.select().from(postsTable)
@@ -271,7 +278,7 @@ router.post("/:id/pin", async (req, res) => {
   if (!user) return res.status(404).json({ error: "User not found" });
   if ((user.pinCount ?? 0) <= 0) return res.status(403).json({ error: "No pin credits" });
 
-  const pinnedUntil = new Date(Date.now() + (hours ?? 24) * 3600_000);
+  const pinnedUntil = new Date(Date.now() + 72 * 3600_000);
   await db.update(postsTable).set({ isPinned: true, pinnedUntil }).where(eq(postsTable.id, id));
   await db.update(usersTable).set({ pinCount: (user.pinCount ?? 0) - 1 }).where(eq(usersTable.wallet, lw));
 
