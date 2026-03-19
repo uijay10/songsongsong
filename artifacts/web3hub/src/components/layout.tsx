@@ -5,7 +5,7 @@ import { Box, Search, Plus, LogOut, User as UserIcon } from "lucide-react";
 import { cn, truncateAddress, generateGradient } from "@/lib/utils";
 import { useState } from "react";
 
-const NAV_SECTIONS: { label: string; href: string }[] = [
+const NAV_ROW1: { label: string; href: string }[] = [
   { label: "测试网",        href: "/section/testnet" },
   { label: "IDO/Launchpad", href: "/section/ido" },
   { label: "安全审计",      href: "/section/security" },
@@ -16,6 +16,9 @@ const NAV_SECTIONS: { label: string; href: string }[] = [
   { label: "招聘人才",      href: "/section/jobs" },
   { label: "节点招募",      href: "/section/nodes" },
   { label: "项目展示",      href: "/showcase" },
+];
+
+const NAV_ROW2: { label: string; href: string }[] = [
   { label: "生态系统",      href: "/section/ecosystem" },
   { label: "伙伴招募",      href: "/section/partners" },
   { label: "黑客松",        href: "/section/hackathon" },
@@ -74,20 +77,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   连接钱包
                 </button>
               ) : (
-                <div className="relative">
+                <div
+                  className="relative"
+                  onMouseEnter={() => setIsDropdownOpen(true)}
+                  onMouseLeave={() => setIsDropdownOpen(false)}
+                >
                   <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className="flex items-center gap-2 p-1 pr-3 rounded-full border border-border hover:border-primary/50 hover:bg-muted/30 transition-all"
                   >
                     <div 
                       className="w-8 h-8 rounded-full shadow-inner" 
-                      style={{ background: user?.avatar ? `url(${user.avatar})` : generateGradient(address) }}
+                      style={{ background: user?.avatar ? `url(${user.avatar}) center/cover` : generateGradient(address) }}
                     />
                     <span className="text-sm font-medium font-mono">{truncateAddress(address)}</span>
                   </button>
                   
                   {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-card rounded-xl shadow-xl border border-border/50 py-1 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute right-0 mt-1 w-48 bg-card rounded-xl shadow-xl border border-border/50 py-1 overflow-hidden z-50">
                       <Link 
                         href="/profile" 
                         onClick={() => setIsDropdownOpen(false)}
@@ -114,23 +120,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         
-        {/* Navigation Categories */}
+        {/* Navigation Categories — 2 rows: 10 + 9 */}
         <div className="border-t border-border/30 bg-muted/20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-medium text-muted-foreground justify-center">
-              {NAV_SECTIONS.map(({ label, href }) => (
-                <Link
-                  key={label}
-                  href={href}
-                  className={cn(
-                    "hover:text-primary transition-colors cursor-pointer whitespace-nowrap py-0.5 px-1 rounded",
-                    location === href ? "text-primary font-semibold" : ""
-                  )}
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 space-y-1.5">
+            {[NAV_ROW1, NAV_ROW2].map((row, ri) => (
+              <div key={ri} className="flex gap-x-1 gap-y-0 text-sm font-medium text-muted-foreground justify-center flex-nowrap overflow-x-auto scrollbar-none">
+                {row.map(({ label, href }) => (
+                  <Link
+                    key={label}
+                    href={href}
+                    className={cn(
+                      "hover:text-primary hover:bg-primary/5 transition-colors cursor-pointer whitespace-nowrap px-3 py-1 rounded-full",
+                      location === href ? "text-primary font-semibold bg-primary/8" : ""
+                    )}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            ))}
           </div>
         </div>
       </header>
