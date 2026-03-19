@@ -10,6 +10,7 @@ import DeveloperColumn from "@/pages/developer";
 import Community from "@/pages/community";
 import Profile from "@/pages/profile";
 import ApplySpace from "@/pages/apply";
+import PostNew from "@/pages/post-new";
 import ProjectDetail from "@/pages/project-detail";
 import SectionPage from "@/pages/section";
 import AdminPage from "@/pages/admin";
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/community" component={Community} />
       <Route path="/profile" component={Profile} />
       <Route path="/apply" component={ApplySpace} />
+      <Route path="/post/new" component={PostNew} />
       <Route path="/project/:id" component={ProjectDetail} />
       <Route path="/section/:slug" component={SectionPage} />
       <Route path="/admin" component={AdminPage} />

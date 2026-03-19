@@ -1,9 +1,10 @@
 import { Link, useLocation } from "wouter";
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { useWeb3Auth } from "@/lib/web3";
+import { useGetMe } from "@workspace/api-client-react";
 import { useLang, type LangCode } from "@/lib/i18n";
 import { isAdmin } from "@/lib/admin";
-import { LogOut, User as UserIcon, Home, Mail, ChevronDown, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { LogOut, User as UserIcon, Home, Mail, ChevronDown, LayoutDashboard, ShieldCheck, PenSquare } from "lucide-react";
 import { cn, truncateAddress, generateGradient } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 
@@ -16,7 +17,6 @@ const NAV_ROW1_KEYS = [
   { key: "nav_events",      href: "/section/events" },
   { key: "nav_funding",     href: "/section/funding" },
   { key: "nav_jobs",        href: "/section/jobs" },
-  { key: "nav_nodes",       href: "/section/nodes" },
 ];
 
 const NAV_ROW2_KEYS = [
@@ -27,6 +27,7 @@ const NAV_ROW2_KEYS = [
   { key: "nav_ama",        href: "/section/ama" },
   { key: "nav_bugbounty",  href: "/section/bugbounty" },
   { key: "nav_community",  href: "/community" },
+  { key: "nav_nodes",      href: "/section/nodes" },
   { key: "nav_kol",        href: "/kol" },
   { key: "nav_developer",  href: "/developer" },
 ];
@@ -51,9 +52,11 @@ const DONATE_ADDR = "0xbe4548c1458be01838f1faafd69d335f0567399a";
 export function Layout({ children }: { children: React.ReactNode }) {
   const { open } = useWeb3Modal();
   const { address, isConnected, user, disconnect } = useWeb3Auth();
+  const { data: meData } = useGetMe({ wallet: address ?? "" }, { query: { enabled: !!address } });
   const [location] = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [addrCopied, setAddrCopied] = useState(false);
+  const [spaceDialog, setSpaceDialog] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("web3hub_dark");
     return saved !== null ? JSON.parse(saved) : false;
@@ -61,7 +64,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { t, lang, setLang } = useLang();
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const spaceDialogRef = useRef<HTMLDivElement>(null);
   const admin = isAdmin(address);
+  const isSpaceOwner = meData?.user?.spaceStatus === "approved" || meData?.user?.spaceStatus === "active";
 
   const toggleDarkMode = () => {
     setIsDark((prev: boolean) => {
@@ -130,9 +135,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Link>
 
             <div className="flex items-center gap-3 ml-auto">
-              <Link href="/apply" className="hidden sm:flex items-center gap-1 text-sm font-medium text-muted-foreground dark:text-slate-400 hover:text-foreground dark:hover:text-slate-200 transition-colors">
-                {t("apply")}
-              </Link>
+              {isConnected && isSpaceOwner ? (
+                <button onClick={() => setSpaceDialog(true)}
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800/40 transition-colors border border-green-200 dark:border-green-800">
+                  <span className="text-green-500">✓</span> {t("spaceOwner")}
+                </button>
+              ) : (
+                <Link href="/apply" className="hidden sm:flex items-center gap-1 text-sm font-medium text-muted-foreground dark:text-slate-400 hover:text-foreground dark:hover:text-slate-200 transition-colors">
+                  {t("apply")}
+                </Link>
+              )}
 
               {!isConnected ? (
                 <button
@@ -233,8 +245,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               ))}
             </div>
 
-            {/* Row 2: 8 nav items */}
-            <div className="flex items-center gap-0.5 justify-center flex-nowrap overflow-x-auto scrollbar-none">
+            {/* Row 2: 10 nav items, nodes below jobs */}
+            <div className="flex items-center gap-0.5 justify-start flex-nowrap overflow-x-auto scrollbar-none pl-12">
               {NAV_ROW2_KEYS.map(({ key, href }) => (
                 <Link key={key} href={href} className={navLinkClass(href)}>
                   {location !== href && (
@@ -251,6 +263,31 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-44">
         {children}
       </main>
+
+      {/* ── Space Owner Post Dialog ──────────────────── */}
+      {spaceDialog && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setSpaceDialog(false)}>
+          <div className="bg-card border border-border rounded-2xl p-7 max-w-sm w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+                <PenSquare className="w-7 h-7 text-green-600 dark:text-green-400" />
+              </div>
+              <h2 className="text-xl font-bold mb-2">{t("spaceOwner")}</h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">{t("spaceOwnerMsg")}</p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setSpaceDialog(false)}
+                className="flex-1 py-3 rounded-xl border border-border font-semibold text-sm hover:bg-muted transition-colors">
+                {t("adminCancel")}
+              </button>
+              <Link href="/post/new" onClick={() => setSpaceDialog(false)}
+                className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm text-center hover:bg-primary/90 transition-colors">
+                {t("adminConfirm")}
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Fixed Bottom Footer ──────────────────────── */}
       <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/50 dark:border-slate-800 shadow-[0_-2px_16px_rgba(0,0,0,0.06)]">

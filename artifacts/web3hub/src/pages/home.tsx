@@ -1,13 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useGetProjects, useGetPinnedProjects } from "@workspace/api-client-react";
+import { useGetProjects, useGetPinnedProjects, useGetMe } from "@workspace/api-client-react";
+import { useWeb3Auth } from "@/lib/web3";
 import { ProjectCard } from "@/components/project-card";
-import { Search, Flame } from "lucide-react";
+import { Search, Flame, PenSquare } from "lucide-react";
 import { Link } from "wouter";
 import { useLang } from "@/lib/i18n";
 import { generateGradient } from "@/lib/utils";
 
 export default function Home() {
   const { t } = useLang();
+  const { address, isConnected } = useWeb3Auth();
+  const { data: meData } = useGetMe({ wallet: address ?? "" }, { query: { enabled: !!address && isConnected } });
+  const isSpaceOwner = meData?.user?.spaceStatus === "approved" || meData?.user?.spaceStatus === "active";
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -56,9 +60,15 @@ export default function Home() {
           <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight text-foreground">Web3Hub</h1>
           <p className="text-muted-foreground text-sm mt-1">{t("tagline")}</p>
         </div>
-        <Link href="/apply" className="shrink-0 inline-flex items-center gap-1 px-5 py-2 rounded-full text-sm font-bold bg-[#FF69B4] text-white hover:bg-[#ff4fa8] shadow-sm hover:shadow transition-all">
-          {t("register")}
-        </Link>
+        {isSpaceOwner ? (
+          <Link href="/post/new" className="shrink-0 inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-bold bg-[#FF69B4] text-white hover:bg-[#ff4fa8] shadow-sm hover:shadow transition-all">
+            <PenSquare className="w-4 h-4" /> {t("postNow")}
+          </Link>
+        ) : (
+          <Link href="/apply" className="shrink-0 inline-flex items-center gap-1 px-5 py-2 rounded-full text-sm font-bold bg-[#FF69B4] text-white hover:bg-[#ff4fa8] shadow-sm hover:shadow transition-all">
+            {t("register")}
+          </Link>
+        )}
       </div>
 
       {/* ── Encouragement + Search + Join button ────────── */}
@@ -77,12 +87,17 @@ export default function Home() {
               className="w-full pl-11 pr-4 py-2.5 rounded-full border border-border dark:border-slate-700 bg-white dark:bg-slate-800 text-sm placeholder-muted-foreground dark:placeholder-slate-400 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all shadow-sm"
             />
           </div>
-          <Link
-            href="/apply"
-            className="shrink-0 inline-flex items-center justify-center gap-1 px-6 py-2.5 rounded-full font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-300 transition-all"
-          >
-            🚀 {t("joinNow")}
-          </Link>
+          {isSpaceOwner ? (
+            <Link href="/post/new"
+              className="shrink-0 inline-flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-full font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-300 transition-all">
+              <PenSquare className="w-4 h-4" /> {t("postNow")}
+            </Link>
+          ) : (
+            <Link href="/apply"
+              className="shrink-0 inline-flex items-center justify-center gap-1 px-6 py-2.5 rounded-full font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-300 transition-all">
+              🚀 {t("joinNow")}
+            </Link>
+          )}
         </div>
       </div>
 

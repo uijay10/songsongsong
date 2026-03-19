@@ -4,7 +4,7 @@ import { generateGradient, truncateAddress } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import {
   Zap, Star, Copy, Check, AlertCircle, Gift, Clock, Edit2,
-  Twitter, Send, Hash, Pin, Trash2, Save, ShieldCheck
+  Twitter, Send, Hash, Pin, Trash2, Save, ShieldCheck, PenSquare
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
@@ -128,13 +128,12 @@ export default function Profile() {
 
   const spaceStatus = () => {
     const s = user?.spaceStatus;
-    if (!s) return { label: t("spaceNo"), cls: "text-muted-foreground bg-muted" };
-    if (s === "active") return { label: t("spaceYes"), cls: "text-green-700 bg-green-50" };
-    if (s === "pending") return { label: t("spacePending"), cls: "text-amber-700 bg-amber-50" };
-    if (s === "rejected") return { label: t("spaceRejected"), cls: "text-red-700 bg-red-50" };
-    if (s === "banned") return { label: t("spaceBanned"), cls: "text-red-900 bg-red-100" };
-    return { label: s, cls: "text-muted-foreground bg-muted" };
+    const isApproved = s === "approved" || s === "active";
+    return isApproved
+      ? { label: null, isYes: true }
+      : { label: "No", isYes: false };
   };
+  const isSpaceOwner = user?.spaceStatus === "approved" || user?.spaceStatus === "active";
 
   const isDev = user?.spaceType === "developer";
 
@@ -204,9 +203,16 @@ export default function Profile() {
           <div className="w-full pt-2 border-t border-border/50">
             <div className="text-xs text-muted-foreground mb-1.5">{t("space")}</div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`px-3 py-1 rounded-full text-xs font-bold ${ss.cls}`}>{ss.label}</span>
-              {(!user?.spaceStatus || user.spaceStatus === "rejected") && (
-                <a href="/apply" className="text-xs text-primary hover:underline">{t("applySpace")}</a>
+              {ss.isYes ? (
+                <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Yes
+                </span>
+              ) : (
+                <>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold text-muted-foreground bg-muted">No</span>
+                  <Link href="/apply" className="text-xs text-primary hover:underline">{t("applySpace")}</Link>
+                </>
               )}
             </div>
           </div>
@@ -346,7 +352,15 @@ export default function Profile() {
 
       {/* ── Posts ─────────────────────────────────────── */}
       <div className="bg-card border border-border rounded-2xl p-5">
-        <h2 className="text-sm font-bold mb-4">{t("myPosts")}</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-bold">{t("myPosts")}</h2>
+          {(isSpaceOwner || admin) && (
+            <Link href="/post/new"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-sm">
+              <PenSquare className="w-3.5 h-3.5" /> {t("createPostBtn")}
+            </Link>
+          )}
+        </div>
         {(!userPosts?.posts || userPosts.posts.length === 0) ? (
           <p className="text-sm text-muted-foreground text-center py-6">{t("noPost")}</p>
         ) : (
