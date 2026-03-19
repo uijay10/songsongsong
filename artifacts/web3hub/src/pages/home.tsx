@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useGetProjects, useGetPinnedProjects, useGetMe } from "@workspace/api-client-react";
 import { useWeb3Auth } from "@/lib/web3";
 import { ProjectCard } from "@/components/project-card";
-import { Search, Flame, PenSquare, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Flame, PenSquare, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 import { Link } from "wouter";
 import { useLang } from "@/lib/i18n";
 import { generateGradient } from "@/lib/utils";
@@ -49,11 +49,12 @@ export default function Home() {
           <p className="text-muted-foreground text-sm mt-1">{t("tagline")}</p>
         </div>
         {hasJoined ? (
-          <span className="shrink-0 inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-bold bg-muted text-muted-foreground border border-border cursor-default select-none">
-            ✓ {t("alreadyJoined")}
+          <span className="shrink-0 inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-500/10 to-green-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/60 cursor-default select-none pointer-events-none">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            {t("alreadyJoined")}
           </span>
         ) : isPending ? (
-          <span className="shrink-0 inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 cursor-default select-none">
+          <span className="shrink-0 inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 cursor-default select-none pointer-events-none">
             {t("spacePending")}
           </span>
         ) : (
@@ -79,11 +80,21 @@ export default function Home() {
               className="w-full pl-11 pr-4 py-2.5 rounded-full border border-border dark:border-slate-700 bg-white dark:bg-slate-800 text-sm placeholder-muted-foreground dark:placeholder-slate-400 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all shadow-sm"
             />
           </div>
-          {isSpaceOwner ? (
-            <Link href="/post/new"
-              className="shrink-0 inline-flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-full font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-300 transition-all">
-              <PenSquare className="w-4 h-4" /> {t("postNow")}
-            </Link>
+          {hasJoined ? (
+            <div className="shrink-0 flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full font-bold text-sm bg-gradient-to-r from-emerald-500/10 to-green-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/60 cursor-default select-none pointer-events-none">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                {t("alreadyJoined")}
+              </span>
+              <Link href="/post/new"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-300 transition-all">
+                <PenSquare className="w-4 h-4" /> {t("postNow")}
+              </Link>
+            </div>
+          ) : isPending ? (
+            <span className="shrink-0 inline-flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-full font-bold text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 cursor-default select-none pointer-events-none">
+              {t("spacePending")}
+            </span>
           ) : (
             <Link href="/apply"
               className="shrink-0 inline-flex items-center justify-center gap-1 px-6 py-2.5 rounded-full font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-300 transition-all">
