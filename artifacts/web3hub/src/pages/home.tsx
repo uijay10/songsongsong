@@ -62,8 +62,8 @@ export default function Home() {
       </div>
 
       {/* ── Encouragement + Search + Join button ────────── */}
-      <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 rounded-2xl px-6 py-5 space-y-4">
-        <p className="text-xl sm:text-2xl font-extrabold text-red-600 leading-snug">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-900/50 rounded-2xl px-6 py-5 space-y-4">
+        <p className="text-xl sm:text-2xl font-extrabold text-blue-600 dark:text-blue-400 leading-snug">
           {t("encouragement")}
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
@@ -74,12 +74,12 @@ export default function Home() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("searchPlaceholder")}
-              className="w-full pl-11 pr-4 py-2.5 rounded-full border border-border bg-white text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all shadow-sm"
+              className="w-full pl-11 pr-4 py-2.5 rounded-full border border-border dark:border-slate-700 bg-white dark:bg-slate-800 text-sm placeholder-muted-foreground dark:placeholder-slate-400 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all shadow-sm"
             />
           </div>
           <Link
             href="/apply"
-            className="shrink-0 inline-flex items-center justify-center gap-1 px-6 py-2.5 rounded-full font-bold text-sm bg-red-500 text-white hover:bg-red-600 shadow-md shadow-red-200 transition-all"
+            className="shrink-0 inline-flex items-center justify-center gap-1 px-6 py-2.5 rounded-full font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-300 transition-all"
           >
             🚀 {t("joinNow")}
           </Link>
@@ -87,7 +87,7 @@ export default function Home() {
       </div>
 
       {/* ── Pinned Zone ─────────────────────────────────── */}
-      <section>
+      <section className="pt-6">
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t("pinned")}</h2>
           <span className="w-2 h-2 rounded-full bg-[#00FF9F] shadow-[0_0_8px_#00FF9F] animate-pulse" />
@@ -109,7 +109,7 @@ export default function Home() {
       </section>
 
       {/* ── Regular Zone + Hot Rank sidebar ─────────────── */}
-      <section>
+      <section className="pt-8">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t("regular")}</h2>
           {hasProjects && (
@@ -148,41 +148,41 @@ export default function Home() {
           </div>
 
           {/* ── Right: Hot Rank sidebar ── */}
-          <div className="w-52 shrink-0 hidden lg:block">
-            <div className="bg-card border border-border rounded-2xl overflow-hidden sticky top-48">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50 bg-gradient-to-r from-orange-50 to-red-50">
-                <Flame className="w-4 h-4 text-red-500" />
-                <span className="text-sm font-bold text-red-600">{t("hotRank")}</span>
+          <div className="w-64 shrink-0 hidden lg:block">
+            <div className="bg-card dark:bg-slate-800 border border-border dark:border-slate-700 rounded-2xl overflow-hidden sticky top-48">
+              <div className="flex items-center gap-2 px-4 py-4 border-b border-border/50 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <Flame className="w-4 h-4 text-orange-500" />
+                <span className="text-sm font-bold text-black dark:text-slate-100">{t("hotRank")}</span>
               </div>
-              <div className="divide-y divide-border/40">
+              <div className="divide-y divide-border/30 dark:divide-slate-700">
                 {hotProjects.length === 0
                   ? Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i} className="flex items-center gap-2.5 px-3 py-2.5">
-                        <div className="w-6 h-6 rounded-full bg-muted animate-pulse shrink-0" />
-                        <div className="h-3 bg-muted animate-pulse rounded flex-1" />
+                      <div key={i} className="flex items-center gap-2.5 px-4 py-3">
+                        <div className="w-5 h-5 rounded-full bg-muted dark:bg-slate-700 animate-pulse shrink-0" />
+                        <div className="h-3 bg-muted dark:bg-slate-700 animate-pulse rounded flex-1" />
                       </div>
                     ))
                   : hotProjects.map((project, idx) => (
                       <Link
                         key={project.id}
                         href={`/project/${project.id}`}
-                        className="flex items-center gap-2.5 px-3 py-2.5 hover:bg-muted/30 transition-colors group"
+                        className="flex items-center gap-2.5 px-4 py-3 hover:bg-muted/50 dark:hover:bg-slate-700/50 transition-colors group"
                       >
-                        <span className={`text-xs font-bold w-4 shrink-0 ${idx < 3 ? "text-red-500" : "text-muted-foreground"}`}>
+                        <span className={`text-xs font-bold w-5 shrink-0 text-center ${idx < 3 ? "text-orange-600 dark:text-orange-400 font-extrabold" : "text-muted-foreground dark:text-slate-400"}`}>
                           {idx + 1}
                         </span>
                         <div
-                          className="w-6 h-6 rounded-full shrink-0 border border-border/50 overflow-hidden flex items-center justify-center text-[10px] font-bold text-muted-foreground"
+                          className="w-6 h-6 rounded-full shrink-0 overflow-hidden flex items-center justify-center text-[10px] font-bold text-muted-foreground dark:text-slate-300 border border-border/40 dark:border-slate-600"
                           style={{ background: project.logo ? `url(${project.logo}) center/cover` : generateGradient(project.id?.toString()) }}
                         >
                           {!project.logo && project.name.charAt(0)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                          <p className="text-xs font-semibold text-foreground dark:text-slate-100 truncate group-hover:text-primary transition-colors">
                             {project.name}
                           </p>
                           {project.latestPostTitle && (
-                            <p className="text-[10px] text-muted-foreground truncate">{project.latestPostTitle}</p>
+                            <p className="text-[10px] text-muted-foreground dark:text-slate-400 truncate">{project.latestPostTitle}</p>
                           )}
                         </div>
                       </Link>

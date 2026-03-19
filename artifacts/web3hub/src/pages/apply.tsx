@@ -134,7 +134,13 @@ export default function ApplySpace() {
               <Field label={`${t("applyPersonalTwitter")} *`}>
                 <input {...register("twitter")} className={inputCls} placeholder="@YourHandle" />
               </Field>
-              <Field label={t("applyDocs")} error={errors.docsLink?.message}>
+              <Field label={t("applyPostArticle")} note={t("applyPostArticleDesc")}>
+                <textarea rows={3} className={inputCls} placeholder="粘贴文章内容..." />
+              </Field>
+              <Field label={`${t("applyPostLink")} *`}>
+                <input {...register("tweetLink")} className={inputCls} placeholder="https://x.com/..." />
+              </Field>
+              <Field label={t("applyDocs")}>
                 <input {...register("docsLink")} className={inputCls} placeholder="https://..." />
               </Field>
             </>
@@ -146,8 +152,11 @@ export default function ApplySpace() {
               <Field label={`${t("applyPersonalTwitter")} *`}>
                 <input {...register("twitter")} className={inputCls} placeholder="@YourHandle" />
               </Field>
-              <Field label={`${t("applyTweetLink")} *`} note={t("applyTweetNote")} error={errors.tweetLink?.message}>
-                <input {...register("tweetLink")} className={inputCls} placeholder="https://twitter.com/..." />
+              <Field label={t("applyPostArticle")} note={t("applyPostArticleDesc")}>
+                <textarea rows={3} className={inputCls} placeholder="粘贴文章内容..." />
+              </Field>
+              <Field label={`${t("applyPostLink")} *`} error={errors.tweetLink?.message}>
+                <input {...register("tweetLink")} className={inputCls} placeholder="https://x.com/..." />
               </Field>
             </>
           )}
@@ -158,10 +167,16 @@ export default function ApplySpace() {
               <Field label={`${t("applyPersonalTwitter")} *`}>
                 <input {...register("twitter")} className={inputCls} placeholder="@YourHandle" />
               </Field>
+              <Field label={t("applyPostArticle")} note={t("applyPostArticleDesc")}>
+                <textarea rows={3} className={inputCls} placeholder="粘贴文章内容..." />
+              </Field>
+              <Field label={`${t("applyPostLink")} *`}>
+                <input {...register("tweetLink")} className={inputCls} placeholder="https://x.com/..." />
+              </Field>
               <Field label={`${t("applyGithub")} *`} error={errors.github?.message}>
                 <input {...register("github")} className={inputCls} placeholder="https://github.com/..." />
               </Field>
-              <Field label={t("applyLinkedin")} error={errors.linkedin?.message}>
+              <Field label={t("applyLinkedin")}>
                 <input {...register("linkedin")} className={inputCls} placeholder="https://linkedin.com/in/..." />
               </Field>
             </>

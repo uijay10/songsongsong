@@ -53,15 +53,33 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [addrCopied, setAddrCopied] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem("web3hub_dark");
+    return saved !== null ? JSON.parse(saved) : false;
+  });
   const { t, lang, setLang } = useLang();
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const toggleDarkMode = () => {
+    setIsDark((prev: boolean) => {
+      const next = !prev;
+      localStorage.setItem("web3hub_dark", JSON.stringify(next));
+      if (next) document.documentElement.classList.add("dark");
+      else document.documentElement.classList.remove("dark");
+      return next;
+    });
+  };
+
+  if (isDark && typeof window !== "undefined") {
+    document.documentElement.classList.add("dark");
+  }
 
   const handleMouseEnter = () => {
     if (hideTimer.current) clearTimeout(hideTimer.current);
     setIsDropdownOpen(true);
   };
   const handleMouseLeave = () => {
-    hideTimer.current = setTimeout(() => setIsDropdownOpen(false), 2000);
+    hideTimer.current = setTimeout(() => setIsDropdownOpen(false), 1000);
   };
 
   const copyAddr = () => {
@@ -95,8 +113,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Link>
 
             <div className="flex items-center gap-3 ml-auto">
-              <Link href="/apply" className="hidden sm:flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                + {t("apply")}
+              <Link href="/apply" className="hidden sm:flex items-center gap-1 text-sm font-medium text-muted-foreground dark:text-slate-400 hover:text-foreground dark:hover:text-slate-200 transition-colors">
+                {t("apply")}
               </Link>
 
               {!isConnected ? (
@@ -117,13 +135,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </button>
 
                   {isDropdownOpen && (
-                    <div className="absolute right-0 mt-1 w-44 bg-card rounded-xl shadow-xl border border-border/50 py-1 z-50">
+                    <div className="absolute right-0 mt-1 w-44 bg-card dark:bg-slate-800 rounded-xl shadow-xl border border-border/50 dark:border-slate-700 py-1 z-50">
                       <Link href="/profile" onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted cursor-pointer">
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-foreground dark:text-slate-100 hover:bg-muted dark:hover:bg-slate-700 cursor-pointer">
                         <UserIcon className="w-4 h-4" /> {t("profile")}
                       </Link>
                       <button onClick={() => { disconnect(); setIsDropdownOpen(false); }}
-                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors text-left">
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-destructive dark:text-red-400 hover:bg-destructive/10 dark:hover:bg-red-950/30 transition-colors text-left">
                         <LogOut className="w-4 h-4" /> {t("disconnect")}
                       </button>
                     </div>
@@ -139,32 +157,41 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="max-w-7xl mx-auto px-2 py-1.5 space-y-1">
             {/* Row 1: Home (red+big) + Language picker + 10 nav items */}
             <div className="flex items-center gap-0.5 justify-center flex-nowrap overflow-x-auto scrollbar-none">
-              {/* Home button — bigger, red */}
+              {/* Home button — blue square */}
               <Link
                 href="/"
                 className={cn(
-                  "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-base font-extrabold whitespace-nowrap transition-all shrink-0 mr-1",
+                  "flex items-center justify-center w-10 h-10 rounded-lg font-extrabold transition-all shrink-0 mr-2",
                   location === "/"
-                    ? "bg-red-500 text-white shadow-md shadow-red-200"
-                    : "text-red-500 hover:bg-red-50 border border-red-200"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-300"
+                    : "bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:hover:bg-blue-900/60"
                 )}
+                title={t("home")}
               >
-                <Home className="w-4 h-4" />
-                {t("home")}
+                <Home className="w-5 h-5" />
               </Link>
 
-              {/* Language selector */}
-              <div className="relative shrink-0 mr-2">
-                <select
-                  value={lang}
-                  onChange={(e) => setLang(e.target.value as LangCode)}
-                  className="appearance-none bg-white border border-border rounded-full pl-3 pr-7 py-1 text-xs font-semibold text-muted-foreground hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer transition-all"
+              {/* Language selector + Dark mode toggle */}
+              <div className="flex items-center gap-2 shrink-0 mr-2">
+                <div className="relative">
+                  <select
+                    value={lang}
+                    onChange={(e) => setLang(e.target.value as LangCode)}
+                    className="appearance-none bg-white dark:bg-slate-800 border border-border dark:border-slate-700 rounded-full pl-3 pr-7 py-1.5 text-sm font-semibold text-muted-foreground dark:text-slate-200 hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer transition-all"
+                  >
+                    {LANGUAGES.map((l) => (
+                      <option key={l.value} value={l.value}>{l.label}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground dark:text-slate-400 pointer-events-none" />
+                </div>
+                <button
+                  onClick={toggleDarkMode}
+                  className="px-3 py-1.5 rounded-full bg-muted dark:bg-slate-700 border border-border dark:border-slate-600 text-muted-foreground dark:text-slate-300 hover:bg-muted/80 dark:hover:bg-slate-600 transition-all font-semibold text-sm"
+                  title="Toggle dark mode"
                 >
-                  {LANGUAGES.map((l) => (
-                    <option key={l.value} value={l.value}>{l.label}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+                  {isDark ? "☀️" : "🌙"}
+                </button>
               </div>
 
               {NAV_ROW1_KEYS.map(({ key, href }) => (
@@ -192,39 +219,39 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-36">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-44">
         {children}
       </main>
 
       {/* ── Fixed Bottom Footer ──────────────────────── */}
-      <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-border/50 shadow-[0_-2px_16px_rgba(0,0,0,0.06)]">
-        <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground font-medium">{t("contact")}：</span>
+      <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/50 dark:border-slate-800 shadow-[0_-2px_16px_rgba(0,0,0,0.06)]">
+        <div className="max-w-7xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground dark:text-slate-400 font-semibold">{t("contact")}：</span>
             <a href="#" title="X / Twitter"
-              className="w-8 h-8 rounded-full bg-muted/60 hover:bg-sky-50 flex items-center justify-center transition-colors group">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-muted-foreground group-hover:fill-sky-500 transition-colors">
+              className="w-9 h-9 rounded-full bg-muted/60 dark:bg-slate-700 hover:bg-sky-50 dark:hover:bg-sky-900/40 flex items-center justify-center transition-colors group">
+              <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-muted-foreground dark:fill-slate-400 group-hover:fill-sky-500 transition-colors">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
             </a>
             <a href="mailto:" title="Email"
-              className="w-8 h-8 rounded-full bg-muted/60 hover:bg-pink-50 flex items-center justify-center transition-colors group">
-              <Mail className="w-4 h-4 text-muted-foreground group-hover:text-pink-500 transition-colors" />
+              className="w-9 h-9 rounded-full bg-muted/60 dark:bg-slate-700 hover:bg-pink-50 dark:hover:bg-pink-900/40 flex items-center justify-center transition-colors group">
+              <Mail className="w-4.5 h-4.5 text-muted-foreground dark:text-slate-400 group-hover:text-pink-500 transition-colors" />
             </a>
             <a href="#" title="Telegram"
-              className="w-8 h-8 rounded-full bg-muted/60 hover:bg-blue-50 flex items-center justify-center transition-colors group">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-muted-foreground group-hover:fill-blue-500 transition-colors">
+              className="w-9 h-9 rounded-full bg-muted/60 dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/40 flex items-center justify-center transition-colors group">
+              <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-muted-foreground dark:fill-slate-400 group-hover:fill-blue-500 transition-colors">
                 <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
               </svg>
             </a>
           </div>
-          <div className="flex items-center gap-2 flex-wrap justify-center">
-            <span className="text-xs text-muted-foreground">{t("donate")} EVM：</span>
+          <div className="flex items-center gap-3 flex-wrap justify-center">
+            <span className="text-sm text-muted-foreground dark:text-slate-400 font-semibold">{t("donate")} EVM：</span>
             <button onClick={copyAddr}
-              className="font-mono text-xs bg-muted/60 hover:bg-muted px-3 py-1 rounded-full border border-border/50 transition-colors">
+              className="font-mono text-sm bg-muted/60 dark:bg-slate-700 hover:bg-muted dark:hover:bg-slate-600 px-3 py-1.5 rounded-full border border-border/50 dark:border-slate-600 transition-colors text-muted-foreground dark:text-slate-300">
               {addrCopied ? "✓ Copied!" : `${DONATE_ADDR.slice(0,10)}...${DONATE_ADDR.slice(-6)}`}
             </button>
-            <span className="text-xs text-muted-foreground">Thank you so much 🙏</span>
+            <span className="text-sm text-muted-foreground dark:text-slate-400">Thank you so much 🙏</span>
           </div>
         </div>
       </footer>
