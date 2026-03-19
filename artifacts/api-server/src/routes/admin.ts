@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, spaceApplicationsTable } from "@workspace/db";
-import { eq, desc, sql } from "drizzle-orm";
+import { db, usersTable, spaceApplicationsTable, postsTable } from "@workspace/db";
+import { eq, desc, asc, sql, and, gte, lte } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -239,6 +239,74 @@ router.get("/bills", requireAdmin, async (req, res) => {
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", "attachment; filename=bills.csv");
     res.send(csv);
+  } catch (e) { res.status(500).json({ error: String(e) }); }
+});
+
+// ── System memory info ────────────────────────────────────
+router.get("/memory", requireAdmin, async (_req, res) => {
+  try {
+    const mem = process.memoryUsage();
+    // Count posts
+    const postCount = await db.select({ count: sql<number>`count(*)` }).from(postsTable);
+    const userCount = await db.select({ count: sql<number>`count(*)` }).from(usersTable);
+    res.json({
+      heapUsed: mem.heapUsed,
+      heapTotal: mem.heapTotal,
+      rss: mem.rss,
+      external: mem.external,
+      postCount: Number(postCount[0]?.count ?? 0),
+      userCount: Number(userCount[0]?.count ?? 0),
+    });
+  } catch (e) { res.status(500).json({ error: String(e) }); }
+});
+
+// ── Cleanup posts ─────────────────────────────────────────
+router.delete("/posts/cleanup", requireAdmin, async (req, res) => {
+  try {
+    const { mode, percent, from, to } = req.body as {
+      mode: "percent" | "date";
+      percent?: number;
+      from?: string;
+      to?: string;
+    };
+
+    let deletedCount = 0;
+
+    if (mode === "percent") {
+      const pct = Math.min(80, Math.max(1, Number(percent ?? 10)));
+      // Count total posts
+      const countRes = await db.select({ count: sql<number>`count(*)` }).from(postsTable);
+      const total = Number(countRes[0]?.count ?? 0);
+      const toDelete = Math.floor(total * pct / 100);
+      if (toDelete > 0) {
+        // Get oldest posts IDs
+        const oldest = await db.select({ id: postsTable.id })
+          .from(postsTable)
+          .orderBy(asc(postsTable.createdAt))
+          .limit(toDelete);
+        const ids = oldest.map(r => r.id);
+        if (ids.length > 0) {
+          await db.execute(sql`DELETE FROM posts WHERE id = ANY(ARRAY[${sql.join(ids.map(id => sql`${id}`), sql`, `)}]::int[])`);
+          deletedCount = ids.length;
+        }
+      }
+    } else if (mode === "date") {
+      if (!from || !to) return res.status(400).json({ error: "from and to required for date mode" });
+      const fromDate = new Date(from);
+      const toDate = new Date(to);
+      toDate.setHours(23, 59, 59, 999); // include full end day
+      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+        return res.status(400).json({ error: "Invalid date format" });
+      }
+      const result = await db.delete(postsTable)
+        .where(and(gte(postsTable.createdAt, fromDate), lte(postsTable.createdAt, toDate)))
+        .returning({ id: postsTable.id });
+      deletedCount = result.length;
+    } else {
+      return res.status(400).json({ error: "mode must be percent or date" });
+    }
+
+    res.json({ success: true, deletedCount });
   } catch (e) { res.status(500).json({ error: String(e) }); }
 });
 

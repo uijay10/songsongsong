@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { useGetPosts, useGetMe } from "@workspace/api-client-react";
 import { useQuery } from "@tanstack/react-query";
 import { useWeb3Auth } from "@/lib/web3";
-import { Search, Flame, PenSquare, ChevronLeft, ChevronRight, CheckCircle2, Pin, Eye } from "lucide-react";
+import { Search, PenSquare, ChevronLeft, ChevronRight, CheckCircle2, Pin, Eye } from "lucide-react";
 import { Link } from "wouter";
 import { useLang } from "@/lib/i18n";
 import { generateGradient } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
-const PIN_SLOTS = 14;
+const PIN_SLOTS = 16;
 
 function getApiBase() {
   const base = import.meta.env.BASE_URL ?? "/";
@@ -28,13 +28,13 @@ function countdown(until: string) {
   return `${mins}m`;
 }
 
-function AuthorAvatar({ wallet, name, avatar, size = "sm" }: { wallet: string; name?: string | null; avatar?: string | null; size?: "sm" | "md" | "lg" }) {
+function AuthorAvatar({ wallet, name, avatar, size = "sm" }: {
+  wallet: string; name?: string | null; avatar?: string | null; size?: "sm" | "md";
+}) {
   const initials = ((name ?? wallet ?? "?").slice(0, 2)).toUpperCase();
-  const cls = {
-    sm: "w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden",
-    md: "w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white overflow-hidden",
-    lg: "w-12 h-12 rounded-xl shrink-0 flex items-center justify-center text-sm font-bold text-white overflow-hidden",
-  }[size];
+  const cls = size === "md"
+    ? "w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white overflow-hidden"
+    : "w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden";
   return (
     <div className={cls} style={{ background: generateGradient(wallet ?? "0") }}>
       {avatar ? <img src={avatar} className="w-full h-full object-cover" alt="" /> : initials}
@@ -42,38 +42,38 @@ function AuthorAvatar({ wallet, name, avatar, size = "sm" }: { wallet: string; n
   );
 }
 
-// ── Pinned zone card (project posts only) ─────────────────
+// ── Pinned card: uniform 2:1 landscape ───────────────────
 function PostPinnedCard({ post }: { post: any }) {
   const cd = post.pinnedUntil ? countdown(post.pinnedUntil) : "";
   return (
     <Link href={`/post/${post.id}`}
-      className="relative rounded-xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800/50 overflow-hidden flex flex-col p-3 hover:shadow-md hover:border-red-400 dark:hover:border-red-600 transition-all group cursor-pointer">
-      <Pin className="absolute top-2 right-2 w-3 h-3 text-red-400" />
-      <div className="flex items-center gap-2 mb-2">
+      className="relative rounded-xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800/50 overflow-hidden flex flex-col p-3 hover:shadow-md hover:border-red-400 dark:hover:border-red-600 transition-all group cursor-pointer h-full">
+      <Pin className="absolute top-2 right-2 w-3 h-3 text-red-400 shrink-0" />
+      <div className="flex items-center gap-2 mb-1.5">
         <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="md" />
-        <p className="text-xs font-semibold text-foreground truncate flex-1">{post.authorName ?? `${post.authorWallet?.slice(0, 6)}...`}</p>
+        <p className="text-[10px] font-semibold text-foreground truncate flex-1 pr-3">{post.authorName ?? `${post.authorWallet?.slice(0, 6)}...`}</p>
       </div>
       <p className="text-[11px] font-bold text-foreground line-clamp-2 leading-snug flex-1">{post.title}</p>
       {post.content && (
-        <p className="text-[10px] text-muted-foreground line-clamp-1 mt-1 leading-snug">{post.content.slice(0, 50)}</p>
+        <p className="text-[9px] text-muted-foreground line-clamp-1 mt-1 leading-snug">{post.content.slice(0, 50)}</p>
       )}
       {cd && (
-        <span className="mt-2 self-start text-[9px] text-red-500 font-bold bg-red-50 dark:bg-red-950/30 px-1.5 py-0.5 rounded-full">{cd}</span>
+        <span className="mt-1.5 self-start text-[9px] text-red-500 font-bold bg-red-50 dark:bg-red-950/30 px-1.5 py-0.5 rounded-full">{cd}</span>
       )}
     </Link>
   );
 }
 
-// Empty pinned slot placeholder
-function PinnedSlotEmpty() {
+function PinnedSlotEmpty({ idx }: { idx: number }) {
   return (
-    <div className="rounded-xl border-2 border-dashed border-border/30 bg-muted/5 flex items-center justify-center min-h-[90px]">
-      <Pin className="w-4 h-4 text-border/40" />
+    <div className="rounded-xl border-2 border-dashed border-border/25 bg-muted/5 flex flex-col items-center justify-center gap-1 h-full">
+      <Pin className="w-3.5 h-3.5 text-border/30" />
+      <span className="text-[9px] text-border/30 font-mono">{idx + 1}</span>
     </div>
   );
 }
 
-// ── Regular zone card (project posts only) ────────────────
+// ── Regular post card ─────────────────────────────────────
 function PostRegularCard({ post, num }: { post: any; num: number }) {
   return (
     <Link href={`/post/${post.id}`}
@@ -115,7 +115,7 @@ export default function Home() {
 
   useEffect(() => { setPage(1); }, [debouncedSearch]);
 
-  // ── Pinned posts: project-type only, pinned=1 ──────────────
+  // Pinned posts (project-type only)
   const { data: pinnedData } = useQuery({
     queryKey: ["/api/posts", "pinned-home"],
     queryFn: async () => {
@@ -126,7 +126,7 @@ export default function Home() {
     refetchInterval: 60_000,
   });
 
-  // ── Regular posts: project-type only ────────────────────
+  // Regular posts (project-type only)
   const { data: postsData, isLoading } = useQuery({
     queryKey: ["/api/posts", "home-regular", page],
     queryFn: async () => {
@@ -136,21 +136,21 @@ export default function Home() {
     staleTime: 30_000,
   });
 
-  // ── Hot rank: project-type, most likes (recent for now) ──
-  const { data: hotData } = useGetPosts({ page: 1, limit: 10 });
-
   const pinnedPosts = pinnedData?.posts ?? [];
-  const posts = postsData?.posts ?? [];
+  const allPosts = postsData?.posts ?? [];
   const totalPages = postsData?.totalPages ?? 1;
   const total = postsData?.total ?? 0;
-  const hotPosts = hotData?.posts ?? [];
 
-  // Build fixed 14-slot grid (filled + empty)
+  // Rule: same user's posts must NOT appear in both zones
+  const pinnedWallets = new Set(pinnedPosts.map((p: any) => p.authorWallet?.toLowerCase()));
+  const posts = allPosts.filter((p: any) => !pinnedWallets.has(p.authorWallet?.toLowerCase()));
+
+  // Build fixed 16-slot grid
   const pinnedSlots = Array.from({ length: PIN_SLOTS }, (_, i) => pinnedPosts[i] ?? null);
 
   return (
     <div className="space-y-6 pb-4">
-      {/* ── Header row ─────────────────────────────────── */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pt-2">
         <div>
           <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight text-foreground">Web3Hub</h1>
@@ -171,7 +171,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* ── Encouragement + Search ────────── */}
+      {/* Encouragement + Search */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-900/50 rounded-2xl px-6 py-5 space-y-4">
         <p className="text-xl sm:text-2xl font-extrabold text-blue-600 dark:text-blue-400 leading-snug">
           {t("encouragement")}
@@ -206,7 +206,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Pinned Zone (14 fixed slots, project posts only) ─── */}
+      {/* ── Pinned Zone: 16 uniform 2:1 landscape slots ── */}
       <section className="pt-6">
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t("pinned")}</h2>
@@ -215,17 +215,17 @@ export default function Home() {
             置顶区（项目方专属 · {pinnedPosts.length}/{PIN_SLOTS} 已占用 · 3天倒计时）
           </span>
         </div>
-        {/* Always render exactly 14 slots in a 7-column grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-          {pinnedSlots.map((post, i) =>
-            post
-              ? <PostPinnedCard key={post.id} post={post} />
-              : <PinnedSlotEmpty key={`empty-${i}`} />
-          )}
+        {/* 8 cols on lg, 4 on sm, 2 on mobile — always 16 equal slots */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          {pinnedSlots.map((post, i) => (
+            <div key={post ? `post-${post.id}` : `empty-${i}`} className="aspect-[2/1]">
+              {post ? <PostPinnedCard post={post} /> : <PinnedSlotEmpty idx={i} />}
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ── Regular Zone + Hot Rank (project posts only) ─────── */}
+      {/* ── Regular Zone: 20/page, no cap ── */}
       <section className="pt-8">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -237,96 +237,67 @@ export default function Home() {
           )}
         </div>
 
-        <div className="flex gap-4 items-start">
-          {/* ── Left: 2-col post list ── */}
-          <div className="flex-1 min-w-0">
-            {isLoading ? (
-              <div className="grid grid-cols-2 gap-3">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />
-                ))}
-              </div>
-            ) : posts.length === 0 ? (
-              <div className="grid grid-cols-2 gap-3">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="h-16 rounded-xl border-2 border-dashed border-border/30 bg-muted/5 flex items-center justify-center">
-                    <span className="text-xs text-border/40">暂无帖子</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {posts.map((post, idx) => {
-                  const globalNum = (page - 1) * PAGE_SIZE + idx + 1;
-                  return <PostRegularCard key={post.id} post={post} num={globalNum} />;
-                })}
-              </div>
-            )}
-
-            {/* ── Pagination ── */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-3 mt-6 pt-4 border-t border-border/30">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="flex items-center gap-1 px-4 py-2 rounded-full text-sm font-semibold bg-muted hover:bg-muted/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                  <ChevronLeft className="w-4 h-4" /> Prev
-                </button>
-                <div className="flex items-center gap-1.5">
-                  {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                    let p: number;
-                    if (totalPages <= 7) p = i + 1;
-                    else if (page <= 4) p = i + 1;
-                    else if (page >= totalPages - 3) p = totalPages - 6 + i;
-                    else p = page - 3 + i;
-                    return (
-                      <button key={p} onClick={() => setPage(p)}
-                        className={`w-8 h-8 rounded-full text-sm font-semibold transition-colors ${p === page ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80 text-foreground"}`}>
-                        {p}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="flex items-center gap-1 px-4 py-2 rounded-full text-sm font-semibold bg-muted hover:bg-muted/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                  Next <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* ── Right: Hot Rank sidebar ── */}
-          <div className="w-64 shrink-0 hidden lg:block">
-            <div className="bg-card dark:bg-slate-800 border border-border dark:border-slate-700 rounded-2xl overflow-hidden sticky top-48">
-              <div className="flex items-center gap-2 px-4 py-4 border-b border-border/50 dark:border-slate-700">
-                <Flame className="w-4 h-4 text-orange-500" />
-                <span className="text-sm font-bold text-foreground">{t("hotRank")}</span>
-              </div>
-              <div className="divide-y divide-border/30 dark:divide-slate-700">
-                {hotPosts.length === 0
-                  ? Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i} className="flex items-center gap-2.5 px-4 py-3">
-                        <div className="w-5 h-5 rounded-full bg-muted animate-pulse shrink-0" />
-                        <div className="h-3 bg-muted animate-pulse rounded flex-1" />
-                      </div>
-                    ))
-                  : hotPosts.map((post, idx) => (
-                      <Link key={post.id} href={`/post/${post.id}`}
-                        className="flex items-center gap-2.5 px-4 py-3 hover:bg-muted/50 dark:hover:bg-slate-700/50 transition-colors group">
-                        <span className={`text-xs font-bold w-5 shrink-0 text-center ${idx < 3 ? "text-orange-600 dark:text-orange-400 font-extrabold" : "text-muted-foreground"}`}>
-                          {idx + 1}
-                        </span>
-                        <AuthorAvatar wallet={post.authorWallet ?? ""} name={post.authorName} avatar={post.authorAvatar} size="sm" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[10px] text-muted-foreground truncate">{post.authorName ?? post.authorWallet?.slice(0, 8)}</p>
-                          <p className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                            {post.title}
-                          </p>
-                        </div>
-                      </Link>
-                    ))
-                }
-              </div>
+        <div className="space-y-4">
+          {isLoading ? (
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />
+              ))}
             </div>
-          </div>
+          ) : posts.length === 0 ? (
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="h-16 rounded-xl border-2 border-dashed border-border/30 bg-muted/5 flex items-center justify-center">
+                  <span className="text-xs text-border/40">暂无帖子</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {posts.map((post, idx) => {
+                const globalNum = (page - 1) * PAGE_SIZE + idx + 1;
+                return <PostRegularCard key={post.id} post={post} num={globalNum} />;
+              })}
+            </div>
+          )}
+
+          {/* Pagination — unlimited pages */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 mt-6 pt-4 border-t border-border/30">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                className="flex items-center gap-1 px-4 py-2 rounded-full text-sm font-semibold bg-muted hover:bg-muted/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                <ChevronLeft className="w-4 h-4" /> Prev
+              </button>
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  let p: number;
+                  if (totalPages <= 7) p = i + 1;
+                  else if (page <= 4) p = i + 1;
+                  else if (page >= totalPages - 3) p = totalPages - 6 + i;
+                  else p = page - 3 + i;
+                  return (
+                    <button key={p} onClick={() => setPage(p)}
+                      className={`w-8 h-8 rounded-full text-sm font-semibold transition-colors ${p === page ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80 text-foreground"}`}>
+                      {p}
+                    </button>
+                  );
+                })}
+                {totalPages > 7 && page < totalPages - 3 && (
+                  <span className="text-muted-foreground px-1">...</span>
+                )}
+                {totalPages > 7 && page < totalPages - 3 && (
+                  <button onClick={() => setPage(totalPages)}
+                    className="w-8 h-8 rounded-full text-sm font-semibold bg-muted hover:bg-muted/80 text-foreground">
+                    {totalPages}
+                  </button>
+                )}
+              </div>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                className="flex items-center gap-1 px-4 py-2 rounded-full text-sm font-semibold bg-muted hover:bg-muted/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                Next <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </section>
     </div>

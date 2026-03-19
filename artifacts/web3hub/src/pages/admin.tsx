@@ -6,7 +6,7 @@ import { useLocation } from "wouter";
 import {
   Users, ClipboardList, Zap, Star, Ban, Download,
   CheckCircle, XCircle, RefreshCw, Pin, Send,
-  ChevronDown, AlertCircle, ShieldOff
+  ChevronDown, AlertCircle, ShieldOff, Cpu, Trash2, Calendar
 } from "lucide-react";
 
 function getApiBase() {
@@ -31,7 +31,7 @@ async function adminGet(path: string, wallet: string) {
   return fetch(`${apiBase}/admin${path}${sep}adminWallet=${encodeURIComponent(wallet)}`).then(r => r.json());
 }
 
-type Tab = "applications" | "users" | "send";
+type Tab = "applications" | "users" | "send" | "system";
 
 interface DialogState {
   type: "approve" | "reject";
@@ -61,6 +61,16 @@ export default function AdminPage() {
   const [sendAll, setSendAll] = useState<{ field: "points" | "energy"; amount: string } | null>(null);
   const [revokeDialog, setRevokeDialog] = useState<string | null>(null);
 
+  // System tab state
+  const [memInfo, setMemInfo] = useState<any>(null);
+  const [cleanupMode, setCleanupMode] = useState<"percent" | "date">("percent");
+  const [cleanupPct, setCleanupPct] = useState(10);
+  const [cleanupFrom, setCleanupFrom] = useState("");
+  const [cleanupTo, setCleanupTo] = useState("");
+  const [cleanupConfirm, setCleanupConfirm] = useState(false);
+  const [cleanupLoading, setCleanupLoading] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState<string>("");
+
   const admin = isAdmin(address);
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3000); };
 
@@ -85,10 +95,44 @@ export default function AdminPage() {
     setLoading(false);
   };
 
+  const loadMemory = async () => {
+    if (!address) return;
+    const d = await adminGet("/memory", address);
+    setMemInfo(d);
+  };
+
+  const doCleanup = async () => {
+    if (!address) return;
+    setCleanupLoading(true);
+    setCleanupResult("");
+    try {
+      const body: any = { adminWallet: address, mode: cleanupMode };
+      if (cleanupMode === "percent") body.percent = cleanupPct;
+      else { body.from = cleanupFrom; body.to = cleanupTo; }
+      const res = await fetch(`${apiBase}/admin/posts/cleanup`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCleanupResult(`✓ 成功清除 ${data.deletedCount} 条帖子`);
+        loadMemory();
+      } else {
+        setCleanupResult(`错误: ${data.error}`);
+      }
+    } catch (e) {
+      setCleanupResult(`错误: ${String(e)}`);
+    }
+    setCleanupLoading(false);
+    setCleanupConfirm(false);
+  };
+
   useEffect(() => {
     if (!admin || !address) return;
     if (tab === "applications") loadApps();
     else if (tab === "users" || tab === "send") loadUsers();
+    else if (tab === "system") loadMemory();
   }, [tab, statusFilter, admin, address]);
 
   const approve = async (id: number) => {
@@ -189,6 +233,9 @@ export default function AdminPage() {
         </button>
         <button className={tabCls(tab === "send")} onClick={() => setTab("send")}>
           <Send className="w-4 h-4 inline mr-1" />{t("adminSend")} / CSV
+        </button>
+        <button className={tabCls(tab === "system")} onClick={() => setTab("system")}>
+          <Cpu className="w-4 h-4 inline mr-1" />系统维护
         </button>
       </div>
 
@@ -462,6 +509,146 @@ export default function AdminPage() {
                 <Download className="w-4 h-4 inline mr-1" />Bills
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── System Tab ─── */}
+      {tab === "system" && (
+        <div className="space-y-5">
+          {/* Memory card */}
+          <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold flex items-center gap-2"><Cpu className="w-5 h-5 text-blue-500" />实时系统状态</h3>
+              <button onClick={loadMemory} className={`${btnCls} bg-muted hover:bg-muted/80`}>
+                <RefreshCw className="w-4 h-4 inline mr-1" />刷新
+              </button>
+            </div>
+            {memInfo ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "堆内存已用", value: `${(memInfo.heapUsed / 1024 / 1024).toFixed(1)} MB`, warn: memInfo.heapUsed / memInfo.heapTotal > 0.7 },
+                  { label: "堆内存总量", value: `${(memInfo.heapTotal / 1024 / 1024).toFixed(1)} MB`, warn: false },
+                  { label: "进程内存(RSS)", value: `${(memInfo.rss / 1024 / 1024).toFixed(1)} MB`, warn: memInfo.rss > 500 * 1024 * 1024 },
+                  { label: "帖子总数", value: `${memInfo.postCount} 条`, warn: memInfo.postCount > 50000 },
+                  { label: "用户总数", value: `${memInfo.userCount} 人`, warn: false },
+                  { label: "堆使用率", value: `${((memInfo.heapUsed / memInfo.heapTotal) * 100).toFixed(0)}%`, warn: memInfo.heapUsed / memInfo.heapTotal > 0.7 },
+                ].map(({ label, value, warn }) => (
+                  <div key={label} className={`rounded-xl border p-4 ${warn ? "border-orange-300 bg-orange-50 dark:bg-orange-950/20" : "border-border bg-muted/20"}`}>
+                    <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                    <p className={`text-lg font-bold ${warn ? "text-orange-600 dark:text-orange-400" : "text-foreground"}`}>{value}</p>
+                    {warn && <p className="text-[10px] text-orange-500 mt-1">⚠ 建议清理</p>}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Cleanup card */}
+          <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
+            <h3 className="font-bold flex items-center gap-2"><Trash2 className="w-5 h-5 text-red-500" />帖子清理工具</h3>
+            <p className="text-sm text-muted-foreground">清理将永久删除最旧的帖子，操作不可恢复，请谨慎操作。</p>
+
+            {/* Mode selector */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCleanupMode("percent")}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${cleanupMode === "percent" ? "bg-red-500 text-white shadow" : "bg-muted hover:bg-muted/80"}`}>
+                按比例清除
+              </button>
+              <button
+                onClick={() => setCleanupMode("date")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${cleanupMode === "date" ? "bg-red-500 text-white shadow" : "bg-muted hover:bg-muted/80"}`}>
+                <Calendar className="w-4 h-4" />按时间段清除
+              </button>
+            </div>
+
+            {/* Percent mode */}
+            {cleanupMode === "percent" && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range" min={1} max={80} value={cleanupPct}
+                    onChange={e => setCleanupPct(Number(e.target.value))}
+                    className="flex-1 accent-red-500"
+                  />
+                  <span className="text-2xl font-bold text-red-500 w-16 text-right">{cleanupPct}%</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  将删除最旧的 <strong className="text-foreground">{cleanupPct}%</strong> 的帖子
+                  {memInfo?.postCount ? `（约 ${Math.floor(memInfo.postCount * cleanupPct / 100)} 条）` : ""}
+                </p>
+                <div className="flex gap-2 flex-wrap text-xs text-muted-foreground">
+                  {[10, 20, 30, 50, 80].map(p => (
+                    <button key={p} onClick={() => setCleanupPct(p)}
+                      className={`px-2.5 py-1 rounded-lg border transition-colors ${cleanupPct === p ? "border-red-400 text-red-500 font-bold" : "border-border hover:border-muted-foreground"}`}>
+                      {p}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Date mode */}
+            {cleanupMode === "date" && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold block mb-1">起始日期</label>
+                    <input type="date" value={cleanupFrom} onChange={e => setCleanupFrom(e.target.value)}
+                      className="w-full border border-border rounded-xl px-3 py-2 text-sm bg-background" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold block mb-1">结束日期</label>
+                    <input type="date" value={cleanupTo} onChange={e => setCleanupTo(e.target.value)}
+                      className="w-full border border-border rounded-xl px-3 py-2 text-sm bg-background" />
+                  </div>
+                </div>
+                {cleanupFrom && cleanupTo && (
+                  <p className="text-sm text-muted-foreground">
+                    将删除 <strong className="text-foreground">{cleanupFrom}</strong> 至 <strong className="text-foreground">{cleanupTo}</strong> 之间的所有帖子
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Action buttons */}
+            {!cleanupConfirm ? (
+              <button
+                onClick={() => setCleanupConfirm(true)}
+                disabled={cleanupMode === "date" && (!cleanupFrom || !cleanupTo)}
+                className="px-5 py-2.5 rounded-xl bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+                <Trash2 className="w-4 h-4" />执行清理
+              </button>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <div className="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-700/50 text-sm text-red-700 dark:text-red-300 font-semibold">
+                  ⚠ 确认要永久删除这些帖子吗？此操作不可撤销！
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => setCleanupConfirm(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-border font-semibold text-sm hover:bg-muted transition-colors">
+                    取消
+                  </button>
+                  <button onClick={doCleanup} disabled={cleanupLoading}
+                    className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-bold text-sm hover:bg-red-600 disabled:opacity-60 transition-colors">
+                    {cleanupLoading ? "清理中..." : "确认删除"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {cleanupResult && (
+              <div className={`px-4 py-2.5 rounded-xl text-sm font-semibold ${cleanupResult.startsWith("✓") ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"}`}>
+                {cleanupResult}
+              </div>
+            )}
           </div>
         </div>
       )}
