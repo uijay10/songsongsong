@@ -6,6 +6,7 @@ import { Search, PenSquare, ChevronLeft, ChevronRight, CheckCircle2, Eye } from 
 import { Link } from "wouter";
 import { useLang } from "@/lib/i18n";
 import { generateGradient } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 
 const PAGE_SIZE = 20;
 const PIN_SLOTS = 16;
@@ -42,23 +43,40 @@ function AuthorAvatar({ wallet, name, avatar, size = "sm" }: {
   );
 }
 
-// ── Pinned card: uniform 2:1 landscape ───────────────────
+const SECTION_LABELS: Record<string, string> = {
+  testnet: "测试网", ido: "IDO", security: "安全", integration: "集成",
+  airdrop: "空投", events: "活动", funding: "融资", jobs: "招聘",
+  nodes: "节点", showcase: "展示", ecosystem: "生态", partners: "合作",
+  hackathon: "黑客松", ama: "AMA", bugbounty: "漏洞赏金", community: "社区",
+  developer: "开发者", kol: "KOL",
+};
+
+// ── Pinned card: structured layout ───────────────────────
 function PostPinnedCard({ post }: { post: any }) {
   const cd = post.pinnedUntil ? countdown(post.pinnedUntil) : "";
+  const sectionLabel = SECTION_LABELS[post.section] ?? post.section;
+  const timeAgo = post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: false }) : "";
+  const displayName = post.authorName ?? `${post.authorWallet?.slice(0, 6)}...`;
   return (
     <Link href={`/section/${post.section}`}
-      className="relative rounded-xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800/50 overflow-hidden flex flex-col p-4 hover:shadow-lg hover:shadow-rose-100 dark:hover:shadow-rose-950/30 hover:border-red-400 dark:hover:border-red-600 transition-all group cursor-pointer h-full shadow-sm shadow-rose-100/50 dark:shadow-rose-950/20">
+      className="relative rounded-xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800/50 overflow-hidden flex flex-col gap-1.5 p-4 hover:shadow-lg hover:shadow-rose-100 dark:hover:shadow-rose-950/30 hover:border-red-400 dark:hover:border-red-600 transition-all group cursor-pointer h-full shadow-sm shadow-rose-100/50 dark:shadow-rose-950/20">
       <span className="absolute inset-0 rounded-xl ring-1 ring-rose-300/30 dark:ring-rose-700/20 pointer-events-none" />
-      <div className="flex items-center gap-2.5 mb-2">
-        <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="md" />
-        <p className="text-xs font-semibold text-foreground truncate flex-1 pr-5">{post.authorName ?? `${post.authorWallet?.slice(0, 6)}...`}</p>
+      {/* Row 1: avatar + name | section | time */}
+      <div className="flex items-center gap-2 min-w-0">
+        <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="sm" />
+        <span className="text-xs font-semibold text-foreground truncate flex-1">{displayName}</span>
+        <span className="text-[10px] text-primary font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 shrink-0">{sectionLabel}</span>
+        <span className="text-[10px] text-muted-foreground shrink-0">{timeAgo}</span>
       </div>
-      <p className="text-sm font-bold text-foreground line-clamp-2 leading-snug flex-1">{post.title}</p>
+      {/* Row 2: title */}
+      <p className="text-sm font-bold text-foreground line-clamp-1 leading-snug">{post.title}</p>
+      {/* Row 3: content */}
       {post.content && (
-        <p className="text-xs text-muted-foreground line-clamp-2 mt-1.5 leading-snug">{post.content.slice(0, 80)}</p>
+        <p className="text-xs text-muted-foreground line-clamp-2 leading-snug flex-1">{post.content}</p>
       )}
+      {/* Row 4: countdown */}
       {cd && (
-        <span className="mt-2 self-start text-xs text-red-500 font-bold bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-full">{cd}</span>
+        <span className="mt-auto self-start text-xs text-red-500 font-bold bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-full">{cd}</span>
       )}
     </Link>
   );
@@ -69,14 +87,6 @@ function PinnedSlotEmpty() {
     <div className="rounded-xl border border-rose-200/40 dark:border-rose-800/20 bg-rose-50/20 dark:bg-rose-950/5 h-full" />
   );
 }
-
-const SECTION_LABELS: Record<string, string> = {
-  testnet: "测试网", ido: "IDO", security: "安全", integration: "集成",
-  airdrop: "空投", events: "活动", funding: "融资", jobs: "招聘",
-  nodes: "节点", showcase: "展示", ecosystem: "生态", partners: "合作",
-  hackathon: "黑客松", ama: "AMA", bugbounty: "漏洞赏金", community: "社区",
-  developer: "开发者", kol: "KOL",
-};
 
 // ── Regular post card (table-row layout) ─────────────────
 function PostRegularCard({ post, num }: { post: any; num: number }) {
