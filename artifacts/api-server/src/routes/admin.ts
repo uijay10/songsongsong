@@ -63,10 +63,15 @@ router.post("/applications/:id/approve", requireAdmin, async (req, res) => {
     const existingUser = await db.select().from(usersTable).where(eq(usersTable.wallet, app[0].wallet)).limit(1);
     const curEnergy = existingUser[0]?.energy ?? 0;
     const curPin = existingUser[0]?.pinCount ?? 0;
+    const approvedName =
+      approvedType === "project"
+        ? (app[0].projectName || app[0].twitter || null)
+        : (app[0].twitter || null);
     await db.update(usersTable).set({
       spaceStatus: "approved", spaceType: approvedType,
       energy: curEnergy + energyGrant,
       pinCount: curPin + pinGrant,
+      ...(approvedName ? { username: approvedName } : {}),
     }).where(eq(usersTable.wallet, app[0].wallet));
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: String(e) }); }
@@ -102,10 +107,15 @@ router.post("/applications/batch", requireAdmin, async (req, res) => {
           const bUser = await db.select().from(usersTable).where(eq(usersTable.wallet, app[0].wallet)).limit(1);
           const bCurEnergy = bUser[0]?.energy ?? 0;
           const bCurPin = bUser[0]?.pinCount ?? 0;
+          const batchName =
+            batchType === "project"
+              ? (app[0].projectName || app[0].twitter || null)
+              : (app[0].twitter || null);
           await db.update(usersTable).set({
             spaceStatus: "approved", spaceType: batchType,
             energy: bCurEnergy + bEnergyGrant,
             pinCount: bCurPin + bPinGrant,
+            ...(batchName ? { username: batchName } : {}),
           }).where(eq(usersTable.wallet, app[0].wallet));
         }
       }

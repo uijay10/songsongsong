@@ -338,7 +338,7 @@ export default function Profile() {
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
         </div>
         <div className="flex-1 min-w-0">
-          {editingName ? (
+          {editingName && !isSpaceOwner ? (
             <div className="flex items-center gap-2 mb-1">
               <input
                 value={username}
@@ -355,10 +355,12 @@ export default function Profile() {
             <div className="flex items-center gap-2 mb-1 group flex-wrap">
               <span className="font-bold text-lg truncate">{displayUsername}</span>
               <RoleBadge spaceType={isSpaceOwner ? spaceType : null} size="sm" />
-              <button onClick={() => setEditingName(true)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
-                <Edit2 className="w-3.5 h-3.5" />
-              </button>
+              {!isSpaceOwner && (
+                <button onClick={() => setEditingName(true)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           )}
           <p className="text-xs text-muted-foreground font-mono truncate">{address}</p>
