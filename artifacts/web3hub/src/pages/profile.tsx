@@ -515,7 +515,7 @@ export default function Profile() {
                         style={{ background: u.avatar ? `url(${u.avatar}) center/cover` : generateGradient(u.wallet) }} />
                       <span className="text-sm font-medium truncate">{u.username || truncateAddress(u.wallet)}</span>
                       {u.spaceType && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold uppercase">{u.spaceType}</span>
+                        <RoleBadge spaceType={u.spaceType} size="xs" />
                       )}
                       <span className="text-xs text-muted-foreground ml-auto shrink-0">
                         {new Date(u.createdAt).toLocaleDateString()}
