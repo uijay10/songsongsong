@@ -46,7 +46,7 @@ function AuthorAvatar({ wallet, name, avatar, size = "sm" }: {
 function PostPinnedCard({ post }: { post: any }) {
   const cd = post.pinnedUntil ? countdown(post.pinnedUntil) : "";
   return (
-    <Link href={`/post/${post.id}`}
+    <Link href={`/section/${post.section}`}
       className="relative rounded-xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800/50 overflow-hidden flex flex-col p-4 hover:shadow-lg hover:shadow-rose-100 dark:hover:shadow-rose-950/30 hover:border-red-400 dark:hover:border-red-600 transition-all group cursor-pointer h-full shadow-sm shadow-rose-100/50 dark:shadow-rose-950/20">
       <span className="absolute inset-0 rounded-xl ring-1 ring-rose-300/30 dark:ring-rose-700/20 pointer-events-none" />
       <div className="flex items-center gap-2.5 mb-2">
@@ -73,7 +73,7 @@ function PinnedSlotEmpty() {
 // ── Regular post card ─────────────────────────────────────
 function PostRegularCard({ post, num }: { post: any; num: number }) {
   return (
-    <Link href={`/post/${post.id}`}
+    <Link href={`/section/${post.section}`}
       className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/30 bg-card hover:border-primary/40 hover:shadow-sm transition-all group cursor-pointer">
       <span className={`text-xs font-bold w-5 shrink-0 text-center ${num <= 3 ? "text-red-500" : "text-muted-foreground"}`}>{num}</span>
       <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="sm" />
