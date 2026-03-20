@@ -102,9 +102,13 @@ function PostRegularCard({ post, num }: { post: any; num: number }) {
         <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="md" />
       </div>
       {/* 名字 + 主题 */}
-      <div className="flex-1 min-w-0">
+      <div className="w-28 shrink-0 min-w-0">
         <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
         <p className="text-xs text-muted-foreground truncate mt-0.5">{post.title}</p>
+      </div>
+      {/* 内容 */}
+      <div className="flex-1 min-w-0 px-2">
+        <p className="text-xs text-muted-foreground truncate">{post.content || ""}</p>
       </div>
       {/* 区域 */}
       <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">{sectionLabel}</span>
