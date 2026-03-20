@@ -678,9 +678,10 @@ const LangContext = createContext<LangContextType>({
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<LangCode>(() => {
-    const saved = localStorage.getItem("web3hub_lang") as LangCode;
     const valid: LangCode[] = ["zh-CN", "en", "de", "ru", "fr", "ja", "ko", "vi"];
-    return valid.includes(saved) ? saved : "en";
+    const userChose = localStorage.getItem("web3hub_lang_chosen") === "1";
+    const saved = localStorage.getItem("web3hub_lang") as LangCode;
+    return (userChose && valid.includes(saved)) ? saved : "en";
   });
 
   const t = (key: string): string =>
@@ -689,6 +690,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const handleSetLang = (l: LangCode) => {
     setLang(l);
     localStorage.setItem("web3hub_lang", l);
+    localStorage.setItem("web3hub_lang_chosen", "1");
   };
 
   return (
