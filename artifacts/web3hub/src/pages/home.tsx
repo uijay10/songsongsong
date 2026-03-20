@@ -223,7 +223,7 @@ export default function Home() {
       </section>
 
       {/* ── Regular Zone: 20/page, no cap ── */}
-      <section className="pt-24">
+      <section className="pt-48">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t("regular")}</h2>
