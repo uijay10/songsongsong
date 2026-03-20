@@ -35,10 +35,12 @@ function countdown(until: string) {
 }
 
 function AuthorAvatar({ wallet, name, avatar, size = "sm" }: {
-  wallet: string; name?: string | null; avatar?: string | null; size?: "sm" | "md";
+  wallet: string; name?: string | null; avatar?: string | null; size?: "sm" | "md" | "lg";
 }) {
   const initials = ((name ?? wallet ?? "?").slice(0, 2)).toUpperCase();
-  const cls = size === "md"
+  const cls = size === "lg"
+    ? "w-14 h-14 rounded-full shrink-0 flex items-center justify-center text-sm font-bold text-white overflow-hidden"
+    : size === "md"
     ? "w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white overflow-hidden"
     : "w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden";
   return (
@@ -66,24 +68,24 @@ function PostPinnedCard({ post }: { post: any }) {
   const displayName = post.authorName ?? `${post.authorWallet?.slice(0, 6)}...`;
   return (
     <Link href={`/section/${post.section}`}
-      className="relative rounded-xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800/50 overflow-hidden flex flex-col gap-2 p-4 hover:shadow-lg hover:shadow-rose-100 dark:hover:shadow-rose-950/30 hover:border-red-400 dark:hover:border-red-600 transition-all group cursor-pointer h-full shadow-sm shadow-rose-100/50 dark:shadow-rose-950/20">
-      <span className="absolute inset-0 rounded-xl ring-1 ring-rose-300/30 dark:ring-rose-700/20 pointer-events-none" />
+      className="relative rounded-2xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800/50 overflow-hidden flex flex-col gap-3 p-6 hover:shadow-lg hover:shadow-rose-100 dark:hover:shadow-rose-950/30 hover:border-red-400 dark:hover:border-red-600 transition-all group cursor-pointer h-full shadow-sm shadow-rose-100/50 dark:shadow-rose-950/20">
+      <span className="absolute inset-0 rounded-2xl ring-1 ring-rose-300/30 dark:ring-rose-700/20 pointer-events-none" />
       {/* Row 1: avatar + name | section | time */}
-      <div className="flex items-center gap-2 min-w-0">
-        <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="sm" />
-        <span className="text-sm font-bold text-foreground truncate flex-1">{displayName}</span>
-        <span className="text-xs text-primary font-semibold px-2 py-0.5 rounded-full bg-primary/10 shrink-0">{sectionLabel}</span>
-        <span className="text-xs text-muted-foreground shrink-0">{timeAgo}</span>
+      <div className="flex items-center gap-3 min-w-0">
+        <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="md" />
+        <span className="text-base font-bold text-foreground truncate flex-1">{displayName}</span>
+        <span className="text-sm text-primary font-semibold px-3 py-1 rounded-full bg-primary/10 shrink-0">{sectionLabel}</span>
+        <span className="text-sm text-muted-foreground shrink-0">{timeAgo}</span>
       </div>
       {/* Row 2: title */}
-      <p className="text-sm font-bold text-foreground line-clamp-1 leading-snug">{post.title}</p>
+      <p className="text-base font-bold text-foreground line-clamp-1 leading-snug">{post.title}</p>
       {/* Row 3: content */}
       {post.content && (
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-snug flex-1">{post.content}</p>
+        <p className="text-sm text-muted-foreground line-clamp-2 leading-snug flex-1">{post.content}</p>
       )}
       {/* Row 4: countdown */}
       {cd && (
-        <span className="mt-auto self-start text-xs text-red-500 font-bold bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-full">{cd}</span>
+        <span className="mt-auto self-start text-sm text-red-500 font-bold bg-red-50 dark:bg-red-950/30 px-3 py-1 rounded-full">{cd}</span>
       )}
     </Link>
   );
@@ -102,27 +104,27 @@ function PostRegularCard({ post, num }: { post: any; num: number }) {
   const sectionLabel = t(`nav_${post.section}` as any) || post.section;
   return (
     <Link href={`/section/${post.section}`}
-      className="flex items-center gap-2 px-4 py-4 rounded-xl border border-border/30 bg-card hover:border-primary/40 hover:bg-primary/5 transition-all group cursor-pointer">
+      className="flex items-center gap-3 px-5 py-5 rounded-2xl border border-border/30 bg-card hover:border-primary/40 hover:bg-primary/5 transition-all group cursor-pointer">
       {/* 序号 */}
-      <span className={`text-sm font-bold w-7 shrink-0 text-center ${num <= 3 ? "text-red-500" : "text-muted-foreground/50"}`}>{num}</span>
+      <span className={`text-base font-bold w-9 shrink-0 text-center ${num <= 3 ? "text-red-500" : "text-muted-foreground/50"}`}>{num}</span>
       {/* 头像 */}
       <div className="shrink-0">
-        <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="md" />
+        <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="lg" />
       </div>
       {/* 名字 + 主题 */}
-      <div className="w-28 shrink-0 min-w-0">
-        <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
-        <p className="text-xs text-muted-foreground truncate mt-0.5">{post.title}</p>
+      <div className="w-36 shrink-0 min-w-0">
+        <p className="text-base font-semibold text-foreground truncate">{displayName}</p>
+        <p className="text-sm text-muted-foreground truncate mt-0.5">{post.title}</p>
       </div>
       {/* 内容 */}
       <div className="flex-1 min-w-0 px-2">
-        <p className="text-xs text-muted-foreground truncate">{post.content || ""}</p>
+        <p className="text-sm text-muted-foreground truncate">{post.content || ""}</p>
       </div>
       {/* 区域 */}
-      <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">{sectionLabel}</span>
+      <span className="shrink-0 text-sm font-semibold px-3.5 py-1.5 rounded-full bg-primary/10 text-primary">{sectionLabel}</span>
       {/* 查看 */}
-      <span className="shrink-0 flex items-center gap-0.5 text-sm text-primary font-semibold group-hover:underline whitespace-nowrap">
-        <Eye className="w-3.5 h-3.5" /> {t("view")}
+      <span className="shrink-0 flex items-center gap-1 text-base text-primary font-semibold group-hover:underline whitespace-nowrap">
+        <Eye className="w-4 h-4" /> {t("view")}
       </span>
     </Link>
   );
@@ -245,9 +247,9 @@ export default function Home() {
           </span>
         </div>
         {/* 4 cols on md+, 2 on mobile — always 16 equal slots, ~3x larger than before */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {pinnedSlots.map((post, i) => (
-            <div key={post ? `post-${post.id}` : `empty-${i}`} className="aspect-[2/1]">
+            <div key={post ? `post-${post.id}` : `empty-${i}`} className="aspect-[3/2]">
               {post ? <PostPinnedCard post={post} /> : <PinnedSlotEmpty />}
             </div>
           ))}
@@ -268,31 +270,31 @@ export default function Home() {
 
         <div className="space-y-3">
           {isLoading ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />
+                <div key={i} className="h-24 rounded-2xl bg-muted animate-pulse" />
               ))}
             </div>
           ) : posts.length === 0 ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {Array.from({ length: PAGE_SIZE }).map((_, i) => {
                 const num = (page - 1) * PAGE_SIZE + i + 1;
                 return (
-                  <div key={i} className="h-16 rounded-xl border border-border/40 bg-muted/5 flex items-center px-4">
-                    <span className="text-sm text-border/40 font-mono font-bold">{num}</span>
+                  <div key={i} className="h-24 rounded-2xl border border-border/40 bg-muted/5 flex items-center px-5">
+                    <span className="text-base text-border/40 font-mono font-bold">{num}</span>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {Array.from({ length: PAGE_SIZE }).map((_, i) => {
                 const post = posts[i];
                 const globalNum = (page - 1) * PAGE_SIZE + i + 1;
                 if (post) return <PostRegularCard key={post.id} post={post} num={globalNum} />;
                 return (
-                  <div key={`empty-${i}`} className="h-16 rounded-xl border border-border/40 bg-muted/5 flex items-center px-4">
-                    <span className="text-sm text-border/40 font-mono font-bold">{globalNum}</span>
+                  <div key={`empty-${i}`} className="h-24 rounded-2xl border border-border/40 bg-muted/5 flex items-center px-5">
+                    <span className="text-base text-border/40 font-mono font-bold">{globalNum}</span>
                   </div>
                 );
               })}
