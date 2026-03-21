@@ -62,6 +62,7 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
   const [commentOpen, setCommentOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commenting, setCommenting] = useState(false);
+  const [commentError, setCommentError] = useState("");
   const [pinning, setPinning] = useState(false);
 
   const displayName = post.authorName ?? truncateAddress(post.authorWallet);
@@ -83,6 +84,7 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
   const handleComment = async () => {
     if (!isConnected || !commentText.trim()) return;
     setCommenting(true);
+    setCommentError("");
     try {
       const res = await fetch(`${apiBase}/posts/${post.id}/comment`, {
         method: "POST",
@@ -90,6 +92,10 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
         body: JSON.stringify({ wallet: address, content: commentText.trim() }),
       });
       const data = await res.json();
+      if (res.status === 403 && data?.error === "BANNED") {
+        setCommentError(t("bannedError"));
+        return;
+      }
       setComments(data.comments ?? comments + 1);
       setCommentText("");
       setCommentOpen(false);
@@ -166,15 +172,18 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
           </div>
         </div>
         {commentOpen && (
-          <div className="mt-3 flex gap-2">
-            <input value={commentText} onChange={e => setCommentText(e.target.value)}
-              placeholder={t("commentPlaceholder")}
-              className="flex-1 text-xs px-3 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-            <button onClick={handleComment} disabled={commenting || !commentText.trim()}
-              className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50">
-              {commenting ? "..." : t("commentSubmit")}
-            </button>
+          <div className="mt-3 flex flex-col gap-1.5">
+            {commentError && <p className="text-xs text-red-500">{commentError}</p>}
+            <div className="flex gap-2">
+              <input value={commentText} onChange={e => setCommentText(e.target.value)}
+                placeholder={t("commentPlaceholder")}
+                className="flex-1 text-xs px-3 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              <button onClick={handleComment} disabled={commenting || !commentText.trim()}
+                className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50">
+                {commenting ? "..." : t("commentSubmit")}
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -242,16 +251,19 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
 
       {/* Comment box */}
       {commentOpen && (
-        <div className="mt-3 flex gap-2">
-          <input value={commentText} onChange={e => setCommentText(e.target.value)}
-            placeholder={t("commentPlaceholder")}
-            className="flex-1 text-sm px-3 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-            onKeyDown={e => e.key === "Enter" && handleComment()}
-          />
-          <button onClick={handleComment} disabled={commenting || !commentText.trim()}
-            className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:bg-primary/90 transition-colors">
-            {commenting ? "..." : t("commentSubmit")}
-          </button>
+        <div className="mt-3 flex flex-col gap-1.5">
+          {commentError && <p className="text-sm text-red-500">{commentError}</p>}
+          <div className="flex gap-2">
+            <input value={commentText} onChange={e => setCommentText(e.target.value)}
+              placeholder={t("commentPlaceholder")}
+              className="flex-1 text-sm px-3 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+              onKeyDown={e => e.key === "Enter" && handleComment()}
+            />
+            <button onClick={handleComment} disabled={commenting || !commentText.trim()}
+              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50 hover:bg-primary/90 transition-colors">
+              {commenting ? "..." : t("commentSubmit")}
+            </button>
+          </div>
         </div>
       )}
     </div>

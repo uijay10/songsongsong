@@ -123,7 +123,9 @@ export default function PostNew() {
         onError: (e: any) => {
           const body = (e as any)?.response ?? (e as any)?.body ?? {};
           const errCode = body?.error ?? String(e?.message ?? "");
-          if (errCode === "INSUFFICIENT_ENERGY") {
+          if (errCode === "BANNED") {
+            setStep("form"); setError(t("bannedError"));
+          } else if (errCode === "INSUFFICIENT_ENERGY") {
             setStep("form"); setShowRecharge(true);
           } else if (errCode === "DAILY_LIMIT") {
             setStep("form"); setError(`今日发帖已达上限（${body?.limit ?? ""}条/天）`);

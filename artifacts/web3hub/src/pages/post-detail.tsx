@@ -51,6 +51,7 @@ export default function PostDetail() {
   const [commentText, setCommentText] = useState("");
   const [commentOpen, setCommentOpen] = useState(false);
   const [commenting, setCommenting] = useState(false);
+  const [commentError, setCommentError] = useState("");
   const [pinning, setPinning] = useState(false);
   const [pinMsg, setPinMsg] = useState("");
 
@@ -72,6 +73,7 @@ export default function PostDetail() {
   const handleComment = async () => {
     if (!isConnected || !commentText.trim() || !post) return;
     setCommenting(true);
+    setCommentError("");
     try {
       const res = await fetch(`${apiBase}/posts/${post.id}/comment`, {
         method: "POST",
@@ -79,6 +81,10 @@ export default function PostDetail() {
         body: JSON.stringify({ wallet: address, content: commentText.trim() }),
       });
       const d = await res.json();
+      if (res.status === 403 && d?.error === "BANNED") {
+        setCommentError(t("bannedError"));
+        return;
+      }
       setComments(d.comments ?? commentCount + 1);
       setCommentText("");
       setCommentOpen(false);
@@ -218,7 +224,9 @@ export default function PostDetail() {
 
         {/* Comment box */}
         {commentOpen && (
-          <div className="flex gap-2 pt-2">
+          <div className="flex flex-col gap-1.5 pt-2">
+            {commentError && <p className="text-sm text-red-500">{commentError}</p>}
+            <div className="flex gap-2">
             <input
               value={commentText}
               onChange={e => setCommentText(e.target.value)}
@@ -233,6 +241,7 @@ export default function PostDetail() {
             >
               {commenting ? "..." : t("commentSubmit")}
             </button>
+            </div>
           </div>
         )}
       </div>

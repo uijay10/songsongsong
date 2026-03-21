@@ -117,6 +117,10 @@ router.post("/", async (req, res) => {
   let user = users[0];
   if (!user) return res.status(404).json({ error: "User not found" });
 
+  if (user.isBanned || user.spaceStatus === "banned") {
+    return res.status(403).json({ error: "BANNED" });
+  }
+
   const spaceType = user.spaceType ?? "";
   const isAdmin = (user.energy ?? 0) >= 99_000_000_000_000;
 
@@ -261,6 +265,16 @@ router.post("/:id/comment", async (req, res) => {
 
   const { wallet, content } = req.body;
   if (!content) return res.status(400).json({ error: "content required" });
+
+  // Check ban status before any writes
+  if (wallet) {
+    const lw = wallet.toLowerCase();
+    const userRows = await db.select().from(usersTable).where(eq(usersTable.wallet, lw)).limit(1);
+    const user = userRows[0];
+    if (user && (user.isBanned || user.spaceStatus === "banned")) {
+      return res.status(403).json({ error: "BANNED" });
+    }
+  }
 
   const posts = await db.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
   if (posts.length === 0) return res.status(404).json({ error: "Post not found" });
