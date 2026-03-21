@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
+import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { useWeb3Auth } from "@/lib/web3";
-import { WalletPickerModal } from "@/components/wallet-modal";
 import { useGetMe } from "@workspace/api-client-react";
 import { useLang, type LangCode } from "@/lib/i18n";
 import { isAdmin } from "@/lib/admin";
@@ -45,12 +45,12 @@ const LANGUAGES: { value: LangCode; label: string }[] = [
 const DONATE_ADDR = "0xbe4548c1458be01838f1faafd69d335f0567399a";
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { open } = useWeb3Modal();
   const { address, isConnected, user, disconnect } = useWeb3Auth();
   const { data: meData } = useGetMe({ wallet: address ?? "" }, { query: { enabled: !!address } });
   const [location] = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [addrCopied, setAddrCopied] = useState(false);
-  const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("web3hub_dark");
     return saved !== null ? JSON.parse(saved) : false;
@@ -151,7 +151,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
               {!isConnected ? (
                 <button
-                  onClick={() => setWalletModalOpen(true)}
+                  onClick={() => open()}
                   className="px-5 py-2 rounded-full text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all"
                 >
                   {t("connect")}
@@ -286,10 +286,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </footer>
 
-      <WalletPickerModal
-        open={walletModalOpen}
-        onClose={() => setWalletModalOpen(false)}
-      />
     </div>
   );
 }
