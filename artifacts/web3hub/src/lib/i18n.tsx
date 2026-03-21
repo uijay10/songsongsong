@@ -95,7 +95,7 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     checkinNA: "此身份无签到",
     pinLabel: "置顶次数",
     pinnedExclusive: "项目方专属", slotsUsed: "已占用", threeDayCountdown: "3天倒计时",
-    regularDesc: "项目方帖子 · 最新优先", itemUnit: "条",
+    regularDesc: "最新优先", itemUnit: "条",
     roleProject: "区块链团队", roleDeveloper: "开发者", roleMember: "平台会员",
     memberTabProject: "项目方", memberTabKol: "KOL", memberTabDev: "开发者",
   },
