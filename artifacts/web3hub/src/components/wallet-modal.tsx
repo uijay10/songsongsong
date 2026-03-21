@@ -28,16 +28,6 @@ const WALLETS: WalletConfig[] = [
     installUrl: "https://metamask.io/download/",
   },
   {
-    key: "okx",
-    name: "OKX Wallet",
-    color: "#000000",
-    logoUrl: "https://www.google.com/s2/favicons?domain=okx.com&sz=128",
-    detect: () =>
-      typeof window !== "undefined" &&
-      (!!(window as any).okxwallet || !!(window as any).ethereum?.isOKExWallet),
-    installUrl: "https://www.okx.com/web3",
-  },
-  {
     key: "trust",
     name: "Trust Wallet",
     color: "#3375BB",
@@ -48,15 +38,6 @@ const WALLETS: WalletConfig[] = [
     installUrl: "https://trustwallet.com/download",
   },
   {
-    key: "rabby",
-    name: "Rabby Wallet",
-    color: "#7084FF",
-    logoUrl: "https://www.google.com/s2/favicons?domain=rabby.io&sz=128",
-    detect: () =>
-      typeof window !== "undefined" && !!(window as any).ethereum?.isRabby,
-    installUrl: "https://rabby.io",
-  },
-  {
     key: "phantom",
     name: "Phantom",
     color: "#AB9FF2",
@@ -65,6 +46,16 @@ const WALLETS: WalletConfig[] = [
       typeof window !== "undefined" &&
       (!!(window as any).phantom?.ethereum || !!(window as any).ethereum?.isPhantom),
     installUrl: "https://phantom.app/download",
+  },
+  {
+    key: "okx",
+    name: "OKX Wallet",
+    color: "#000000",
+    logoUrl: "https://www.google.com/s2/favicons?domain=okx.com&sz=128",
+    detect: () =>
+      typeof window !== "undefined" &&
+      (!!(window as any).okxwallet || !!(window as any).ethereum?.isOKExWallet),
+    installUrl: "https://www.okx.com/web3",
   },
   {
     key: "coinbase",
@@ -78,13 +69,13 @@ const WALLETS: WalletConfig[] = [
     installUrl: "https://www.coinbase.com/wallet/downloads",
   },
   {
-    key: "rainbow",
-    name: "Rainbow",
-    color: "#174299",
-    logoUrl: "https://www.google.com/s2/favicons?domain=rainbow.me&sz=128",
+    key: "rabby",
+    name: "Rabby Wallet",
+    color: "#7084FF",
+    logoUrl: "https://www.google.com/s2/favicons?domain=rabby.io&sz=128",
     detect: () =>
-      typeof window !== "undefined" && !!(window as any).ethereum?.isRainbow,
-    installUrl: "https://rainbow.me/download",
+      typeof window !== "undefined" && !!(window as any).ethereum?.isRabby,
+    installUrl: "https://rabby.io",
   },
 ];
 
@@ -208,7 +199,7 @@ export function WalletPickerModal({ open, onClose }: WalletPickerModalProps) {
         <div className="h-px bg-gray-100 dark:bg-white/5" />
 
         {/* Wallet list */}
-        <div className="py-2 max-h-[65vh] overflow-y-auto">
+        <div className="py-2">
 
           {/* WalletConnect */}
           <button
@@ -224,7 +215,7 @@ export function WalletPickerModal({ open, onClose }: WalletPickerModalProps) {
             </span>
           </button>
 
-          {/* All 7 wallets */}
+          {/* MetaMask + 5 wallets */}
           {WALLETS.map((wallet) => (
             <div key={wallet.key}>
               <button
@@ -262,13 +253,6 @@ export function WalletPickerModal({ open, onClose }: WalletPickerModalProps) {
             </div>
           ))}
         </div>
-
-        <div className="h-px bg-gray-100 dark:bg-white/5" />
-        <p className="text-center text-xs text-gray-400 dark:text-gray-600 py-3 px-5">
-          {isZh
-            ? "连接钱包即表示您同意我们的服务条款"
-            : "By connecting, you agree to our Terms of Service"}
-        </p>
       </div>
     </div>
   );
