@@ -244,9 +244,6 @@ export default function PostDetail() {
 
         {/* Actions */}
         <div className="flex items-center gap-4 pt-4 border-t border-border/40">
-          <span className="flex items-center gap-1 text-sm text-muted-foreground/60">
-            <Eye className="w-4 h-4" /> {(post.views ?? 0).toLocaleString()}
-          </span>
           <button
             onClick={handleLike}
             disabled={liked || !isConnected}
@@ -261,6 +258,9 @@ export default function PostDetail() {
             <MessageCircle className="w-4 h-4" /> {commentCount}
           </button>
           <div className="ml-auto flex items-center gap-2">
+            <span className="flex items-center gap-1 text-sm text-muted-foreground/60 pr-1">
+              <Eye className="w-4 h-4" /> {(post.views ?? 0).toLocaleString()}
+            </span>
             <Link
               href={authorHref}
               className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"

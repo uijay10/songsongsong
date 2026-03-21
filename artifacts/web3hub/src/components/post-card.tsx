@@ -181,9 +181,6 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
         <div className="flex items-center gap-3 mt-3 pt-2 border-t border-border/40">
           <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">#{t(SECTION_KEY_MAP[post.section] ?? post.section) || post.section}</span>
           <div className="ml-auto flex items-center gap-2">
-            <span className="flex items-center gap-0.5 text-xs text-muted-foreground/70">
-              <Eye className="w-3 h-3" />{(post.views ?? 0).toLocaleString()}
-            </span>
             <button onClick={handleLike} disabled={liked || !isConnected}
               className={`flex items-center gap-1 text-xs transition-colors ${liked ? "text-pink-500" : "text-muted-foreground hover:text-pink-500"}`}>
               <Heart className={`w-3.5 h-3.5 ${liked ? "fill-pink-500" : ""}`} />{likes}
@@ -192,6 +189,9 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-blue-500 transition-colors">
               <MessageCircle className="w-3.5 h-3.5" />{comments}
             </button>
+            <span className="flex items-center gap-0.5 text-xs text-muted-foreground/70 px-0.5">
+              <Eye className="w-3 h-3" />{(post.views ?? 0).toLocaleString()}
+            </span>
             <button onClick={handleCopy} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
@@ -279,9 +279,6 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
 
       {/* Actions */}
       <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border/40">
-        <span className="flex items-center gap-1 text-sm text-muted-foreground/60">
-          <Eye className="w-4 h-4" /> {(post.views ?? 0).toLocaleString()}
-        </span>
         <button onClick={handleLike} disabled={liked || !isConnected}
           className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${liked ? "text-pink-500" : "text-muted-foreground hover:text-pink-500"}`}>
           <Heart className={`w-4 h-4 ${liked ? "fill-pink-500" : ""}`} /> {likes}
@@ -291,6 +288,9 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
           <MessageCircle className="w-4 h-4" /> {comments}
         </button>
         <div className="ml-auto flex items-center gap-2">
+          <span className="flex items-center gap-1 text-sm text-muted-foreground/60 pr-1">
+            <Eye className="w-4 h-4" /> {(post.views ?? 0).toLocaleString()}
+          </span>
           <button onClick={handleCopy} title="Copy link"
             className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
             {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
