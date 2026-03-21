@@ -113,7 +113,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#EEF4FF] dark:bg-background" style={isDark ? {} : {background: "linear-gradient(180deg, #EEF5FF 0%, #F5F9FF 120px, #ffffff 400px)"}}>
       {/* ── Top Navbar ──────────────────────────────── */}
       <header className="sticky top-0 z-50 w-full glass-panel border-b border-border/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
