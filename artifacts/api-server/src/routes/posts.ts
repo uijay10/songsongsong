@@ -6,11 +6,46 @@ const router: IRouter = Router();
 
 const PIN_SLOTS = 14; // max simultaneous pinned posts on homepage
 
+/**
+ * Deterministic auto-view computation — no extra DB columns.
+ * Uses post.id as seed; returns total auto-views accrued up to now.
+ * Project posts: target 2180–53560, starts 5–10 min after creation, ends 24h later.
+ * KOL / developer posts: target 160–2068, same timing.
+ */
+function computeAutoViews(id: number, createdAt: Date, authorType: string | null): number {
+  if (authorType !== "project" && authorType !== "kol" && authorType !== "developer") return 0;
+
+  const startDelay = (5 + (id % 6)) * 60_000;          // 5–10 min in ms
+  const startMs = createdAt.getTime() + startDelay;
+  const endMs   = createdAt.getTime() + 24 * 3_600_000; // 24 h
+  const now     = Date.now();
+
+  if (now < startMs) return 0;
+
+  const elapsed  = Math.min(now, endMs) - startMs;
+  const duration = endMs - startMs;
+  const progress = elapsed / duration; // 0–1
+
+  // Deterministic target from post id
+  let target: number;
+  if (authorType === "project") {
+    const range = 53560 - 2180;
+    target = 2180 + ((id * 7919 + id * id * 17) % range);
+  } else {
+    const range = 2068 - 160;
+    target = 160 + ((id * 6271 + id * id * 11) % range);
+  }
+  // Ease-out: fast start, gentle tail — mimics organic traffic
+  const eased = 1 - Math.pow(1 - progress, 1.8);
+  return Math.floor(target * eased);
+}
+
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
 function formatPost(p: typeof postsTable.$inferSelect & { authorNameLive?: string | null; authorAvatarLive?: string | null }) {
+  const autoViews = computeAutoViews(p.id, p.createdAt, p.authorType);
   return {
     id: p.id,
     title: p.title,
@@ -20,6 +55,7 @@ function formatPost(p: typeof postsTable.$inferSelect & { authorNameLive?: strin
     authorName: p.authorNameLive ?? p.authorName,
     authorAvatar: p.authorAvatarLive ?? p.authorAvatar,
     authorType: p.authorType,
+    views: (p.views ?? 0) + autoViews,
     likes: p.likes,
     comments: p.comments,
     kolLikePoints: p.kolLikePoints,
@@ -188,6 +224,12 @@ router.post("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
+
+  // Increment real view count (fire-and-forget, don't block response)
+  db.update(postsTable)
+    .set({ views: sql`${postsTable.views} + 1` })
+    .where(eq(postsTable.id, id))
+    .catch(() => {});
 
   const posts = await db.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
   if (!posts.length) return res.status(404).json({ error: "Post not found" });

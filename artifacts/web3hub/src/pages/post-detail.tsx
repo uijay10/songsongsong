@@ -1,6 +1,6 @@
 import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, MessageCircle, ArrowLeft, Pin, Clock, User } from "lucide-react";
+import { Heart, MessageCircle, ArrowLeft, Pin, Clock, User, Eye } from "lucide-react";
 import { useState } from "react";
 import { useWeb3Auth } from "@/lib/web3";
 import { generateGradient, truncateAddress } from "@/lib/utils";
@@ -244,6 +244,9 @@ export default function PostDetail() {
 
         {/* Actions */}
         <div className="flex items-center gap-4 pt-4 border-t border-border/40">
+          <span className="flex items-center gap-1 text-sm text-muted-foreground/60">
+            <Eye className="w-4 h-4" /> {(post.views ?? 0).toLocaleString()}
+          </span>
           <button
             onClick={handleLike}
             disabled={liked || !isConnected}

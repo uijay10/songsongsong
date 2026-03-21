@@ -11,6 +11,7 @@ export const postsTable = pgTable("posts", {
   authorName: text("author_name"),
   authorAvatar: text("author_avatar"),
   authorType: text("author_type"),
+  views: integer("views").notNull().default(0),
   likes: integer("likes").notNull().default(0),
   comments: integer("comments").notNull().default(0),
   kolLikePoints: integer("kol_like_points").notNull().default(0),

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Heart, MessageCircle, Copy, Check, Pin, User } from "lucide-react";
+import { Heart, MessageCircle, Copy, Check, Pin, User, Eye } from "lucide-react";
 
 const SECTION_KEY_MAP: Record<string, string> = {
   testnet: "sTestnetLabel", ido: "sIdoLabel", security: "sSecurityLabel",
@@ -36,6 +36,7 @@ interface PostCardPost {
   authorName?: string | null;
   authorAvatar?: string | null;
   authorType?: string | null;
+  views?: number;
   likes: number;
   comments: number;
   isPinned?: boolean;
@@ -180,6 +181,9 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
         <div className="flex items-center gap-3 mt-3 pt-2 border-t border-border/40">
           <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">#{t(SECTION_KEY_MAP[post.section] ?? post.section) || post.section}</span>
           <div className="ml-auto flex items-center gap-2">
+            <span className="flex items-center gap-0.5 text-xs text-muted-foreground/70">
+              <Eye className="w-3 h-3" />{(post.views ?? 0).toLocaleString()}
+            </span>
             <button onClick={handleLike} disabled={liked || !isConnected}
               className={`flex items-center gap-1 text-xs transition-colors ${liked ? "text-pink-500" : "text-muted-foreground hover:text-pink-500"}`}>
               <Heart className={`w-3.5 h-3.5 ${liked ? "fill-pink-500" : ""}`} />{likes}
@@ -275,6 +279,9 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
 
       {/* Actions */}
       <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border/40">
+        <span className="flex items-center gap-1 text-sm text-muted-foreground/60">
+          <Eye className="w-4 h-4" /> {(post.views ?? 0).toLocaleString()}
+        </span>
         <button onClick={handleLike} disabled={liked || !isConnected}
           className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${liked ? "text-pink-500" : "text-muted-foreground hover:text-pink-500"}`}>
           <Heart className={`w-4 h-4 ${liked ? "fill-pink-500" : ""}`} /> {likes}
