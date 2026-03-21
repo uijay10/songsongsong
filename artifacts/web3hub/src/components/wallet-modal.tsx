@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
-import { X, ExternalLink, ChevronRight } from "lucide-react";
+import { X, ExternalLink, ChevronLeft, LayoutGrid } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -89,25 +89,19 @@ const WALLETS: WalletConfig[] = [
   },
 ];
 
-function WalletLogo({ wallet, size = 44 }: { wallet: WalletConfig; size?: number }) {
+function WalletLogo({ wallet, size = 40 }: { wallet: WalletConfig; size?: number }) {
   const [imgError, setImgError] = useState(false);
-  const letter = wallet.name[0].toUpperCase();
-
-  if (imgError) {
-    return (
-      <div
-        className="rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
-        style={{ width: size, height: size, background: wallet.color }}
-      >
-        {letter}
-      </div>
-    );
-  }
-
-  return (
+  return imgError ? (
+    <div
+      className="rounded-xl flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+      style={{ width: size, height: size, background: wallet.color }}
+    >
+      {wallet.name[0]}
+    </div>
+  ) : (
     <div
       className="rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
-      style={{ width: size, height: size, background: "#f8f8f8" }}
+      style={{ width: size, height: size, background: "#f3f4f6" }}
     >
       <img
         src={wallet.logoUrl}
@@ -119,75 +113,78 @@ function WalletLogo({ wallet, size = 44 }: { wallet: WalletConfig; size?: number
   );
 }
 
-interface WalletRowProps {
-  wallet: WalletConfig;
-  isInstalled: boolean;
-  onConnect: () => void;
-  lang: string;
+function WalletConnectLogo({ size = 40 }: { size?: number }) {
+  return (
+    <div
+      className="rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+      style={{ width: size, height: size, background: "#3396FF" }}
+    >
+      <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 40 25" fill="none">
+        <path
+          d="M8.19 4.94c6.52-6.59 17.1-6.59 23.62 0l.79.79a.81.81 0 0 1 0 1.17l-2.68 2.71a.43.43 0 0 1-.6 0l-1.08-1.09c-4.55-4.59-11.93-4.59-16.48 0l-1.16 1.17a.43.43 0 0 1-.6 0L7.32 6.98a.81.81 0 0 1 0-1.17l.87-.87zm29.18 5.6 2.39 2.41a.81.81 0 0 1 0 1.17L27.42 26.04a.85.85 0 0 1-1.2 0l-8.43-8.51a.21.21 0 0 0-.3 0L9.06 26.04a.85.85 0 0 1-1.2 0L.41 18.49a.81.81 0 0 1 0-1.17l2.39-2.41a.85.85 0 0 1 1.2 0l8.43 8.51c.08.08.22.08.3 0l8.43-8.51a.85.85 0 0 1 1.2 0l8.43 8.51c.08.08.22.08.3 0l8.43-8.51a.85.85 0 0 1 1.2 0z"
+          fill="white"
+        />
+      </svg>
+    </div>
+  );
 }
 
-function WalletRow({ wallet, isInstalled, onConnect, lang }: WalletRowProps) {
-  const [showNotInstalled, setShowNotInstalled] = useState(false);
-  const isZh = lang === "zh-CN";
+interface AllWalletsRowProps {
+  walletStates: Record<string, boolean>;
+  lang: string;
+  onConnect: () => void;
+}
 
-  const handleClick = () => {
-    if (isInstalled) {
-      setShowNotInstalled(false);
+function AllWalletsView({ walletStates, lang, onConnect }: AllWalletsRowProps) {
+  const isZh = lang === "zh-CN";
+  const [notInstalledKey, setNotInstalledKey] = useState<string | null>(null);
+
+  const handleWalletClick = (wallet: WalletConfig) => {
+    if (walletStates[wallet.key]) {
       onConnect();
     } else {
-      setShowNotInstalled(true);
+      setNotInstalledKey(notInstalledKey === wallet.key ? null : wallet.key);
     }
   };
 
   return (
-    <div className="rounded-xl overflow-hidden">
-      <button
-        onClick={handleClick}
-        className={cn(
-          "w-full flex items-center gap-3 px-4 py-3 transition-all text-left",
-          "hover:bg-gray-50 dark:hover:bg-slate-800/60 active:scale-[0.99]"
-        )}
-      >
-        <WalletLogo wallet={wallet} />
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+    <div className="py-1">
+      {WALLETS.map((wallet) => (
+        <div key={wallet.key}>
+          <button
+            onClick={() => handleWalletClick(wallet)}
+            className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors text-left"
+          >
+            <WalletLogo wallet={wallet} />
+            <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">
               {wallet.name}
             </span>
-            {isInstalled && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-medium leading-none">
-                {isZh ? "已安装" : "Installed"}
+            {walletStates[wallet.key] ? (
+              <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-[#3396FF] text-white tracking-wide">
+                {isZh ? "已安装" : "INSTALLED"}
               </span>
-            )}
-          </div>
-          {!isInstalled && !showNotInstalled && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-              {isZh ? "点击查看安装提示" : "Click to install"}
-            </p>
+            ) : null}
+          </button>
+
+          {notInstalledKey === wallet.key && (
+            <div className="mx-5 mb-2 px-3 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 flex items-center justify-between gap-2">
+              <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                {isZh ? "请先安装该钱包" : "Please install this wallet first"}
+              </p>
+              <a
+                href={wallet.installUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:underline flex-shrink-0"
+              >
+                {isZh ? "去安装" : "Install"}
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
           )}
         </div>
-
-        <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
-      </button>
-
-      {showNotInstalled && (
-        <div className="mx-4 mb-3 px-3 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 flex items-center justify-between gap-2">
-          <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
-            {isZh ? "请先安装该钱包" : "Please install this wallet first"}
-          </p>
-          <a
-            href={wallet.installUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:underline flex-shrink-0"
-          >
-            {isZh ? "去安装" : "Install"}
-            <ExternalLink className="w-3 h-3" />
-          </a>
-        </div>
-      )}
+      ))}
     </div>
   );
 }
@@ -204,16 +201,16 @@ export function WalletPickerModal({ open, onClose }: WalletPickerModalProps) {
   const isZh = lang === "zh-CN";
 
   const [walletStates, setWalletStates] = useState<Record<string, boolean>>({});
+  const [view, setView] = useState<"main" | "all">("main");
+  const [notInstalledKey, setNotInstalledKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
+      setView("main");
+      setNotInstalledKey(null);
       const states: Record<string, boolean> = {};
       for (const w of WALLETS) {
-        try {
-          states[w.key] = w.detect();
-        } catch {
-          states[w.key] = false;
-        }
+        try { states[w.key] = w.detect(); } catch { states[w.key] = false; }
       }
       setWalletStates(states);
     }
@@ -221,74 +218,136 @@ export function WalletPickerModal({ open, onClose }: WalletPickerModalProps) {
 
   useEffect(() => {
     if (!open) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
 
   if (!open) return null;
 
-  const handleConnectWallet = (wallet: WalletConfig) => {
-    try {
-      connect({ connector: injected() });
-      onClose();
-    } catch {
-      // silently fail; wagmi will surface errors via its own state
-    }
+  const handleConnect = () => {
+    try { connect({ connector: injected() }); } catch { /* wagmi surfaces errors */ }
+    onClose();
   };
 
-  const handleMoreWallets = () => {
+  const handleWalletConnectClick = () => {
     onClose();
     setTimeout(() => openW3M(), 100);
   };
 
+  // Find first installed wallet to feature on main screen
+  const installedWallet = WALLETS.find((w) => walletStates[w.key]) ?? null;
+
+  const installedCount = WALLETS.filter((w) => walletStates[w.key]).length;
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Modal card */}
-      <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-700/60 overflow-hidden">
+      <div className="relative w-full max-w-sm bg-white dark:bg-[#141414] rounded-3xl shadow-2xl overflow-hidden border border-gray-100 dark:border-white/5">
+
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-slate-800">
-          <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
-            {isZh ? "连接钱包" : "Connect Wallet"}
+        <div className="flex items-center px-5 pt-5 pb-4">
+          {view === "all" ? (
+            <button
+              onClick={() => setView("main")}
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/5 transition-colors mr-2"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            </button>
+          ) : (
+            <div className="w-8 h-8 mr-2 flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" className="text-gray-400" />
+                <path d="M12 8v4m0 4h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-gray-400" />
+              </svg>
+            </div>
+          )}
+          <h2 className="flex-1 text-center text-base font-semibold text-gray-900 dark:text-white">
+            {view === "all"
+              ? (isZh ? "全部钱包" : "All Wallets")
+              : (isZh ? "连接钱包" : "Connect Wallet")}
           </h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
           >
-            <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <X className="w-4.5 h-4.5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
-        {/* Wallet list */}
-        <div className="py-2 max-h-[60vh] overflow-y-auto">
-          {WALLETS.map((wallet) => (
-            <WalletRow
-              key={wallet.key}
-              wallet={wallet}
-              isInstalled={!!walletStates[wallet.key]}
-              onConnect={() => handleConnectWallet(wallet)}
+        {/* Divider */}
+        <div className="h-px bg-gray-100 dark:bg-white/5" />
+
+        {/* Main view */}
+        {view === "main" && (
+          <div className="py-2">
+            {/* WalletConnect row */}
+            <button
+              onClick={handleWalletConnectClick}
+              className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
+            >
+              <WalletConnectLogo />
+              <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">
+                WalletConnect
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded font-bold border border-[#3396FF] text-[#3396FF] tracking-wide">
+                QR CODE
+              </span>
+            </button>
+
+            {/* Featured installed wallet (if any) */}
+            {installedWallet && (
+              <button
+                onClick={handleConnect}
+                className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
+              >
+                <WalletLogo wallet={installedWallet} />
+                <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">
+                  {installedWallet.name}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-[#3396FF] text-white tracking-wide">
+                  {isZh ? "已安装" : "INSTALLED"}
+                </span>
+              </button>
+            )}
+
+            {/* All Wallets row */}
+            <button
+              onClick={() => setView("all")}
+              className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/8 flex items-center justify-center flex-shrink-0">
+                <LayoutGrid className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </div>
+              <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">
+                {isZh ? "全部钱包" : "All Wallets"}
+              </span>
+              <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-white/8 px-2.5 py-0.5 rounded-full">
+                {installedCount}
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* All Wallets view */}
+        {view === "all" && (
+          <div className="max-h-[55vh] overflow-y-auto">
+            <AllWalletsView
+              walletStates={walletStates}
               lang={lang}
+              onConnect={handleConnect}
             />
-          ))}
-        </div>
+          </div>
+        )}
 
-        {/* Footer: More wallets */}
-        <div className="px-4 pb-4 pt-2 border-t border-gray-100 dark:border-slate-800">
-          <button
-            onClick={handleMoreWallets}
-            className="w-full py-2.5 rounded-xl text-sm font-semibold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors border border-gray-200 dark:border-slate-700"
-          >
-            {isZh ? "更多钱包 / WalletConnect" : "More Wallets / WalletConnect"}
-          </button>
-        </div>
+        {/* Footer */}
+        <div className="h-px bg-gray-100 dark:bg-white/5" />
+        <p className="text-center text-xs text-gray-400 dark:text-gray-600 py-3 px-5">
+          {isZh
+            ? "连接钱包即表示您同意我们的服务条款"
+            : "By connecting, you agree to our Terms of Service"}
+        </p>
       </div>
     </div>
   );
