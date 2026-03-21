@@ -82,8 +82,8 @@ function PostPinnedCard({ post, idx = 0 }: { post: any; idx?: number }) {
   const displayName = post.authorName ?? `${post.authorWallet?.slice(0, 6)}...`;
   return (
     <Link href={`/section/${post.section}`}
-      className="pinned-card relative rounded-2xl bg-white dark:bg-slate-800 overflow-hidden flex flex-col hover:scale-[1.02] transition-transform group cursor-pointer h-full"
-      style={{ animationDelay: `${(idx % 8) * 1}s` }}>
+      className="pinned-card relative rounded-2xl bg-white dark:bg-slate-800 overflow-hidden flex flex-col hover:scale-[1.03] hover:brightness-105 transition-all duration-300 group cursor-pointer h-full"
+      style={{ animationDelay: `${(idx % 8) * 0.6}s` }}>
       <span className="absolute inset-0 rounded-2xl pointer-events-none" />
 
       {/* Row 1: 时间 — top-right only */}
@@ -263,20 +263,22 @@ export default function Home() {
 
       {/* ── Pinned Zone: 16 uniform 2:1 landscape slots ── */}
       <section className="pt-6">
-        <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t("pinned")}</h2>
-          <span className="w-2 h-2 rounded-full bg-[#00FF9F] shadow-[0_0_8px_#00FF9F] animate-pulse" />
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-base animate-pulse">✦</span>
+          <h2 className="pinned-title-glow text-sm font-extrabold uppercase tracking-widest">{t("pinned")}</h2>
+          <span className="w-2 h-2 rounded-full bg-[#fbbf24] shadow-[0_0_8px_#fbbf24,0_0_16px_#fbbf24] animate-pulse" />
           <span className="text-xs text-muted-foreground ml-1">
             （{t("pinnedExclusive")} · {pinnedPosts.length}/{PIN_SLOTS} {t("slotsUsed")} · {t("threeDayCountdown")}）
           </span>
         </div>
-        {/* 4 cols on md+, 2 on mobile — always 16 equal slots, ~3x larger than before */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {pinnedSlots.map((post, i) => (
-            <div key={post ? `post-${post.id}` : `empty-${i}`} className="aspect-[3/2]">
-              {post ? <PostPinnedCard post={post} idx={i} /> : <PinnedSlotEmpty idx={i} />}
-            </div>
-          ))}
+        <div className="pinned-zone-wrapper">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {pinnedSlots.map((post, i) => (
+              <div key={post ? `post-${post.id}` : `empty-${i}`} className="aspect-[3/2]">
+                {post ? <PostPinnedCard post={post} idx={i} /> : <PinnedSlotEmpty idx={i} />}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
