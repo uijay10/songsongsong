@@ -64,6 +64,8 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
   const [commenting, setCommenting] = useState(false);
   const [commentError, setCommentError] = useState("");
   const [pinning, setPinning] = useState(false);
+  const [pinConfirmOpen, setPinConfirmOpen] = useState(false);
+  const [pinMsg, setPinMsg] = useState("");
 
   const displayName = post.authorName ?? truncateAddress(post.authorWallet);
   const authorHref = `/profile/${post.authorWallet}`;
@@ -104,19 +106,44 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
     }
   };
 
-  const handlePin = async () => {
+  const doPin = async () => {
     if (!address) return;
+    setPinConfirmOpen(false);
     setPinning(true);
+    setPinMsg("");
     try {
-      await fetch(`${apiBase}/posts/${post.id}/pin`, {
+      const res = await fetch(`${apiBase}/posts/${post.id}/pin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet: address, hours: 24 }),
+        body: JSON.stringify({ wallet: address }),
       });
-      onRefresh?.();
+      const d = await res.json();
+      if (!res.ok) {
+        setPinMsg(d.error === "No pin credits" ? "❌ 置顶次数不足" : `❌ ${d.error}`);
+        return;
+      }
+      if (d.queued) {
+        let waitStr = "";
+        if (d.estimatedAt) {
+          const ms = Math.max(0, new Date(d.estimatedAt).getTime() - Date.now());
+          const h = Math.floor(ms / 3_600_000);
+          const m = Math.floor((ms % 3_600_000) / 60_000);
+          waitStr = h > 0 ? ` · 等待约 ${h}h${m}m` : ` · 等待约 ${m}分钟`;
+        }
+        setPinMsg(`置顶排队中${waitStr}`);
+      } else {
+        setPinMsg("✅ 置顶成功！");
+        onRefresh?.();
+      }
     } finally {
       setPinning(false);
     }
+  };
+
+  const handlePin = () => {
+    if (!address || pinning) return;
+    setPinMsg("");
+    setPinConfirmOpen(true);
   };
 
   const handleCopy = () => {
@@ -171,6 +198,23 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
             )}
           </div>
         </div>
+        {/* Pin confirm dialog – compact */}
+        {pinConfirmOpen && (
+          <div className="mt-2 p-3 rounded-xl bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800">
+            <p className="text-xs text-violet-800 dark:text-violet-200 mb-2">置顶此帖将消耗 1 次置顶次数，确认操作？</p>
+            <div className="flex gap-2">
+              <button onClick={() => setPinConfirmOpen(false)}
+                className="flex-1 py-1 rounded-lg text-xs bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">取消</button>
+              <button onClick={doPin} disabled={pinning}
+                className="flex-1 py-1 rounded-lg text-xs bg-violet-500 text-white hover:bg-violet-600 transition-colors disabled:opacity-50">
+                {pinning ? "..." : "确定"}
+              </button>
+            </div>
+          </div>
+        )}
+        {pinMsg && !pinConfirmOpen && (
+          <p className="text-xs mt-2 text-violet-500 font-medium">{pinMsg}</p>
+        )}
         {commentOpen && (
           <div className="mt-3 flex flex-col gap-1.5">
             {commentError && <p className="text-xs text-red-500">{commentError}</p>}
@@ -248,6 +292,24 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
           </Link>
         </div>
       </div>
+
+      {/* Pin confirm dialog – full */}
+      {pinConfirmOpen && (
+        <div className="mt-3 p-3.5 rounded-xl bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800">
+          <p className="text-sm text-violet-800 dark:text-violet-200 mb-3">置顶此帖将消耗 1 次置顶次数，确认操作？</p>
+          <div className="flex gap-2">
+            <button onClick={() => setPinConfirmOpen(false)}
+              className="flex-1 py-1.5 rounded-lg text-sm bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">取消</button>
+            <button onClick={doPin} disabled={pinning}
+              className="flex-1 py-1.5 rounded-lg text-sm bg-violet-500 text-white hover:bg-violet-600 transition-colors disabled:opacity-50">
+              {pinning ? "..." : "确定"}
+            </button>
+          </div>
+        </div>
+      )}
+      {pinMsg && !pinConfirmOpen && (
+        <p className="text-sm mt-2 text-violet-500 font-medium">{pinMsg}</p>
+      )}
 
       {/* Comment box */}
       {commentOpen && (

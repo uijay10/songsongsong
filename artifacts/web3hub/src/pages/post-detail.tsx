@@ -7,7 +7,6 @@ import { generateGradient, truncateAddress } from "@/lib/utils";
 import { RoleBadge } from "@/components/role-badge";
 import { formatDistanceToNow } from "date-fns";
 import { useLang } from "@/lib/i18n";
-import { isAdmin } from "@/lib/admin";
 
 function getApiBase() {
   const base = import.meta.env.BASE_URL ?? "/";
@@ -30,7 +29,6 @@ export default function PostDetail() {
   const postId = Number(params?.id);
   const { address, isConnected } = useWeb3Auth();
   const { t } = useLang();
-  const admin = isAdmin(address);
   const apiBase = getApiBase();
 
   const { data, isLoading, error } = useQuery({
@@ -54,6 +52,7 @@ export default function PostDetail() {
   const [commentError, setCommentError] = useState("");
   const [pinning, setPinning] = useState(false);
   const [pinMsg, setPinMsg] = useState("");
+  const [pinConfirmOpen, setPinConfirmOpen] = useState(false);
 
   const likeCount = likes ?? post?.likes ?? 0;
   const commentCount = comments ?? post?.comments ?? 0;
@@ -93,21 +92,43 @@ export default function PostDetail() {
     }
   };
 
-  const handlePin = async () => {
+  const doPin = async () => {
     if (!address || !post) return;
+    setPinConfirmOpen(false);
     setPinning(true);
     setPinMsg("");
     try {
       const res = await fetch(`${apiBase}/posts/${post.id}/pin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet: address, hours: 72 }),
+        body: JSON.stringify({ wallet: address }),
       });
       const d = await res.json();
-      setPinMsg(d.queued ? "已加入置顶队列" : "置顶成功！");
+      if (!res.ok) {
+        setPinMsg(d.error === "No pin credits" ? "❌ 置顶次数不足" : `❌ ${d.error}`);
+        return;
+      }
+      if (d.queued) {
+        let waitStr = "";
+        if (d.estimatedAt) {
+          const ms = Math.max(0, new Date(d.estimatedAt).getTime() - Date.now());
+          const h = Math.floor(ms / 3_600_000);
+          const m = Math.floor((ms % 3_600_000) / 60_000);
+          waitStr = h > 0 ? ` · 等待约 ${h}小时${m}分` : ` · 等待约 ${m}分钟`;
+        }
+        setPinMsg(`置顶排队中${waitStr}`);
+      } else {
+        setPinMsg("✅ 置顶成功！");
+      }
     } finally {
       setPinning(false);
     }
+  };
+
+  const handlePin = () => {
+    if (!address || pinning) return;
+    setPinMsg("");
+    setPinConfirmOpen(true);
   };
 
   if (isLoading) {
@@ -140,6 +161,44 @@ export default function PostDetail() {
       <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group">
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> 返回首页
       </Link>
+
+      {/* ── Pin banner (project posts, all connected users) ── */}
+      {isConnected && post.authorType === "project" && !post.isPinned && (
+        <div className="flex items-start gap-3 px-4 py-3 bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800 rounded-2xl">
+          <Pin className="w-4 h-4 text-violet-500 shrink-0 mt-0.5" />
+          {pinMsg ? (
+            <span className="text-sm text-violet-600 dark:text-violet-400 font-medium flex-1">{pinMsg}</span>
+          ) : pinConfirmOpen ? (
+            <div className="flex-1">
+              <p className="text-sm text-violet-800 dark:text-violet-200 mb-2.5">
+                {address?.toLowerCase() === post.authorWallet?.toLowerCase()
+                  ? "你要置顶此帖吗？将消耗 1 次置顶次数"
+                  : "你要帮助此帖置顶吗？将消耗 1 次置顶次数"}
+              </p>
+              <div className="flex gap-2">
+                <button onClick={() => setPinConfirmOpen(false)}
+                  className="px-4 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">取消</button>
+                <button onClick={doPin} disabled={pinning}
+                  className="px-4 py-1.5 rounded-lg text-xs bg-violet-500 text-white hover:bg-violet-600 transition-colors disabled:opacity-50">
+                  {pinning ? "处理中..." : "确定"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between flex-1">
+              <span className="text-sm text-violet-700 dark:text-violet-300">
+                {address?.toLowerCase() === post.authorWallet?.toLowerCase()
+                  ? "置顶你的帖子到首页精华区"
+                  : "帮助此帖置顶到首页精华区"}
+              </span>
+              <button onClick={handlePin} disabled={pinning}
+                className="ml-3 px-4 py-1.5 rounded-lg text-xs font-semibold bg-violet-500 text-white hover:bg-violet-600 transition-colors disabled:opacity-50 shrink-0">
+                置顶
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Post card */}
       <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
@@ -199,15 +258,6 @@ export default function PostDetail() {
             <MessageCircle className="w-4 h-4" /> {commentCount}
           </button>
           <div className="ml-auto flex items-center gap-2">
-            {(admin || post.authorWallet?.toLowerCase() === address?.toLowerCase()) && (
-              <button
-                onClick={handlePin}
-                disabled={pinning}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-violet-50 dark:bg-violet-950/30 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-colors"
-              >
-                <Pin className="w-3.5 h-3.5" /> {pinning ? "..." : "置顶"}
-              </button>
-            )}
             <Link
               href={authorHref}
               className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
@@ -217,10 +267,6 @@ export default function PostDetail() {
             </Link>
           </div>
         </div>
-
-        {pinMsg && (
-          <p className="text-xs text-violet-600 font-medium">{pinMsg}</p>
-        )}
 
         {/* Comment box */}
         {commentOpen && (
