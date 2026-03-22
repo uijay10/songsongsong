@@ -110,13 +110,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: 0.01em;
+    font-weight: 400;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'DM Sans', 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
     font-feature-settings: "kern" 1, "liga" 1;
     letter-spacing: -0.015em;
-    font-weight: 700;
+    font-weight: 500;
   }
 
   /* Ensure ALL text elements use DM Sans */
@@ -128,7 +129,7 @@
   header nav a,
   header a {
     font-family: 'DM Sans', 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
-    font-weight: 500;
+    font-weight: 400;
     letter-spacing: 0.01em;
   }
 
