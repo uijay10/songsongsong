@@ -4,7 +4,7 @@ import { WalletPickerModal } from "@/components/wallet-modal";
 import { useGetMe } from "@workspace/api-client-react";
 import { useLang, type LangCode } from "@/lib/i18n";
 import { isAdmin } from "@/lib/admin";
-import { LogOut, Mail, ChevronDown, LayoutDashboard, ShieldCheck, PenSquare } from "lucide-react";
+import { LogOut, Mail, ChevronDown, LayoutDashboard, ShieldCheck, PenSquare, FileText, X } from "lucide-react";
 import { cn, truncateAddress, generateGradient } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 
@@ -51,6 +51,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [addrCopied, setAddrCopied] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [whitepaperOpen, setWhitepaperOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("web3hub_dark");
     return saved !== null ? JSON.parse(saved) : false;
@@ -269,6 +270,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
               </svg>
             </a>
+            <button onClick={() => setWhitepaperOpen(true)} title="Whitepaper"
+              className="w-9 h-9 rounded-full bg-muted/60 dark:bg-slate-700 hover:bg-violet-50 dark:hover:bg-violet-900/40 flex items-center justify-center transition-colors group">
+              <FileText className="w-4.5 h-4.5 text-muted-foreground dark:text-slate-400 group-hover:text-violet-500 transition-colors" />
+            </button>
           </div>
           <div className="flex items-center gap-3 flex-wrap justify-center">
             <span className="text-sm text-muted-foreground dark:text-slate-400 font-semibold">{t("donate")} EVM：</span>
@@ -280,6 +285,112 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
+
+      {/* ── Whitepaper Modal ── */}
+      {whitepaperOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setWhitepaperOpen(false)}>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col border border-border" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-violet-500" />
+                <span className="font-bold text-base text-foreground">Web3 Release Whitepaper</span>
+                <span className="text-xs text-muted-foreground ml-1">v1.0 · March 22, 2026</span>
+              </div>
+              <button onClick={() => setWhitepaperOpen(false)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {/* Scrollable content */}
+            <div className="overflow-y-auto flex-1 px-6 py-5 text-sm text-foreground leading-relaxed space-y-5">
+              <section>
+                <h2 className="text-base font-bold mb-2">1. Abstract</h2>
+                <p className="text-muted-foreground">Web3 Release is a decentralized, community-driven Web3 collaboration platform designed to connect <strong>crypto teams</strong>, <strong>KOLs (Key Opinion Leaders)</strong>, and <strong>developers</strong>, building a transparent and efficient hub for blockchain ecosystem publishing and collaboration.</p>
+                <p className="text-muted-foreground mt-2">The platform enables real identity verification through wallet connections, allowing seamless interactions for crypto team needs, talent matching, knowledge sharing, and community engagement. Its core goal is to address long-standing issues in the Web3 ecosystem—fragmentation, lack of trust, and insufficient incentives—accelerating healthier and faster real-world adoption of blockchain innovation.</p>
+              </section>
+
+              <section>
+                <h2 className="text-base font-bold mb-2">2. Current Pain Points in the Web3 Ecosystem</h2>
+                <ul className="list-disc list-inside space-y-1.5 text-muted-foreground">
+                  <li>Crypto teams struggle to efficiently find reliable developers, security auditors, node operators, or community partners. Information is scattered across Twitter, Discord, Telegram, and other channels, resulting in extremely high screening costs.</li>
+                  <li>KOLs frequently receive numerous low-quality collaboration requests, making it difficult to assess project legitimacy, while high-quality content creators lack sustained incentive mechanisms.</li>
+                  <li>Developers face unequal opportunities in on-chain projects, remaining invisible and struggling to match with truly valuable tasks (e.g., bug bounties, hackathons, node recruitment).</li>
+                  <li>The overall ecosystem suffers from information asymmetry, trust barriers, redundant development, low-quality collaborations, rampant scams, and reduced efficiency in genuine innovation.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-base font-bold mb-2">3. Core Solutions</h2>
+                <p className="text-muted-foreground mb-2">Web3 Release offers a unified, permissionless collaboration space where all interactions are based on wallet addresses, ensuring pseudonymity with traceability. The main user roles:</p>
+                <div className="space-y-3">
+                  <div className="bg-muted/40 rounded-xl p-4">
+                    <h3 className="font-semibold text-sm mb-1">3.1 Crypto Teams</h3>
+                    <p className="text-muted-foreground text-xs">Can publish testnet recruitment, IDO/Launchpad collaborations, security audit requests, integration announcements, airdrop plans, funding/recruitment/node recruitment, hackathons/bug bounties, and more. All content appears in the homepage "Project Showcase" area and corresponding sections.</p>
+                  </div>
+                  <div className="bg-muted/40 rounded-xl p-4">
+                    <h3 className="font-semibold text-sm mb-1">3.2 KOLs (Key Opinion Leaders)</h3>
+                    <p className="text-muted-foreground text-xs">Can publish collaboration intentions, project reviews, market insights, AMAs, and more. Dedicated KOL section + KOL leaderboard, automatically ranked based on real engagement metrics. The top 200 most active KOLs each month receive ecosystem airdrop rewards.</p>
+                  </div>
+                  <div className="bg-muted/40 rounded-xl p-4">
+                    <h3 className="font-semibold text-sm mb-1">3.3 Developers</h3>
+                    <p className="text-muted-foreground text-xs">Can publish technical shares, job intentions, open-source contributions, bug bounty tasks, etc. Dedicated "Developers" section where all developer posts are vertically displayed, making it easy for crypto teams to quickly screen talent.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h2 className="text-base font-bold mb-2">4. Points System (Core Incentive Mechanism)</h2>
+                <p className="text-muted-foreground mb-2">Web3 Release features a built-in points system to incentivize high-quality content creation and community participation. The total points supply is unlimited and can be used for future airdrop redemptions or other ecosystem benefits.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3">
+                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1.5">General User Points</p>
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      <li>• Daily check-in: <strong>+1,000 pts</strong></li>
+                      <li>• Likes: <strong>+100 pts</strong> per like</li>
+                      <li>• Comments: <strong>+100 pts</strong> per comment (first 10/day)</li>
+                      <li>• Referral: 20% of referred user's daily points</li>
+                    </ul>
+                  </div>
+                  <div className="bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800 rounded-xl p-3">
+                    <p className="text-xs font-semibold text-violet-700 dark:text-violet-400 mb-1.5">KOL-Exclusive Points</p>
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      <li>• Post liked: <strong>+10 pts</strong> per like</li>
+                      <li>• Post commented: <strong>+10 pts</strong> per comment</li>
+                      <li>• Per 1,000 post views: <strong>+50 pts</strong></li>
+                      <li>• Referral: same 20% as above</li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h2 className="text-base font-bold mb-2">5. Contributions to the Blockchain Field</h2>
+                <div className="space-y-2">
+                  {[
+                    ["Reduces Collaboration Friction", "Crypto team demands and developer/KOL supply are matched in real time on a single platform, minimizing cross-platform searches and trust costs."],
+                    ["Verifiable Reputation System", "Based on wallet addresses + engagement data (likes, comments, views), it forms a decentralized reputation system that reduces scam risks."],
+                    ["Incentivizes Genuine Contributions", "Points are earned from real interactions, enabling KOLs and developers to receive ongoing rewards through high-quality content."],
+                    ["Promotes Multi-Chain Collaboration", "Unified display of cross-chain information such as testnets, airdrops, audits, and hackathons accelerates ecosystem interconnectivity."],
+                    ["Empowers Developers and Mid-Tier KOLs", "Provides zero-barrier exposure channels, allowing truly capable individuals to be discovered without relying on centralized platform algorithms or paid promotions."],
+                  ].map(([title, desc]) => (
+                    <div key={title} className="flex gap-2.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0 mt-1.5" />
+                      <div><span className="font-semibold">{title}</span> — <span className="text-muted-foreground">{desc}</span></div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="bg-gradient-to-r from-violet-50 to-blue-50 dark:from-violet-950/20 dark:to-blue-950/20 border border-violet-100 dark:border-violet-900 rounded-2xl p-5">
+                <h2 className="text-base font-bold mb-2">6. Vision</h2>
+                <p className="text-muted-foreground">Web3 Release aims to become the <strong>"Twitter + LinkedIn + Gitcoin"</strong> of the Web3 era—a truly decentralized, community self-driven collaboration and publishing hub.</p>
+                <p className="text-muted-foreground mt-2">We believe that when crypto teams, KOLs, and developers can freely publish and collaborate in an environment of trust, traceability, and sufficient incentives, the next wave of genuine blockchain innovation will accelerate.</p>
+                <p className="mt-3 font-bold text-violet-600 dark:text-violet-400">Web3 Release – Connecting Demands, Unleashing Innovation.</p>
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
 
       <WalletPickerModal open={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
     </div>
