@@ -189,22 +189,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </button>
 
                   {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-52 rounded-xl shadow-2xl border border-border dark:border-slate-700 py-1 z-50"
-                      style={{ background: "var(--card)", opacity: 1 }}>
+                    <div className="absolute right-0 mt-2 w-52 rounded-xl shadow-2xl py-1 z-50 overflow-hidden"
+                      style={{ background: "#2563eb", border: "1px solid #3b82f6" }}>
                       <Link href="/profile" onClick={() => setIsDropdownOpen(false)}
-                        className="group flex items-center gap-2.5 px-4 py-3 text-sm text-foreground dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors cursor-pointer">
-                        <LayoutDashboard className="w-4 h-4 text-blue-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" /> {t("dashboard")}
+                        className="group flex items-center gap-2.5 px-4 py-3 text-sm text-white hover:bg-blue-700 transition-colors cursor-pointer">
+                        <LayoutDashboard className="w-4 h-4 text-white/80 group-hover:text-white transition-colors" /> {t("dashboard")}
                       </Link>
                       {admin && (
                         <Link href="/admin" onClick={() => setIsDropdownOpen(false)}
-                          className="group flex items-center gap-2.5 px-4 py-3 text-sm text-amber-600 dark:text-amber-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors cursor-pointer">
-                          <ShieldCheck className="w-4 h-4 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" /> Admin Panel
+                          className="group flex items-center gap-2.5 px-4 py-3 text-sm text-white hover:bg-blue-700 transition-colors cursor-pointer">
+                          <ShieldCheck className="w-4 h-4 text-white/80 group-hover:text-white transition-colors" /> Admin Panel
                         </Link>
                       )}
-                      <div className="border-t border-border/40 dark:border-slate-700 my-1" />
+                      <div className="my-1" style={{ borderTop: "1px solid rgba(255,255,255,0.2)" }} />
                       <button onClick={() => { disconnect(); setIsDropdownOpen(false); }}
-                        className="group w-full flex items-center gap-2.5 px-4 py-3 text-sm text-foreground dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors text-left">
-                        <LogOut className="w-4 h-4 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" /> {t("logout")}
+                        className="group w-full flex items-center gap-2.5 px-4 py-3 text-sm text-white hover:bg-blue-700 transition-colors text-left">
+                        <LogOut className="w-4 h-4 text-white/80 group-hover:text-white transition-colors" /> {t("logout")}
                       </button>
                     </div>
                   )}
