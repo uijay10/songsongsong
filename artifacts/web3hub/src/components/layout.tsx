@@ -4,6 +4,7 @@ import { WalletPickerModal } from "@/components/wallet-modal";
 import { useGetMe } from "@workspace/api-client-react";
 import { useLang, type LangCode } from "@/lib/i18n";
 import { isAdmin } from "@/lib/admin";
+import { DISCLAIMER_CONTENT } from "@/lib/disclaimer-content";
 import { LogOut, ChevronDown, LayoutDashboard, ShieldCheck, PenSquare, FileText, X } from "lucide-react";
 import { cn, truncateAddress, generateGradient } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
@@ -275,7 +276,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </a>
             <button onClick={() => setWhitepaperOpen(true)}
               className="px-3 py-1.5 rounded-full bg-muted/60 dark:bg-slate-700 hover:bg-violet-50 dark:hover:bg-violet-900/40 text-xs font-medium text-muted-foreground dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors border border-border/50 dark:border-slate-600">
-              免责声明
+              {t("disclaimerBtn")}
             </button>
           </div>
           <div className="flex items-center gap-3 flex-wrap justify-center">
@@ -294,44 +295,41 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setWhitepaperOpen(false)}>
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col border border-border/50 dark:border-slate-800" onClick={e => e.stopPropagation()}>
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border/50 dark:border-slate-800 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm text-foreground leading-tight">Web3 Release 免责声明</p>
-                  <p className="text-xs text-muted-foreground leading-tight">版本 1.0 · 2026年3月23日</p>
-                </div>
-              </div>
-              <button onClick={() => setWhitepaperOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted dark:hover:bg-slate-800 transition-colors text-muted-foreground hover:text-foreground">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            {/* Scrollable content */}
-            <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
-              {[
-                ["1. 平台性质", "Web3 Release 是一个去中心化、社区驱动的 Web3 协作平台，仅提供信息发布、展示和匹配服务。平台不参与任何交易、投资、融资、代币发行或法律行为，仅作为用户间信息交流的中介工具。平台上所有内容（包括但不限于需求发布、合作意向、测试网招募、IDO 信息、空投计划、招聘、节点招募等）均由用户自行发布，平台不拥有、不控制、不担保其真实性、合法性、完整性或安全性。"],
-                ["2. 用户责任", "用户在使用平台时，应自行判断内容的真实性、可信度和风险。用户之间的一切互动、合作、交易、转账、投资等行为均为双方自愿、私下达成，与 Web3 Release 平台无关。用户因基于平台信息产生的任何损失、纠纷、法律责任，均由用户自行承担，平台不承担任何连带责任。"],
-                ["3. 无投资建议", "平台上出现的任何项目信息、代币、空投、IDO、Launchpad、融资公告、节点招募等内容，不构成任何形式的投资建议、金融建议、法律建议或商业承诺。平台不提供投资咨询服务，用户参与任何项目均需自行评估风险，并遵守当地法律法规。投资有风险，入市需谨慎。"],
-                ["4. 代币与积分声明", "平台当前积分系统仅用于记录用户贡献与活跃度，是未来 $W3R 代币空投分配的重要凭证，但不保证任何兑换价值或收益。未来 $W3R 代币（如发行）仅用于平台内能量消耗、发帖门槛等实用功能，不构成证券、金融衍生品或投资工具。平台不承诺任何代币升值、回报、分红或流动性。代币相关事宜以最终白皮书、DAO 治理决议为准。"],
-                ["5. 技术与安全风险", "平台基于区块链和钱包连接技术运行，可能存在智能合约漏洞、网络攻击、钱包安全问题、DNS 解析延迟、DDoS 等技术风险。用户需自行保护钱包私钥、助记词等信息，避免钓鱼、诈骗。平台不对因用户操作失误、技术故障导致的资产损失负责。"],
-                ["6. 第三方链接与内容", "平台可能链接外部网站、社交媒体、项目官网等第三方资源，这些链接仅供参考，平台不控制、不审核、不担保其内容。用户访问第三方链接产生的任何后果，由用户自行承担。"],
-                ["7. 法律适用与管辖", "本免责声明受新加坡法律管辖（如有争议，以新加坡法院为第一审管辖）。平台保留随时修改本声明的权利，修改后继续使用即视为同意。"],
-              ].map(([title, body]) => (
-                <div key={title} className="rounded-xl border border-border/40 dark:border-slate-800 bg-muted/30 dark:bg-slate-800/30 px-4 py-3">
-                  <p className="font-semibold text-sm text-foreground mb-1">{title}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
-                </div>
-              ))}
-
-              <div className="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-900/10 px-4 py-3">
-                <p className="font-semibold text-sm text-amber-700 dark:text-amber-400 mb-1">重要提醒</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">使用 Web3 Release 即表示您已阅读、理解并完全同意本免责声明。平台不向任何用户提供任何明示或默示的担保或承诺。参与 Web3 生态存在高风险，请用户理性判断、谨慎行事。如不同意本声明，请立即停止使用平台。</p>
-              </div>
-
-              <p className="text-right text-xs text-muted-foreground pb-1">Web3 Release 团队 · 2026年3月23日</p>
-            </div>
+            {(() => {
+              const dc = DISCLAIMER_CONTENT[lang] ?? DISCLAIMER_CONTENT["en"];
+              return (
+                <>
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-border/50 dark:border-slate-800 shrink-0">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                        <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-foreground leading-tight">{dc.title}</p>
+                        <p className="text-xs text-muted-foreground leading-tight">{dc.version}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setWhitepaperOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted dark:hover:bg-slate-800 transition-colors text-muted-foreground hover:text-foreground">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {/* Scrollable content */}
+                  <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+                    {dc.clauses.map(({ heading, body }) => (
+                      <div key={heading} className="rounded-xl border border-border/40 dark:border-slate-800 bg-muted/30 dark:bg-slate-800/30 px-4 py-3">
+                        <p className="font-semibold text-sm text-foreground mb-1">{heading}</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
+                      </div>
+                    ))}
+                    <div className="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-900/10 px-4 py-3">
+                      <p className="font-semibold text-sm text-amber-700 dark:text-amber-400 mb-1">{dc.warningTitle}</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{dc.warning}</p>
+                    </div>
+                    <p className="text-right text-xs text-muted-foreground pb-1">{dc.footer}</p>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
