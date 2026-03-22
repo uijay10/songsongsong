@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, postsTable, usersTable } from "@workspace/db";
-import { eq, and, desc, asc, sql, gte } from "drizzle-orm";
+import { eq, and, desc, asc, sql, gte, or, ilike } from "drizzle-orm";
 import { checkContent, filterErrorMessage } from "../content-filter";
 
 const router: IRouter = Router();
@@ -106,6 +106,7 @@ router.get("/", async (req, res) => {
   const pinnedOnly = req.query.pinned === "1" || req.query.pinned === "true";
   // home=1 means filter by project-type only (home page both zones)
   const homeMode = req.query.home === "1";
+  const q = (req.query.q as string | undefined)?.trim();
   const page = Math.max(1, parseInt(req.query.page as string ?? "1"));
   const limit = Math.min(50, parseInt(req.query.limit as string ?? "20"));
   const offset = (page - 1) * limit;
@@ -118,6 +119,7 @@ router.get("/", async (req, res) => {
   if (homeMode) conditions.push(eq(postsTable.authorType, "project"));
   if (authorWallet) conditions.push(eq(postsTable.authorWallet, authorWallet.toLowerCase()));
   if (pinnedOnly) conditions.push(eq(postsTable.isPinned, true));
+  if (q) conditions.push(or(ilike(postsTable.title, `%${q}%`), ilike(postsTable.content, `%${q}%`))!);
 
   const where = conditions.length ? and(...conditions) : undefined;
 

@@ -155,7 +155,7 @@ function PostRegularCard({ post, num }: { post: any; num: number }) {
 }
 
 export default function Home() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const { address, isConnected } = useWeb3Auth();
   const { data: meData } = useGetMe({ wallet: address ?? "" }, { query: { enabled: !!address && isConnected } });
   const me = (meData as any)?.user ?? meData;
@@ -185,11 +185,12 @@ export default function Home() {
     refetchInterval: 60_000,
   });
 
-  // Regular posts (project-type only)
+  // Regular posts (project-type only, with optional search)
   const { data: postsData, isLoading } = useQuery({
-    queryKey: ["/api/posts", "home-regular", page],
+    queryKey: ["/api/posts", "home-regular", page, debouncedSearch],
     queryFn: async () => {
-      const res = await fetch(`${getApiBase()}/posts?authorType=project&page=${page}&limit=${PAGE_SIZE}`);
+      const qParam = debouncedSearch ? `&q=${encodeURIComponent(debouncedSearch)}` : "";
+      const res = await fetch(`${getApiBase()}/posts?authorType=project&page=${page}&limit=${PAGE_SIZE}${qParam}`);
       return res.json() as Promise<{ posts: any[]; total: number; totalPages: number; page: number }>;
     },
     staleTime: 30_000,
@@ -262,7 +263,7 @@ export default function Home() {
       </div>
 
       {/* ── Pinned Zone: 16 uniform 2:1 landscape slots ── */}
-      <section className="pt-6">
+      <section className="pt-6" style={{ display: debouncedSearch ? "none" : undefined }}>
         <div className="flex items-center gap-2 mb-4">
           <span className="text-base animate-pulse">✦</span>
           <h2 className="pinned-title-glow text-sm font-extrabold uppercase tracking-widest">{t("pinned")}</h2>
@@ -283,11 +284,20 @@ export default function Home() {
       </section>
 
       {/* ── Regular Zone: 20/page, no cap ── */}
-      <section className="pt-48">
+      <section className={debouncedSearch ? "pt-4" : "pt-48"}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t("regular")}</h2>
-            <span className="text-xs text-muted-foreground">（{t("regularDesc")}）</span>
+            {debouncedSearch ? (
+              <>
+                <h2 className="text-sm font-bold uppercase tracking-widest text-primary">{lang === "zh-CN" ? "搜索结果" : "Search Results"}</h2>
+                <span className="text-xs text-muted-foreground">「{debouncedSearch}」</span>
+              </>
+            ) : (
+              <>
+                <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t("regular")}</h2>
+                <span className="text-xs text-muted-foreground">（{t("regularDesc")}）</span>
+              </>
+            )}
           </div>
           {total > 0 && (
             <span className="text-xs text-muted-foreground">{t("total")} {total}{t("itemUnit") ? " " + t("itemUnit") : ""}</span>
@@ -302,16 +312,22 @@ export default function Home() {
               ))}
             </div>
           ) : posts.length === 0 ? (
-            <div className="grid grid-cols-2 gap-4">
-              {Array.from({ length: PAGE_SIZE }).map((_, i) => {
-                const num = (page - 1) * PAGE_SIZE + i + 1;
-                return (
-                  <div key={i} className="h-24 rounded-2xl border border-border/40 bg-muted/5 flex items-center px-5">
-                    <span className="text-base text-border/40 font-mono font-bold">{num}</span>
-                  </div>
-                );
-              })}
-            </div>
+            debouncedSearch ? (
+              <div className="py-16 text-center">
+                <p className="text-muted-foreground text-sm">{lang === "zh-CN" ? `未找到「${debouncedSearch}」相关内容` : `No results found for "${debouncedSearch}"`}</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {Array.from({ length: PAGE_SIZE }).map((_, i) => {
+                  const num = (page - 1) * PAGE_SIZE + i + 1;
+                  return (
+                    <div key={i} className="h-24 rounded-2xl border border-border/40 bg-muted/5 flex items-center px-5">
+                      <span className="text-base text-border/40 font-mono font-bold">{num}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )
           ) : (
             <div className="grid grid-cols-2 gap-4">
               {Array.from({ length: PAGE_SIZE }).map((_, i) => {
