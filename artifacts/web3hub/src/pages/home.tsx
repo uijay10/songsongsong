@@ -185,12 +185,19 @@ export default function Home() {
     refetchInterval: 60_000,
   });
 
-  // Regular posts (project-type only, with optional search)
+  // Regular posts — when searching: all types; when browsing: project-type only
   const { data: postsData, isLoading } = useQuery({
     queryKey: ["/api/posts", "home-regular", page, debouncedSearch],
     queryFn: async () => {
-      const qParam = debouncedSearch ? `&q=${encodeURIComponent(debouncedSearch)}` : "";
-      const res = await fetch(`${getApiBase()}/posts?authorType=project&page=${page}&limit=${PAGE_SIZE}${qParam}`);
+      if (debouncedSearch) {
+        // Search across ALL post types so nothing is missed
+        const res = await fetch(
+          `${getApiBase()}/posts?page=${page}&limit=${PAGE_SIZE}&q=${encodeURIComponent(debouncedSearch)}`
+        );
+        return res.json() as Promise<{ posts: any[]; total: number; totalPages: number; page: number }>;
+      }
+      // Normal home feed: project posts only
+      const res = await fetch(`${getApiBase()}/posts?authorType=project&page=${page}&limit=${PAGE_SIZE}`);
       return res.json() as Promise<{ posts: any[]; total: number; totalPages: number; page: number }>;
     },
     staleTime: 30_000,

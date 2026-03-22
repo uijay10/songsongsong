@@ -119,7 +119,14 @@ router.get("/", async (req, res) => {
   if (homeMode) conditions.push(eq(postsTable.authorType, "project"));
   if (authorWallet) conditions.push(eq(postsTable.authorWallet, authorWallet.toLowerCase()));
   if (pinnedOnly) conditions.push(eq(postsTable.isPinned, true));
-  if (q) conditions.push(or(ilike(postsTable.title, `%${q}%`), ilike(postsTable.content, `%${q}%`))!);
+  if (q) conditions.push(
+    or(
+      ilike(postsTable.title, `%${q}%`),
+      ilike(postsTable.content, `%${q}%`),
+      ilike(postsTable.authorName, `%${q}%`),
+      ilike(postsTable.authorWallet, `%${q}%`)
+    )!
+  );
 
   const where = conditions.length ? and(...conditions) : undefined;
 
