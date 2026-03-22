@@ -108,12 +108,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navLinkClass = (href: string) => cn(
     "relative px-3.5 py-1.5 rounded-full text-base font-semibold whitespace-nowrap transition-all duration-200 group",
     location === href
-      ? "text-primary bg-primary/10"
-      : "text-muted-foreground hover:text-primary"
+      ? "text-white bg-white/15"
+      : "text-white/70 hover:text-white"
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#EEF4FF] dark:bg-background" style={isDark ? {} : {background: "linear-gradient(180deg, #EEF5FF 0%, #F5F9FF 120px, #ffffff 400px)"}}>
+    <div className="min-h-screen flex flex-col dark:bg-background" style={isDark ? {} : {background: "#EEF5FF"}}>
       {/* ── Top Navbar ──────────────────────────────── */}
       <header className="sticky top-0 z-50 w-full glass-panel border-b border-border/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -215,14 +215,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* ── Nav rows ── */}
-        <div className="border-t border-border/30 bg-muted/20">
+        <div className="border-t border-border/10" style={{background: "#0A0C14"}}>
           <div className="max-w-7xl mx-auto px-2 py-1.5 space-y-1">
             {/* Row 1 */}
             <div className="flex items-center justify-center gap-0.5 overflow-x-auto scrollbar-none">
               {NAV_ROW1_KEYS.map(({ key, href }) => (
                 <Link key={key} href={href} className={navLinkClass(href)}>
                   {location !== href && (
-                    <span className="absolute inset-0 rounded-full bg-primary/0 group-hover:bg-primary/8 group-hover:scale-105 transition-all duration-200 origin-center" />
+                    <span className="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/10 group-hover:scale-105 transition-all duration-200 origin-center" />
                   )}
                   <span className="relative z-10">{t(key)}</span>
                 </Link>
@@ -234,7 +234,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {NAV_ROW2_KEYS.map(({ key, href }) => (
                 <Link key={key} href={href} className={navLinkClass(href)}>
                   {location !== href && (
-                    <span className="absolute inset-0 rounded-full bg-primary/0 group-hover:bg-primary/8 group-hover:scale-105 transition-all duration-200 origin-center" />
+                    <span className="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/10 group-hover:scale-105 transition-all duration-200 origin-center" />
                   )}
                   <span className="relative z-10">{t(key)}</span>
                 </Link>
