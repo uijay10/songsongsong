@@ -18,7 +18,7 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     checkinBtn: "每日签到", nextCheckin: "下次签到：", canCheckin: "✓ 今日可签到",
     spaceNo: "否", spaceYes: "是 ✓", spacePending: "审核中", spaceRejected: "未通过",
     spaceBanned: "失去资格", applySpace: "立即加入 →",
-    donate: "本平台免费使用", contact: "所有合作联系支持",
+    donate: "本平台免费使用，欢迎打赏", contact: "所有合作联系支持",
     invited: "已邀", people: "人", tagline: "Web3 项目方一站式需求发布与匹配平台",
     register: "加入公会", joinNow: "立即加入", noLatest: "暂无动态",
     alreadyJoined: "已加入",
