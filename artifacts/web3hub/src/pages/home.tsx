@@ -227,16 +227,16 @@ export default function Home() {
       </div>
 
       {/* Encouragement + Search */}
-      <div className="bg-[#0A0C14] border border-white/10 rounded-2xl px-6 py-5 space-y-4" style={{background: "linear-gradient(135deg, #0A0C14 0%, #0F1320 60%, #080B12 100%)"}}>
-        <p className="text-lg sm:text-xl font-bold text-white/90 leading-snug drop-shadow-sm">
+      <div className="rounded-2xl px-6 py-5 space-y-4 border border-blue-200/60" style={{background: "linear-gradient(135deg, #dbeafe 0%, #eff6ff 50%, #e0f2fe 100%)"}}>
+        <p className="text-lg sm:text-xl font-bold text-blue-700 leading-snug">
           {t("encouragement")}
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 max-w-xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
             <input type="search" value={search} onChange={e => setSearch(e.target.value)}
               placeholder={t("searchPlaceholder")}
-              className="w-full pl-11 pr-4 py-2.5 rounded-full border border-white/15 bg-white/10 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400/50 transition-all shadow-sm backdrop-blur-sm" />
+              className="w-full pl-11 pr-4 py-2.5 rounded-full border border-blue-200 bg-white/80 text-sm text-gray-700 placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition-all shadow-sm" />
           </div>
           {hasJoined ? (
             <div className="shrink-0 flex items-center gap-2">
