@@ -141,8 +141,8 @@ function PostRegularCard({ post, num }: { post: any; num: number }) {
         <p className="text-sm text-muted-foreground truncate mt-0.5">{post.title}</p>
       </div>
       {/* 内容 */}
-      <div className="flex-1 min-w-0 px-2">
-        <p className="text-sm text-muted-foreground truncate">{post.content || ""}</p>
+      <div className="flex-1 min-w-0 px-2 overflow-hidden">
+        <p className="text-sm text-muted-foreground line-clamp-2 break-words" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{post.content || ""}</p>
       </div>
       {/* 区域 */}
       <span className="shrink-0 text-sm font-semibold px-3.5 py-1.5 rounded-full bg-primary/10 text-primary">{sectionLabel}</span>

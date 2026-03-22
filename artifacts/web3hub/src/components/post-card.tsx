@@ -52,9 +52,11 @@ interface PostCardProps {
   compact?: boolean;
 }
 
+const CONTENT_LIMIT = 260; // chars shown before "read more"
+
 export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
   const { address, isConnected } = useWeb3Auth();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const likeMutation = useLikePost();
   const admin = isAdmin(address);
 
@@ -69,6 +71,14 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
   const [pinning, setPinning] = useState(false);
   const [pinConfirmOpen, setPinConfirmOpen] = useState(false);
   const [pinMsg, setPinMsg] = useState("");
+  const [expanded, setExpanded] = useState(false);
+
+  const isLong = post.content.length > CONTENT_LIMIT;
+  const displayContent = expanded || !isLong
+    ? post.content
+    : post.content.slice(0, CONTENT_LIMIT).trimEnd() + "…";
+  const readMoreLabel = lang === "zh-CN" ? "查看全文" : "Show more";
+  const collapseLabel = lang === "zh-CN" ? "收起" : "Show less";
 
   const displayName = post.authorName ?? truncateAddress(post.authorWallet);
   const authorHref = `/profile/${post.authorWallet}`;
@@ -178,7 +188,15 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
               <span className="text-[10px] text-muted-foreground ml-auto">{formatDistanceToNow(new Date(post.createdAt))} ago</span>
             </div>
             <p className="font-semibold text-sm text-foreground line-clamp-1">{post.title}</p>
-            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{post.content}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 break-words" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{displayContent}</p>
+            {isLong && (
+              <button
+                onClick={e => { e.preventDefault(); e.stopPropagation(); setExpanded(v => !v); }}
+                className="text-xs text-primary hover:underline mt-0.5"
+              >
+                {expanded ? collapseLabel : readMoreLabel}
+              </button>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3 mt-3 pt-2 border-t border-border/40">
@@ -278,7 +296,15 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
 
       {/* Content */}
       <h3 className="font-bold text-base mb-2 text-foreground">{post.title}</h3>
-      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">{post.content}</p>
+      <p className="text-sm text-muted-foreground leading-relaxed break-words" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{displayContent}</p>
+      {isLong && (
+        <button
+          onClick={e => { e.preventDefault(); e.stopPropagation(); setExpanded(v => !v); }}
+          className="text-xs text-primary hover:underline mt-1.5"
+        >
+          {expanded ? collapseLabel : readMoreLabel}
+        </button>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border/40">
