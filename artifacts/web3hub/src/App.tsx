@@ -17,6 +17,7 @@ import ProjectDetail from "@/pages/project-detail";
 import SectionPage from "@/pages/section";
 import AdminPage from "@/pages/admin";
 import MembersPage from "@/pages/members";
+import AboutPage from "@/pages/about";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/section/:slug" component={SectionPage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/members" component={MembersPage} />
+      <Route path="/about" component={AboutPage} />
       <Route component={NotFound} />
     </Switch>
   );

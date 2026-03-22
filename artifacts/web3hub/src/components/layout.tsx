@@ -21,6 +21,7 @@ const NAV_ROW1_KEYS = [
 ];
 
 const NAV_ROW2_KEYS = [
+  { key: "nav_about",      href: "/about" },
   { key: "nav_showcase",   href: "/members" },
   { key: "nav_ecosystem",  href: "/section/ecosystem" },
   { key: "nav_partners",   href: "/section/partners" },
