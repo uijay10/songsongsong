@@ -246,13 +246,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-44">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-[32rem]">
         {children}
       </main>
 
       {/* ── Fixed Bottom Footer ──────────────────────── */}
       <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/50 dark:border-slate-800 shadow-[0_-2px_16px_rgba(0,0,0,0.06)]">
-        <div className="max-w-7xl mx-auto px-4 py-20 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground dark:text-slate-400 font-semibold">{t("contact")}：</span>
             <a href="https://x.com/Web3Release" target="_blank" rel="noreferrer" title="X / Twitter"
