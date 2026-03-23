@@ -6,18 +6,18 @@ import { Link } from "wouter";
 function SectionBlock({ section }: { section: AboutSection }) {
   return (
     <div className="mb-8">
-      <h2 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
-        <span className="w-1 h-6 rounded-full bg-blue-500 inline-block shrink-0" />
+      <h2 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
+        <span className="w-1 h-5 rounded-full bg-blue-500 inline-block shrink-0" />
         {section.heading}
       </h2>
       {section.intro && (
-        <p className="text-muted-foreground leading-relaxed mb-3 pl-3">{section.intro}</p>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-3 pl-3">{section.intro}</p>
       )}
       {section.items && section.items.length > 0 && (
         <ul className="pl-3 space-y-2">
           {section.items.map((item, i) => (
-            <li key={i} className="flex gap-2 text-muted-foreground">
-              <ChevronRight className="w-4 h-4 mt-0.5 shrink-0 text-blue-400" />
+            <li key={i} className="flex gap-2 text-sm text-muted-foreground">
+              <ChevronRight className="w-3.5 h-3.5 mt-0.5 shrink-0 text-blue-400" />
               <span className="leading-relaxed">{item}</span>
             </li>
           ))}
@@ -25,15 +25,15 @@ function SectionBlock({ section }: { section: AboutSection }) {
       )}
       {section.subsections && section.subsections.map((sub, si) => (
         <div key={si} className="mt-4 pl-3">
-          <h3 className="text-xl font-bold text-foreground mb-2">{sub.heading}</h3>
+          <h3 className="text-base font-bold text-foreground mb-2">{sub.heading}</h3>
           {sub.intro && (
-            <p className="text-muted-foreground leading-relaxed mb-2">{sub.intro}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-2">{sub.intro}</p>
           )}
           {sub.items && sub.items.length > 0 && (
             <ul className="space-y-2">
               {sub.items.map((item, ii) => (
-                <li key={ii} className="flex gap-2 text-muted-foreground">
-                  <ChevronRight className="w-4 h-4 mt-0.5 shrink-0 text-blue-400" />
+                <li key={ii} className="flex gap-2 text-sm text-muted-foreground">
+                  <ChevronRight className="w-3.5 h-3.5 mt-0.5 shrink-0 text-blue-400" />
                   <span className="leading-relaxed">{item}</span>
                 </li>
               ))}
