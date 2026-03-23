@@ -290,8 +290,10 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
         )}
         <div className="flex items-start gap-3">
           <Link href={authorHref}>
-            <div className="w-8 h-8 rounded-full shrink-0 border border-border overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/40"
-              style={{ background: post.authorAvatar ? `url(${post.authorAvatar}) center/cover` : generateGradient(post.authorWallet) }}>
+            <div className="w-8 h-8 rounded-full shrink-0 border border-border overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/40 bg-background"
+              style={post.authorAvatar
+                ? { backgroundImage: `url(${post.authorAvatar})`, backgroundSize: "cover", backgroundPosition: "center" }
+                : { background: generateGradient(post.authorWallet) }}>
               {!post.authorAvatar && <div className="w-full h-full" />}
             </div>
           </Link>
@@ -400,8 +402,10 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
       {/* Author header */}
       <div className="flex items-start gap-3 mb-4">
         <Link href={authorHref}>
-          <div className="w-10 h-10 rounded-full shrink-0 border border-border overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/40"
-            style={{ background: post.authorAvatar ? `url(${post.authorAvatar}) center/cover` : generateGradient(post.authorWallet) }}>
+          <div className="w-10 h-10 rounded-full shrink-0 border border-border overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/40 bg-background"
+            style={post.authorAvatar
+              ? { backgroundImage: `url(${post.authorAvatar})`, backgroundSize: "cover", backgroundPosition: "center" }
+              : { background: generateGradient(post.authorWallet) }}>
             {!post.authorAvatar && <div className="w-full h-full" />}
           </div>
         </Link>

@@ -264,8 +264,10 @@ export default function Profile() {
         {/* Avatar + Name */}
         <div className="bg-card border border-border rounded-2xl p-6 flex items-center gap-5">
           <div className="relative group cursor-pointer shrink-0" onClick={() => fileRef.current?.click()}>
-            <div className="w-20 h-20 rounded-2xl border-2 border-amber-300 shadow-lg"
-              style={{ background: me?.avatar ? `url(${me.avatar}) center/cover` : generateGradient(address) }} />
+            <div className="w-20 h-20 rounded-2xl border-2 border-amber-300 shadow-lg bg-background"
+              style={me?.avatar
+                ? { backgroundImage: `url(${me.avatar})`, backgroundSize: "cover", backgroundPosition: "center" }
+                : { background: generateGradient(address) }} />
             <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <Edit2 className="w-5 h-5 text-white" />
             </div>
@@ -335,8 +337,10 @@ export default function Profile() {
       {/* ── Avatar + Name Header ── */}
       <div className="bg-card border border-border rounded-2xl p-5 flex items-center gap-5">
         <div className="relative group cursor-pointer shrink-0" onClick={() => fileRef.current?.click()}>
-          <div className="w-20 h-20 rounded-2xl border-2 border-border shadow"
-            style={{ background: me?.avatar ? `url(${me.avatar}) center/cover` : generateGradient(address) }} />
+          <div className="w-20 h-20 rounded-2xl border-2 border-border shadow bg-background"
+            style={me?.avatar
+              ? { backgroundImage: `url(${me.avatar})`, backgroundSize: "cover", backgroundPosition: "center" }
+              : { background: generateGradient(address) }} />
           <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <Edit2 className="w-5 h-5 text-white" />
           </div>
@@ -507,8 +511,10 @@ export default function Profile() {
                 ) : (
                   invitedUsers.map(u => (
                     <div key={u.wallet} className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full shrink-0"
-                        style={{ background: u.avatar ? `url(${u.avatar}) center/cover` : generateGradient(u.wallet) }} />
+                      <div className="w-7 h-7 rounded-full shrink-0 bg-background"
+                        style={u.avatar
+                          ? { backgroundImage: `url(${u.avatar})`, backgroundSize: "cover", backgroundPosition: "center" }
+                          : { background: generateGradient(u.wallet) }} />
                       <span className="text-sm font-medium truncate">{u.username || truncateAddress(u.wallet)}</span>
                       {u.spaceType && (
                         <RoleBadge spaceType={u.spaceType} size="xs" />

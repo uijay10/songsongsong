@@ -48,7 +48,9 @@ export default function PublicProfile() {
     : spaceType === "kol" ? "KOL"
     : spaceType;
 
-  const avatarBg = user?.avatar ? `url(${user.avatar}) center/cover` : generateGradient(wallet);
+  const avatarStyle = user?.avatar
+    ? { backgroundImage: `url(${user.avatar})`, backgroundSize: "cover", backgroundPosition: "center" }
+    : { background: generateGradient(wallet) };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -65,8 +67,8 @@ export default function PublicProfile() {
           <div className="px-6 pb-6 -mt-10">
             <div className="flex items-end gap-4 mb-4">
               <div
-                className="w-20 h-20 rounded-2xl border-4 border-card shadow-md shrink-0"
-                style={{ background: avatarBg }}
+                className="w-20 h-20 rounded-2xl border-4 border-card shadow-md shrink-0 bg-background"
+                style={avatarStyle}
               />
               <div className="flex-1 min-w-0 pb-1">
                 <div className="flex items-center gap-2 flex-wrap">
