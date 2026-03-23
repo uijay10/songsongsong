@@ -70,11 +70,22 @@ export const ABOUT_CONTENT: Record<string, AboutContent> = {
         intro:
           "能量是内容发布和提升可见度的核心资源，目前通过申请身份赠送，未来由代币提供或兑换（代币作为内容消耗的凭据）。",
         items: [
-          "申请身份通过后自动赠送 1000 能量（首次使用礼包）。",
+          "申请身份通过后自动赠送 1000 能量（首次使用礼包，仅赠一次）。",
           "每次内容消耗 1 能量（无论内容类型）。",
           "每日内容最多 10 次（即使能量充足，也受此上限限制，防止刷量和内容泛滥）。",
-          "能量有上限（当前测试上限 100,000），未使用能量每 30 天衰减 20%（鼓励活跃使用）。",
           "未来 $WBR 代币将作为内容消耗凭据：用户持有/赚取代币后可兑换能量，用于发布内容、置顶、Boost 等行为，形成平台经济闭环。",
+        ],
+        subsections: [
+          {
+            heading: "能量衰减与惩罚机制（鼓励持续活跃）",
+            intro:
+              "为防止能量长期囤积、激励用户保持持续内容输出，平台设有以下自动衰减规则：",
+            items: [
+              "每日衰减：如果用户在过去 48 小时内未发布任何内容，系统将在每天 00:00（UTC）自动对当前能量总量扣除 5%（向下取整）。示例：当前能量 1000 → 连续 48 小时未发布 → 扣除 50，剩余 950。",
+              "连续 7 天清零：如果用户连续 7 天（168 小时）未发布任何内容，第 7 天结束时能量余额自动清零至 0。清零后仍可通过未来 $WBR 代币兑换重新获取能量，但首次礼包不再重复赠送。",
+              "衰减目的：通过每 48 小时 5% 小额衰减 + 7 天清零组合，形成持续且可预期的压力，鼓励用户至少每天或每周保持内容输出，构建高活跃的内容生态。",
+            ],
+          },
         ],
       },
       {
@@ -196,11 +207,22 @@ export const ABOUT_CONTENT: Record<string, AboutContent> = {
         intro:
           "Energy is the core resource for posting and increasing visibility. Currently granted upon identity approval; in the future it will be provided or exchanged via tokens.",
         items: [
-          "1,000 energy granted automatically upon identity approval (welcome package).",
+          "1,000 energy granted automatically upon identity approval (welcome package — one-time only).",
           "Each post costs 1 energy, regardless of content type.",
           "Daily post cap: 10 posts/day (even with sufficient energy — prevents spam).",
-          "Energy has a ceiling (current test cap: 100,000); unused energy decays 20% every 30 days (encouraging active use).",
           "Future $WBR tokens will serve as posting currency: earn/hold tokens → convert to energy → post, pin, boost, forming a complete platform economic loop.",
+        ],
+        subsections: [
+          {
+            heading: "Energy Decay & Penalty Mechanism (Encouraging Active Use)",
+            intro:
+              "To discourage long-term energy hoarding and reward consistent content output, the platform enforces automatic decay rules:",
+            items: [
+              "Daily decay: If a user has not published any content in the past 48 hours, the system automatically deducts 5% of their current energy (rounded down) at 00:00 UTC each day. Example: 1,000 energy → no post for 48 h → deduct 50, remaining 950.",
+              "7-day inactivity wipe: If a user has published no content for 7 consecutive days (168 hours), their energy balance is automatically reset to 0 at the end of the 7th day. After a wipe, energy can be restored via future $WBR token exchange, but the one-time welcome package will not be re-issued.",
+              "Purpose: The combination of 5% daily decay (every 48 h) and a 7-day full wipe creates predictable, sustained pressure that motivates users to publish at least weekly — building a healthy, highly-active content ecosystem.",
+            ],
+          },
         ],
       },
       {
@@ -313,11 +335,21 @@ export const ABOUT_CONTENT: Record<string, AboutContent> = {
         heading: "Energiesystem (Beitrags-Treibstoff)",
         intro: "Energie ist die Kernressource zum Veröffentlichen und zur Sichtbarkeitssteigerung.",
         items: [
-          "Nach Identitätsgenehmigung werden automatisch 1.000 Energie vergeben.",
+          "Nach Identitätsgenehmigung werden automatisch 1.000 Energie vergeben (Willkommenspaket – einmalig).",
           "Jeder Beitrag kostet 1 Energie.",
           "Tägliches Beitragslimit: max. 10 Beiträge/Tag.",
-          "Energie hat eine Obergrenze (100.000); ungenutzte Energie verfällt alle 30 Tage um 20 %.",
           "Zukünftiger $WBR-Token dient als Posting-Währung und bildet einen wirtschaftlichen Kreislauf.",
+        ],
+        subsections: [
+          {
+            heading: "Energie-Verfall & Strafmechanismus (Aktive Nutzung fördern)",
+            intro: "Um Energie-Horten zu verhindern und kontinuierlichen Content zu fördern, gelten automatische Verfallsregeln:",
+            items: [
+              "Täglicher Verfall: Wurde in den letzten 48 Stunden kein Inhalt veröffentlicht, werden täglich um 00:00 UTC automatisch 5 % der aktuellen Energie abgezogen (abgerundet). Beispiel: 1.000 Energie → 48 h kein Beitrag → −50, verbleibend 950.",
+              "7-Tage-Nullstellung: Werden 7 Tage (168 Stunden) lang keine Inhalte veröffentlicht, wird das Energieguthaben am Ende des 7. Tages auf 0 zurückgesetzt. Energie kann danach via $WBR-Token zurückgewonnen werden, das Willkommenspaket wird jedoch nicht erneut vergeben.",
+              "Ziel: Die Kombination aus 5 % täglichem Verfall (alle 48 h) und 7-Tage-Nullstellung schafft nachhaltig messbaren Druck, der Nutzer zu regelmäßiger Content-Produktion motiviert.",
+            ],
+          },
         ],
       },
       {
@@ -424,10 +456,20 @@ export const ABOUT_CONTENT: Record<string, AboutContent> = {
         heading: "Система энергии (топливо для публикаций)",
         intro: "Энергия — основной ресурс для публикации и повышения видимости.",
         items: [
-          "После одобрения личности автоматически выдаётся 1 000 энергии.",
+          "После одобрения личности автоматически выдаётся 1 000 энергии (приветственный пакет — единоразово).",
           "Каждая публикация стоит 1 энергию; дневной лимит: 10 публикаций.",
-          "Потолок энергии — 100 000; неиспользованная энергия убывает на 20 % каждые 30 дней.",
           "Будущий $WBR-токен станет платёжным средством для публикаций.",
+        ],
+        subsections: [
+          {
+            heading: "Затухание энергии и штрафной механизм (поощрение активности)",
+            intro: "Чтобы предотвратить накопление энергии и стимулировать регулярный выпуск контента, действуют автоматические правила затухания:",
+            items: [
+              "Ежедневное затухание: если за последние 48 часов не было опубликовано ни одного материала, каждый день в 00:00 UTC автоматически вычитается 5 % текущей энергии (округление вниз). Пример: 1 000 энергии → 48 ч без публикаций → −50, остаток 950.",
+              "Обнуление через 7 дней: если публикации отсутствуют 7 дней (168 часов) подряд, баланс энергии автоматически обнуляется в конце 7-го дня. После обнуления энергию можно восстановить обменом токенов $WBR, но приветственный пакет повторно не выдаётся.",
+              "Цель: сочетание ежедневного затухания 5 % (каждые 48 ч) и обнуления на 7-й день создаёт предсказуемое давление, мотивирующее публиковать контент хотя бы раз в неделю.",
+            ],
+          },
         ],
       },
       {
@@ -534,10 +576,20 @@ export const ABOUT_CONTENT: Record<string, AboutContent> = {
         heading: "Système d'énergie (carburant de publication)",
         intro: "L'énergie est la ressource centrale pour publier et augmenter la visibilité.",
         items: [
-          "1 000 énergie accordée automatiquement après approbation de l'identité.",
+          "1 000 énergie accordée automatiquement après approbation de l'identité (pack de bienvenue — unique).",
           "Chaque publication coûte 1 énergie ; max. 10 publications/jour.",
-          "Plafond d'énergie : 100 000 ; l'énergie non utilisée diminue de 20 % tous les 30 jours.",
           "Futur token $WBR = devise de publication, formant une boucle économique complète.",
+        ],
+        subsections: [
+          {
+            heading: "Décroissance de l'énergie & mécanisme de pénalité (encourager l'activité)",
+            intro: "Pour décourager l'accumulation d'énergie et récompenser la création régulière, des règles de décroissance automatique s'appliquent :",
+            items: [
+              "Décroissance quotidienne : si aucun contenu n'a été publié au cours des 48 dernières heures, le système déduit automatiquement 5 % de l'énergie actuelle (arrondi à l'inférieur) chaque jour à 00:00 UTC. Exemple : 1 000 énergie → 48 h sans publication → −50, reste 950.",
+              "Remise à zéro après 7 jours : si aucun contenu n'est publié pendant 7 jours consécutifs (168 heures), le solde d'énergie est automatiquement remis à 0. L'énergie peut ensuite être récupérée via l'échange de tokens $WBR, mais le pack de bienvenue ne sera pas redonné.",
+              "Objectif : la combinaison de 5 % de décroissance quotidienne (toutes les 48 h) et de remise à zéro au bout de 7 jours crée une pression prévisible et soutenue motivant les utilisateurs à publier régulièrement.",
+            ],
+          },
         ],
       },
       {
@@ -641,10 +693,20 @@ export const ABOUT_CONTENT: Record<string, AboutContent> = {
         heading: "エネルギーシステム（投稿の燃料）",
         intro: "エネルギーは投稿と可視性向上の主要リソースです。",
         items: [
-          "身分承認後に自動で1,000エネルギー付与。",
+          "身分承認後に自動で1,000エネルギー付与（ウェルカムパッケージ：1回限り）。",
           "投稿1件につき1エネルギー消費；1日最大10件。",
-          "上限100,000；未使用エネルギーは30日ごとに20%減衰。",
           "将来的に$WBRトークンで投稿通貨として機能し、経済ループを形成。",
+        ],
+        subsections: [
+          {
+            heading: "エネルギー減衰とペナルティ機能（継続的な活動を促進）",
+            intro: "エネルギーの長期的な蓄積を防ぎ、継続的なコンテンツ投稿を奨励するため、自動減衰ルールが適用されます：",
+            items: [
+              "毎日の減衰：過去48時間以内にコンテンツを投稿していない場合、毎日00:00 UTC に現在のエネルギー総量の5%が自動的に差し引かれます（切り捨て）。例：1,000エネルギー → 48時間投稿なし → −50、残量950。",
+              "7日間の完全リセット：7日間（168時間）連続してコンテンツを投稿しなかった場合、7日目の終わりにエネルギー残高が自動的に0にリセットされます。その後は$WBRトークン交換でエネルギーを取り戻せますが、ウェルカムパッケージは再付与されません。",
+              "目的：48時間ごとの5%減衰と7日リセットを組み合わせることで、ユーザーが少なくとも週に一度はコンテンツを発信するよう、継続的かつ予測可能なプレッシャーを生み出します。",
+            ],
+          },
         ],
       },
       {
@@ -747,10 +809,20 @@ export const ABOUT_CONTENT: Record<string, AboutContent> = {
         heading: "에너지 시스템 (게시 연료)",
         intro: "에너지는 게시 및 가시성 향상을 위한 핵심 자원입니다.",
         items: [
-          "신원 승인 후 자동으로 1,000 에너지 지급.",
+          "신원 승인 후 자동으로 1,000 에너지 지급 (환영 패키지 — 1회 한정).",
           "게시물 1개당 1 에너지 소모; 일일 최대 10개.",
-          "상한 100,000; 미사용 에너지는 30일마다 20% 감소.",
           "향후 $WBR 토큰이 게시 통화로 기능하여 경제 루프를 형성.",
+        ],
+        subsections: [
+          {
+            heading: "에너지 감소 및 패널티 메커니즘 (활발한 활동 장려)",
+            intro: "에너지의 장기 비축을 방지하고 지속적인 콘텐츠 게시를 장려하기 위해 자동 감소 규칙이 적용됩니다:",
+            items: [
+              "일일 감소: 지난 48시간 내에 콘텐츠를 게시하지 않은 경우, 매일 00:00 UTC에 현재 에너지 총량의 5%가 자동으로 차감됩니다 (내림). 예: 1,000 에너지 → 48시간 미게시 → −50, 잔량 950.",
+              "7일 완전 초기화: 7일(168시간) 연속으로 콘텐츠를 게시하지 않으면 7일차 종료 시 에너지 잔액이 자동으로 0으로 초기화됩니다. 초기화 후 $WBR 토큰 교환을 통해 에너지를 다시 얻을 수 있지만, 환영 패키지는 재지급되지 않습니다.",
+              "목적: 48시간마다 5% 감소와 7일 초기화를 결합하여, 사용자가 최소 주 1회 콘텐츠를 게시하도록 지속적이고 예측 가능한 압력을 형성합니다.",
+            ],
+          },
         ],
       },
       {
@@ -853,10 +925,20 @@ export const ABOUT_CONTENT: Record<string, AboutContent> = {
         heading: "Hệ thống năng lượng (Nhiên liệu đăng bài)",
         intro: "Năng lượng là tài nguyên cốt lõi để đăng bài và tăng khả năng hiển thị.",
         items: [
-          "Tự động tặng 1.000 năng lượng sau khi phê duyệt danh tính.",
+          "Tự động tặng 1.000 năng lượng sau khi phê duyệt danh tính (gói chào mừng — tặng một lần).",
           "Mỗi bài đăng tốn 1 năng lượng; tối đa 10 bài/ngày.",
-          "Giới hạn 100.000; năng lượng không dùng giảm 20% mỗi 30 ngày.",
           "$WBR trong tương lai sẽ là tiền tệ đăng bài, tạo vòng kinh tế hoàn chỉnh.",
+        ],
+        subsections: [
+          {
+            heading: "Suy giảm năng lượng & cơ chế phạt (Khuyến khích hoạt động liên tục)",
+            intro: "Để ngăn chặn tích lũy năng lượng dài hạn và khuyến khích đăng bài đều đặn, nền tảng áp dụng các quy tắc suy giảm tự động:",
+            items: [
+              "Suy giảm hàng ngày: Nếu người dùng không đăng bài trong 48 giờ qua, hệ thống tự động trừ 5% tổng năng lượng hiện tại (làm tròn xuống) vào lúc 00:00 UTC mỗi ngày. Ví dụ: 1.000 năng lượng → 48 giờ không đăng → −50, còn lại 950.",
+              "Xóa về 0 sau 7 ngày: Nếu người dùng không đăng bài liên tục trong 7 ngày (168 giờ), số dư năng lượng sẽ tự động về 0 vào cuối ngày thứ 7. Sau khi bị xóa, năng lượng có thể được phục hồi qua đổi token $WBR, nhưng gói chào mừng sẽ không được tặng lại.",
+              "Mục đích: Kết hợp suy giảm 5% mỗi 48 giờ và xóa sạch sau 7 ngày tạo ra áp lực có thể dự đoán, thúc đẩy người dùng đăng bài ít nhất mỗi tuần để duy trì hệ sinh thái nội dung sôi động.",
+            ],
+          },
         ],
       },
       {

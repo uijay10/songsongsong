@@ -214,6 +214,8 @@ router.post("/", async (req, res) => {
     await db.update(usersTable).set({ energy: (user.energy ?? 1) - 1 }).where(eq(usersTable.wallet, lw));
   }
 
+  await db.update(usersTable).set({ lastPostAt: new Date() }).where(eq(usersTable.wallet, lw));
+
   const inserted = await db.insert(postsTable).values({
     title,
     content,

@@ -30,6 +30,7 @@ export const usersTable = pgTable("users", {
   lastSlotPull: timestamp("last_slot_pull"),
   dailyTokensEarned: integer("daily_tokens_earned").notNull().default(0),
   lastTokenDate: text("last_token_date"),
+  lastPostAt: timestamp("last_post_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
