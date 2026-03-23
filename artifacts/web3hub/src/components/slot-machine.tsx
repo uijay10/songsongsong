@@ -14,13 +14,11 @@ function useAudio() {
       const ac = getCtx();
       const osc = ac.createOscillator();
       const gain = ac.createGain();
-      osc.connect(gain);
-      gain.connect(ac.destination);
+      osc.connect(gain); gain.connect(ac.destination);
       osc.frequency.value = 600 + Math.random() * 400;
-      gain.gain.setValueAtTime(0.08, ac.currentTime);
+      gain.gain.setValueAtTime(0.06, ac.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.06);
-      osc.start();
-      osc.stop(ac.currentTime + 0.06);
+      osc.start(); osc.stop(ac.currentTime + 0.06);
     } catch {}
   }
   function playWin(amount: number) {
@@ -30,15 +28,12 @@ function useAudio() {
       freqs.forEach((freq, i) => {
         const osc = ac.createOscillator();
         const gain = ac.createGain();
-        osc.connect(gain);
-        gain.connect(ac.destination);
-        osc.frequency.value = freq;
-        osc.type = "sine";
+        osc.connect(gain); gain.connect(ac.destination);
+        osc.frequency.value = freq; osc.type = "sine";
         const t = ac.currentTime + i * 0.12;
-        gain.gain.setValueAtTime(0.15, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
-        osc.start(t);
-        osc.stop(t + 0.4);
+        gain.gain.setValueAtTime(0.12, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+        osc.start(t); osc.stop(t + 0.35);
       });
     } catch {}
   }
@@ -58,30 +53,20 @@ function Reel({ spinning, finalSymbol, delay }: { spinning: boolean; finalSymbol
       }, delay);
       return () => clearTimeout(start);
     } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
       setCurrent(finalSymbol);
     }
   }, [spinning, finalSymbol, delay]);
 
   return (
-    <div
-      style={{
-        width: 64,
-        height: 64,
-        background: "rgba(255,255,255,0.08)",
-        border: "2px solid rgba(255,255,255,0.18)",
-        borderRadius: 12,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 32,
-        transition: spinning ? "none" : "all 0.3s",
-        boxShadow: spinning ? "0 0 12px rgba(251,191,36,0.4)" : "none",
-      }}
-    >
+    <div style={{
+      width: 60, height: 60,
+      background: "rgba(255,255,255,0.06)",
+      border: "1.5px solid rgba(255,255,255,0.12)",
+      borderRadius: 10,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: 28,
+    }}>
       {current}
     </div>
   );
@@ -99,7 +84,7 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
   const { playTick, playWin } = useAudio();
 
   const [spinning, setSpinning] = useState(false);
-  const [result, setResult] = useState<{ earned: number; tokens: number } | null>(null);
+  const [result, setResult] = useState<{ earned: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [finalSymbols, setFinalSymbols] = useState([SYMBOLS[0], SYMBOLS[1], SYMBOLS[2], SYMBOLS[3]]);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -120,7 +105,6 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
     setSpinning(true);
     setResult(null);
     setError(null);
-
     tickRef.current = setInterval(() => playTick(), 120);
 
     try {
@@ -131,7 +115,6 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
         body: JSON.stringify({ wallet }),
       });
       const data = await res.json();
-
       if (tickRef.current) clearInterval(tickRef.current);
 
       if (!data.success) {
@@ -145,7 +128,7 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
 
       setTimeout(() => {
         setSpinning(false);
-        setResult({ earned: data.earned, tokens: data.tokens });
+        setResult({ earned: data.earned });
         playWin(data.earned);
         onSuccess(data.tokens, data.earned);
       }, 2200);
@@ -156,93 +139,93 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
     }
   }
 
+  const isDone = !canPull && !spinning;
+
   return (
-    <div
-      style={{
-        background: "linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(16,185,129,0.15) 100%)",
-        border: "1.5px solid rgba(124,58,237,0.4)",
-        borderRadius: 16,
-        padding: "20px 24px",
-        marginBottom: 16,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+    <div style={{
+      background: "rgba(255,255,255,0.04)",
+      border: "1px solid rgba(255,255,255,0.1)",
+      borderRadius: 14,
+      padding: "16px 20px",
+      marginBottom: 12,
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>{t("slotTitle")}</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{t("slotDesc")}</div>
+          <div style={{ fontWeight: 600, fontSize: 14, color: "var(--foreground)" }}>{t("slotTitle")}</div>
+          <div style={{ fontSize: 11, color: "var(--muted-foreground)", marginTop: 2 }}>{t("slotDesc")}</div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{t("tokenLabel")}</div>
-          <div style={{ fontWeight: 700, fontSize: 22, color: "#fbbf24" }}>{tokens.toLocaleString()}</div>
-          <div style={{ fontSize: 11, color: "rgba(251,191,36,0.7)" }}>$WBR</div>
+          <div style={{ fontSize: 11, color: "var(--muted-foreground)" }}>{t("tokenLabel")}</div>
+          <div style={{ fontWeight: 700, fontSize: 20, color: "#f59e0b", lineHeight: 1.2 }}>{tokens.toLocaleString()}</div>
+          <div style={{ fontSize: 10, color: "rgba(245,158,11,0.6)" }}>$WBR</div>
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 16 }}>
-        <Reel spinning={spinning} finalSymbol={finalSymbols[0]} delay={0} />
-        <Reel spinning={spinning} finalSymbol={finalSymbols[1]} delay={100} />
-        <Reel spinning={spinning} finalSymbol={finalSymbols[2]} delay={200} />
-        <Reel spinning={spinning} finalSymbol={finalSymbols[3]} delay={300} />
-      </div>
+      {/* Reels — only shown when not yet pulled today, or while spinning */}
+      {(!isDone || spinning) && (
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 14 }}>
+          <Reel spinning={spinning} finalSymbol={finalSymbols[0]} delay={0} />
+          <Reel spinning={spinning} finalSymbol={finalSymbols[1]} delay={100} />
+          <Reel spinning={spinning} finalSymbol={finalSymbols[2]} delay={200} />
+          <Reel spinning={spinning} finalSymbol={finalSymbols[3]} delay={300} />
+        </div>
+      )}
 
+      {/* Result (shown after successful pull, persists) */}
       {result && (
         <div style={{
           textAlign: "center",
           marginBottom: 12,
-          padding: "8px 16px",
-          background: "rgba(251,191,36,0.15)",
-          border: "1px solid rgba(251,191,36,0.4)",
+          padding: "8px 14px",
+          background: "rgba(245,158,11,0.1)",
+          border: "1px solid rgba(245,158,11,0.25)",
           borderRadius: 8,
-          color: "#fbbf24",
-          fontWeight: 700,
+          color: "#f59e0b",
+          fontWeight: 600,
           fontSize: 14,
         }}>
           {t("slotResult").replace("{amount}", result.earned.toLocaleString())}
         </div>
       )}
 
+      {/* Error */}
       {error && (
         <div style={{
-          textAlign: "center",
-          marginBottom: 12,
-          padding: "8px 16px",
-          background: "rgba(239,68,68,0.12)",
-          border: "1px solid rgba(239,68,68,0.3)",
-          borderRadius: 8,
-          color: "#f87171",
-          fontSize: 13,
+          textAlign: "center", marginBottom: 12, padding: "7px 14px",
+          background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
+          borderRadius: 8, color: "#f87171", fontSize: 12,
         }}>
           {error}
         </div>
       )}
 
-      <button
-        onClick={handlePull}
-        disabled={spinning || !canPull}
-        style={{
-          width: "100%",
-          padding: "11px 0",
-          borderRadius: 10,
-          border: "none",
-          background: spinning
-            ? "rgba(124,58,237,0.4)"
-            : canPull
-            ? "linear-gradient(90deg, #7c3aed, #10b981)"
-            : "rgba(255,255,255,0.08)",
-          color: canPull || spinning ? "#fff" : "rgba(255,255,255,0.35)",
-          fontWeight: 700,
-          fontSize: 14,
-          cursor: spinning || !canPull ? "not-allowed" : "pointer",
-          letterSpacing: "0.5px",
-          transition: "all 0.2s",
-        }}
-      >
-        {spinning ? t("slotPulling") : canPull ? t("slotPull") : t("slotCooldown")}
-      </button>
+      {/* Pull button — hidden once pulled today */}
+      {!isDone && (
+        <button
+          onClick={handlePull}
+          disabled={spinning}
+          style={{
+            width: "100%", padding: "10px 0", borderRadius: 9, border: "none",
+            background: spinning ? "rgba(255,255,255,0.08)" : "rgba(124,58,237,0.7)",
+            color: "#fff", fontWeight: 600, fontSize: 14,
+            cursor: spinning ? "not-allowed" : "pointer",
+            transition: "all 0.2s",
+          }}
+        >
+          {spinning ? t("slotPulling") : t("slotPull")}
+        </button>
+      )}
 
-      {!canPull && nextPullStr && (
-        <div style={{ textAlign: "center", marginTop: 8, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
-          {t("slotNextPull").replace("{time}", nextPullStr)}
+      {/* Cooldown info after pull */}
+      {isDone && (
+        <div style={{ fontSize: 12, color: "var(--muted-foreground)", textAlign: "center" }}>
+          <span>{t("slotCooldown")}</span>
+          {nextPullStr && (
+            <span style={{ marginLeft: 8, color: "var(--muted-foreground)" }}>
+              · {t("slotNextPull").replace("{time}", nextPullStr)}
+            </span>
+          )}
         </div>
       )}
     </div>
