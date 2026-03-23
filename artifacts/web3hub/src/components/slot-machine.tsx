@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLang } from "@/lib/i18n";
 
-const SYMBOLS = ["🎰", "💎", "⭐", "🔥", "🌊", "⚡", "🎯", "🏆"];
-
 function useAudio() {
   const ctx = useRef<AudioContext | null>(null);
   function getCtx(): AudioContext {
@@ -15,10 +13,10 @@ function useAudio() {
       const osc = ac.createOscillator();
       const gain = ac.createGain();
       osc.connect(gain); gain.connect(ac.destination);
-      osc.frequency.value = 600 + Math.random() * 400;
-      gain.gain.setValueAtTime(0.06, ac.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.06);
-      osc.start(); osc.stop(ac.currentTime + 0.06);
+      osc.frequency.value = 400 + Math.random() * 200;
+      gain.gain.setValueAtTime(0.04, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.05);
+      osc.start(); osc.stop(ac.currentTime + 0.05);
     } catch {}
   }
   function playWin(amount: number) {
@@ -40,32 +38,43 @@ function useAudio() {
   return { playTick, playWin };
 }
 
-function Reel({ spinning, finalSymbol, delay }: { spinning: boolean; finalSymbol: string; delay: number }) {
-  const [current, setCurrent] = useState(SYMBOLS[0]);
+// Single digit reel
+function DigitReel({ spinning, finalDigit, delay, speed }: {
+  spinning: boolean;
+  finalDigit: number;
+  delay: number;
+  speed: number; // ms per tick
+}) {
+  const [current, setCurrent] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (spinning) {
       const start = setTimeout(() => {
         intervalRef.current = setInterval(() => {
-          setCurrent(SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
-        }, 80);
+          setCurrent(d => (d + 1) % 10);
+        }, speed);
       }, delay);
       return () => clearTimeout(start);
     } else {
       if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-      setCurrent(finalSymbol);
+      setCurrent(finalDigit);
     }
-  }, [spinning, finalSymbol, delay]);
+  }, [spinning, finalDigit, delay, speed]);
 
   return (
     <div style={{
-      width: 60, height: 60,
+      width: 56, height: 72,
       background: "rgba(255,255,255,0.06)",
       border: "1.5px solid rgba(255,255,255,0.12)",
       borderRadius: 10,
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: 28,
+      fontSize: 36, fontWeight: 800,
+      fontVariantNumeric: "tabular-nums",
+      color: spinning ? "#a78bfa" : "#fbbf24",
+      transition: spinning ? "none" : "color 0.4s",
+      letterSpacing: 0,
+      fontFamily: "monospace",
     }}>
       {current}
     </div>
@@ -79,15 +88,23 @@ interface SlotMachineProps {
   onSuccess: (newTokens: number, earned: number) => void;
 }
 
+const SPIN_DURATION = 5000; // 5 seconds
+
 export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMachineProps) {
   const { t } = useLang();
   const { playTick, playWin } = useAudio();
 
   const [spinning, setSpinning] = useState(false);
+  const [countdown, setCountdown] = useState(5);
   const [result, setResult] = useState<{ earned: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [finalSymbols, setFinalSymbols] = useState([SYMBOLS[0], SYMBOLS[1], SYMBOLS[2], SYMBOLS[3]]);
+  // 4 digits representing the prize, e.g. 131 → [0,1,3,1]
+  const [finalDigits, setFinalDigits] = useState([0, 0, 0, 0]);
+  // reel speeds (fast early, slow near end)
+  const [reelSpeed, setReelSpeed] = useState(60);
+
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const canPull = !lastSlotPull || Date.now() - new Date(lastSlotPull).getTime() >= 24 * 60 * 60 * 1000;
 
@@ -100,12 +117,34 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
     nextPullStr = `${h}h ${m}m`;
   }
 
+  function stopAll() {
+    if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
+    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; }
+  }
+
   async function handlePull() {
     if (spinning || !canPull) return;
     setSpinning(true);
     setResult(null);
     setError(null);
-    tickRef.current = setInterval(() => playTick(), 120);
+    setCountdown(5);
+    setReelSpeed(60);
+
+    // Start sound ticks
+    tickRef.current = setInterval(() => playTick(), 100);
+
+    // Countdown timer
+    let cd = 5;
+    countdownRef.current = setInterval(() => {
+      cd -= 1;
+      setCountdown(cd);
+      // Slow down reels near end
+      if (cd === 2) setReelSpeed(120);
+      if (cd === 1) setReelSpeed(220);
+      if (cd <= 0) {
+        if (countdownRef.current) clearInterval(countdownRef.current);
+      }
+    }, 1000);
 
     try {
       const API = import.meta.env.BASE_URL.replace(/\/$/, "").replace(/\/web3hub$/, "") + "/api";
@@ -115,25 +154,30 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
         body: JSON.stringify({ wallet }),
       });
       const data = await res.json();
-      if (tickRef.current) clearInterval(tickRef.current);
 
       if (!data.success) {
+        stopAll();
         setSpinning(false);
         setError(data.message || t("slotCooldown"));
         return;
       }
 
-      const syms = Array.from({ length: 4 }, () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
-      setFinalSymbols(syms);
+      const earned: number = data.earned;
+      // Pad to 4 digits
+      const digits = String(earned).padStart(4, "0").split("").map(Number);
+      setFinalDigits(digits);
 
+      // Wait for 5s total spin then stop
       setTimeout(() => {
+        stopAll();
         setSpinning(false);
-        setResult({ earned: data.earned });
-        playWin(data.earned);
-        onSuccess(data.tokens, data.earned);
-      }, 2200);
+        setResult({ earned });
+        playWin(earned);
+        onSuccess(data.tokens, earned);
+      }, SPIN_DURATION);
+
     } catch {
-      if (tickRef.current) clearInterval(tickRef.current);
+      stopAll();
       setSpinning(false);
       setError("Network error");
     }
@@ -162,28 +206,29 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
         </div>
       </div>
 
-      {/* Reels — only shown when not yet pulled today, or while spinning */}
+      {/* Number reels — shown only when spinning or not yet pulled */}
       {(!isDone || spinning) && (
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 14 }}>
-          <Reel spinning={spinning} finalSymbol={finalSymbols[0]} delay={0} />
-          <Reel spinning={spinning} finalSymbol={finalSymbols[1]} delay={100} />
-          <Reel spinning={spinning} finalSymbol={finalSymbols[2]} delay={200} />
-          <Reel spinning={spinning} finalSymbol={finalSymbols[3]} delay={300} />
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center" }}>
+            <DigitReel spinning={spinning} finalDigit={finalDigits[0]} delay={0} speed={reelSpeed} />
+            <DigitReel spinning={spinning} finalDigit={finalDigits[1]} delay={80} speed={reelSpeed} />
+            <DigitReel spinning={spinning} finalDigit={finalDigits[2]} delay={160} speed={reelSpeed} />
+            <DigitReel spinning={spinning} finalDigit={finalDigits[3]} delay={240} speed={reelSpeed} />
+          </div>
+          {spinning && (
+            <div style={{ textAlign: "center", marginTop: 10, fontSize: 13, color: "#a78bfa", fontWeight: 600 }}>
+              {countdown}s
+            </div>
+          )}
         </div>
       )}
 
-      {/* Result (shown after successful pull, persists) */}
+      {/* Result */}
       {result && (
         <div style={{
-          textAlign: "center",
-          marginBottom: 12,
-          padding: "8px 14px",
-          background: "rgba(245,158,11,0.1)",
-          border: "1px solid rgba(245,158,11,0.25)",
-          borderRadius: 8,
-          color: "#f59e0b",
-          fontWeight: 600,
-          fontSize: 14,
+          textAlign: "center", marginBottom: 12, padding: "8px 14px",
+          background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)",
+          borderRadius: 8, color: "#f59e0b", fontWeight: 600, fontSize: 14,
         }}>
           {t("slotResult").replace("{amount}", result.earned.toLocaleString())}
         </div>
@@ -200,15 +245,16 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
         </div>
       )}
 
-      {/* Pull button — hidden once pulled today */}
+      {/* Pull button */}
       {!isDone && (
         <button
           onClick={handlePull}
           disabled={spinning}
           style={{
             width: "100%", padding: "10px 0", borderRadius: 9, border: "none",
-            background: spinning ? "rgba(255,255,255,0.08)" : "rgba(124,58,237,0.7)",
-            color: "#fff", fontWeight: 600, fontSize: 14,
+            background: spinning ? "rgba(255,255,255,0.06)" : "rgba(124,58,237,0.7)",
+            color: spinning ? "rgba(255,255,255,0.4)" : "#fff",
+            fontWeight: 600, fontSize: 14,
             cursor: spinning ? "not-allowed" : "pointer",
             transition: "all 0.2s",
           }}
@@ -217,12 +263,12 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
         </button>
       )}
 
-      {/* Cooldown info after pull */}
+      {/* Cooldown */}
       {isDone && (
         <div style={{ fontSize: 12, color: "var(--muted-foreground)", textAlign: "center" }}>
           <span>{t("slotCooldown")}</span>
           {nextPullStr && (
-            <span style={{ marginLeft: 8, color: "var(--muted-foreground)" }}>
+            <span style={{ marginLeft: 8 }}>
               · {t("slotNextPull").replace("{time}", nextPullStr)}
             </span>
           )}
