@@ -57,6 +57,7 @@ function getSlotCountdown(lastPull: string): string {
 }
 
 function DailyLuckyBtn({ lastSlotPull, label }: { lastSlotPull: string | null; label: string }) {
+  const { t } = useLang();
   const [cd, setCd] = useState(() => lastSlotPull ? getSlotCountdown(lastSlotPull) : "");
 
   useEffect(() => {
@@ -80,7 +81,7 @@ function DailyLuckyBtn({ lastSlotPull, label }: { lastSlotPull: string | null; l
           fontWeight: 400,
           letterSpacing: "0.02em",
         }}>
-        今日已完成 · {cd}
+        {t("slotCooldown")} · {cd}
       </span>
     );
   }
@@ -95,7 +96,7 @@ function DailyLuckyBtn({ lastSlotPull, label }: { lastSlotPull: string | null; l
         textDecoration: "none",
         fontWeight: 600,
       }}>
-      立即抽奖
+      {t("slotPull")}
     </a>
   );
 }
