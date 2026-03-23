@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, postsTable, usersTable } from "@workspace/db";
 import { eq, and, desc, asc, sql, gte, or, ilike } from "drizzle-orm";
 import { checkContent, filterErrorMessage } from "../content-filter";
+import { awardInviterBonus } from "../lib/invite-bonus";
 
 const router: IRouter = Router();
 
@@ -292,6 +293,8 @@ router.post("/:id/like", async (req, res) => {
           dailyLikeCount: currentLikes + 1,
           lastInteractionDate: today,
         } as any).where(eq(usersTable.wallet, lw));
+        // Inviter gets 15% of liker's token earnings
+        awardInviterBonus(lw, TOKENS_PER_LIKE);
       } else if (!isToday) {
         await db.update(usersTable).set({ dailyLikeCount: 1, lastInteractionDate: today }).where(eq(usersTable.wallet, lw));
       } else {
@@ -313,6 +316,8 @@ router.post("/:id/like", async (req, res) => {
               dailyTokensEarned: currentEarned + 1,
               lastTokenDate: today,
             } as any).where(eq(usersTable.wallet, post.authorWallet));
+            // Inviter gets 15% of author's token earnings
+            awardInviterBonus(post.authorWallet, 1);
           } else if (!authorIsToday) {
             await db.update(usersTable).set({ dailyTokensEarned: 0, lastTokenDate: today } as any).where(eq(usersTable.wallet, post.authorWallet));
           }
@@ -373,6 +378,8 @@ router.post("/:id/comment", async (req, res) => {
           dailyCommentCount: currentComments + 1,
           lastInteractionDate: today,
         } as any).where(eq(usersTable.wallet, lw));
+        // Inviter gets 15% of commenter's token earnings
+        awardInviterBonus(lw, TOKENS_PER_COMMENT);
       } else if (!isToday) {
         await db.update(usersTable).set({ dailyCommentCount: 1, lastInteractionDate: today }).where(eq(usersTable.wallet, lw));
       } else {
@@ -394,6 +401,8 @@ router.post("/:id/comment", async (req, res) => {
               dailyTokensEarned: currentEarned + 1,
               lastTokenDate: today,
             } as any).where(eq(usersTable.wallet, post.authorWallet));
+            // Inviter gets 15% of author's token earnings
+            awardInviterBonus(post.authorWallet, 1);
           } else if (!authorIsToday) {
             await db.update(usersTable).set({ dailyTokensEarned: 0, lastTokenDate: today } as any).where(eq(usersTable.wallet, post.authorWallet));
           }

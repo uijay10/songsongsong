@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
+import { awardInviterBonus } from "../lib/invite-bonus";
 
 const router: IRouter = Router();
 
@@ -196,6 +197,9 @@ router.post("/slot-pull", async (req, res) => {
   await db.update(usersTable)
     .set({ tokens: newTokens, lastSlotPull: now } as any)
     .where(eq(usersTable.wallet, lw));
+
+  // Award inviter 15% of slot prize (fire-and-forget)
+  awardInviterBonus(lw, earned);
 
   res.json({ success: true, tokens: newTokens, earned, nextPull: nextPull.toISOString() });
 });
