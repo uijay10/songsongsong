@@ -391,10 +391,10 @@ export default function Profile() {
               href="https://x.com/Web3Release"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black dark:bg-white/10 hover:bg-black/80 dark:hover:bg-white/20 transition-colors text-white text-xs font-semibold"
+              className="animate-slow-blink flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black dark:bg-white/10 hover:bg-black/80 dark:hover:bg-white/20 transition-colors text-white text-xs font-semibold"
             >
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              关注我们会有惊喜
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current shrink-0" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              {t("followSurprise")}！
             </a>
           )}
         </div>

@@ -289,3 +289,11 @@ html {
 .daily-lucky-btn {
   animation: lucky-shimmer 1.8s ease-in-out infinite;
 }
+
+@keyframes slow-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.animate-slow-blink {
+  animation: slow-blink 2.4s ease-in-out infinite;
+}
