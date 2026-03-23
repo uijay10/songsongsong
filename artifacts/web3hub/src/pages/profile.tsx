@@ -406,15 +406,6 @@ export default function Profile() {
           </div>
         )}
 
-        {/* 3. 我的代币 – 所有用户显示 */}
-        <InfoRow label={t("tokenLabel")}>
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="flex items-center gap-1.5 text-xl font-bold text-yellow-500">
-              <Star className="w-4 h-4" /> {tokenCount.toLocaleString()} <span className="text-sm font-semibold text-yellow-400">$WBR</span>
-            </span>
-            <span className="text-xs text-muted-foreground">{t("tokenDesc")}</span>
-          </div>
-        </InfoRow>
 
         {/* 4. 我的能量 + 置顶次数 */}
         <InfoRow label={t("energyLabel")}>
