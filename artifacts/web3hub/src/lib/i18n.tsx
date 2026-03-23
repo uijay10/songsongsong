@@ -129,6 +129,10 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     regularDesc: "最新优先", itemUnit: "条",
     roleProject: "区块链团队", roleDeveloper: "开发者", roleMember: "平台会员",
     memberTabProject: "团队", memberTabKol: "KOL", memberTabDev: "开发者",
+    tokenLabel: "我的代币", slotTitle: "每日抽奖", slotPull: "立即抽取",
+    slotPulling: "抽取中...", slotResult: "恭喜！获得 {amount} $WBR！",
+    slotNextPull: "下次抽取：{time}", slotCooldown: "今日已抽（24h冷却）",
+    slotDesc: "每日一次·奖励 100~1000 $WBR·TGE 按 1:1 兑换",
   },
   "en": {
     home: "Home", profile: "Profile", connect: "Connect Wallet", disconnect: "Disconnect",
@@ -255,6 +259,10 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     regularDesc: "Project posts · Latest first", itemUnit: "",
     roleProject: "Blockchain Team", roleDeveloper: "Developer", roleMember: "Member",
     memberTabProject: "Team", memberTabKol: "KOL", memberTabDev: "Developers",
+    tokenLabel: "My Tokens", slotTitle: "Daily Reward", slotPull: "Pull Now",
+    slotPulling: "Pulling...", slotResult: "Congrats! You got {amount} $WBR!",
+    slotNextPull: "Next pull: {time}", slotCooldown: "Already pulled today (24h cooldown)",
+    slotDesc: "Once per day · Win 100–1000 $WBR · 1:1 exchange at TGE",
   },
   "de": {
     home: "Startseite", profile: "Profil", connect: "Wallet verbinden", disconnect: "Trennen",
@@ -364,6 +372,10 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     regularDesc: "Projektbeiträge · Neueste zuerst", itemUnit: "",
     roleProject: "Blockchain-Team", roleDeveloper: "Entwickler", roleMember: "Mitglied",
     memberTabProject: "Projekte", memberTabKol: "KOL", memberTabDev: "Entwickler",
+    tokenLabel: "Meine Token", slotTitle: "Tägliche Belohnung", slotPull: "Jetzt ziehen",
+    slotPulling: "Ziehe...", slotResult: "Glückwunsch! {amount} $WBR gewonnen!",
+    slotNextPull: "Nächster Zug: {time}", slotCooldown: "Heute bereits gezogen (24h Cooldown)",
+    slotDesc: "Einmal täglich · 100–1000 $WBR · 1:1 beim TGE",
   },
   "ru": {
     home: "Главная", profile: "Профиль", connect: "Подключить кошелёк", disconnect: "Отключить",
@@ -473,6 +485,10 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     regularDesc: "Проекты · Новые сначала", itemUnit: "",
     roleProject: "Блокчейн-команда", roleDeveloper: "Разработчик", roleMember: "Участник",
     memberTabProject: "Проекты", memberTabKol: "KOL", memberTabDev: "Разработчики",
+    tokenLabel: "Мои токены", slotTitle: "Ежедневная награда", slotPull: "Крутить",
+    slotPulling: "Крутим...", slotResult: "Поздравляем! Вы выиграли {amount} $WBR!",
+    slotNextPull: "Следующий: {time}", slotCooldown: "Уже крутили сегодня (24ч кулдаун)",
+    slotDesc: "Раз в день · Выигрыш 100–1000 $WBR · Обмен 1:1 при TGE",
   },
   "fr": {
     home: "Accueil", profile: "Profil", connect: "Connecter le wallet", disconnect: "Déconnecter",
@@ -582,6 +598,10 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     regularDesc: "Posts projets · Les plus récents", itemUnit: "",
     roleProject: "Équipe Blockchain", roleDeveloper: "Développeur", roleMember: "Membre",
     memberTabProject: "Projets", memberTabKol: "KOL", memberTabDev: "Développeurs",
+    tokenLabel: "Mes tokens", slotTitle: "Récompense quotidienne", slotPull: "Tirer maintenant",
+    slotPulling: "En cours...", slotResult: "Félicitations ! Vous avez gagné {amount} $WBR !",
+    slotNextPull: "Prochain tirage : {time}", slotCooldown: "Déjà tiré aujourd'hui (cooldown 24h)",
+    slotDesc: "Une fois par jour · Gagnez 100–1000 $WBR · Échange 1:1 au TGE",
   },
   "ja": {
     home: "ホーム", profile: "プロフィール", connect: "ウォレット接続", disconnect: "切断",
@@ -691,6 +711,10 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     regularDesc: "プロジェクト投稿 · 最新順", itemUnit: "件",
     roleProject: "ブロックチェーンチーム", roleDeveloper: "開発者", roleMember: "メンバー",
     memberTabProject: "プロジェクト", memberTabKol: "KOL", memberTabDev: "開発者",
+    tokenLabel: "マイトークン", slotTitle: "デイリー報酬", slotPull: "今すぐ引く",
+    slotPulling: "引いています...", slotResult: "おめでとう！{amount} $WBR を獲得！",
+    slotNextPull: "次回：{time}", slotCooldown: "本日分はすでに引きました（24hクールダウン）",
+    slotDesc: "1日1回 · 100〜1000 $WBR 獲得 · TGEで1:1交換",
   },
   "ko": {
     home: "홈", profile: "프로필", connect: "지갑 연결", disconnect: "연결 해제",
@@ -800,6 +824,10 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     regularDesc: "프로젝트 게시물 · 최신순", itemUnit: "개",
     roleProject: "블록체인 팀", roleDeveloper: "개발자", roleMember: "회원",
     memberTabProject: "프로젝트", memberTabKol: "KOL", memberTabDev: "개발자",
+    tokenLabel: "내 토큰", slotTitle: "일일 보상", slotPull: "지금 뽑기",
+    slotPulling: "뽑는 중...", slotResult: "축하합니다! {amount} $WBR 획득!",
+    slotNextPull: "다음 뽑기: {time}", slotCooldown: "오늘은 이미 뽑았습니다 (24h 쿨다운)",
+    slotDesc: "하루 1회 · 100~1000 $WBR 획득 · TGE에서 1:1 교환",
   },
   "vi": {
     home: "Trang chủ", profile: "Hồ sơ", connect: "Kết nối ví", disconnect: "Ngắt kết nối",
@@ -909,6 +937,10 @@ const TRANSLATIONS: Record<LangCode, Dict> = {
     regularDesc: "Bài dự án · Mới nhất trước", itemUnit: "",
     roleProject: "Đội Blockchain", roleDeveloper: "Lập trình viên", roleMember: "Thành viên",
     memberTabProject: "Dự án", memberTabKol: "KOL", memberTabDev: "Lập trình viên",
+    tokenLabel: "Token của tôi", slotTitle: "Phần thưởng hàng ngày", slotPull: "Quay ngay",
+    slotPulling: "Đang quay...", slotResult: "Chúc mừng! Bạn nhận được {amount} $WBR!",
+    slotNextPull: "Lần tiếp: {time}", slotCooldown: "Đã quay hôm nay (hồi chiêu 24h)",
+    slotDesc: "Mỗi ngày một lần · Nhận 100–1000 $WBR · Đổi 1:1 tại TGE",
   },
 };
 

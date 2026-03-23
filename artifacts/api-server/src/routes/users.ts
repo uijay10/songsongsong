@@ -17,6 +17,8 @@ function fmtUser(u: typeof usersTable.$inferSelect) {
     avatar: u.avatar,
     points: u.points,
     energy: u.energy,
+    tokens: (u as any).tokens ?? 0,
+    lastSlotPull: (u as any).lastSlotPull?.toISOString() ?? null,
     spaceStatus: u.spaceStatus,
     spaceType: u.spaceType,
     inviteCode: u.inviteCode,
@@ -30,6 +32,13 @@ function fmtUser(u: typeof usersTable.$inferSelect) {
     spaceRejectedAt: (u as any).spaceRejectedAt?.toISOString() ?? null,
     createdAt: u.createdAt.toISOString(),
   };
+}
+
+function rollTokenPrize(): number {
+  const r = Math.random();
+  if (r < 0.4) return Math.floor(100 + Math.random() * 101);  // 100-200
+  if (r < 0.8) return Math.floor(201 + Math.random() * 299);  // 201-499
+  return Math.floor(500 + Math.random() * 501);                // 500-1000
 }
 
 router.get("/me", async (req, res) => {
@@ -158,6 +167,37 @@ router.get("/list", async (req, res) => {
     website: u.website,
     createdAt: u.createdAt.toISOString(),
   })) });
+});
+
+router.post("/slot-pull", async (req, res) => {
+  const { wallet } = req.body;
+  if (!wallet) return res.status(400).json({ error: "wallet required" });
+
+  const lw = wallet.toLowerCase();
+  const users = await db.select().from(usersTable).where(eq(usersTable.wallet, lw)).limit(1);
+  if (users.length === 0) return res.status(404).json({ error: "User not found" });
+
+  const u = users[0];
+  const now = new Date();
+  const lastPull = (u as any).lastSlotPull as Date | null;
+
+  if (lastPull) {
+    const diff = now.getTime() - lastPull.getTime();
+    if (diff < 24 * 60 * 60 * 1000) {
+      const next = new Date(lastPull.getTime() + 24 * 60 * 60 * 1000);
+      return res.json({ success: false, tokens: (u as any).tokens ?? 0, nextPull: next.toISOString(), message: "Already pulled today" });
+    }
+  }
+
+  const earned = rollTokenPrize();
+  const newTokens = ((u as any).tokens ?? 0) + earned;
+  const nextPull = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+  await db.update(usersTable)
+    .set({ tokens: newTokens, lastSlotPull: now } as any)
+    .where(eq(usersTable.wallet, lw));
+
+  res.json({ success: true, tokens: newTokens, earned, nextPull: nextPull.toISOString() });
 });
 
 router.post("/checkin", async (req, res) => {

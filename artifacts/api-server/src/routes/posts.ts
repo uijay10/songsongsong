@@ -279,34 +279,42 @@ router.post("/:id/like", async (req, res) => {
     const user = userRows[0];
 
     if (user) {
+      const isSpaceUser = user.spaceType === "project" || user.spaceType === "kol" || user.spaceType === "developer";
       const isToday = user.lastInteractionDate === today;
       const currentLikes = isToday ? (user.dailyLikeCount ?? 0) : 0;
-      const MAX_DAILY = 5;
-      const PTS_PER_LIKE = 100;
+      const MAX_DAILY_LIKES = 20;
+      const TOKENS_PER_LIKE = 5;
 
-      if (currentLikes < MAX_DAILY) {
+      // Regular users earn tokens from liking; space users do not
+      if (!isSpaceUser && currentLikes < MAX_DAILY_LIKES) {
         await db.update(usersTable).set({
-          points: (user.points ?? 0) + PTS_PER_LIKE,
+          tokens: ((user as any).tokens ?? 0) + TOKENS_PER_LIKE,
           dailyLikeCount: currentLikes + 1,
           lastInteractionDate: today,
-        }).where(eq(usersTable.wallet, lw));
+        } as any).where(eq(usersTable.wallet, lw));
+      } else if (!isToday) {
+        await db.update(usersTable).set({ dailyLikeCount: 1, lastInteractionDate: today }).where(eq(usersTable.wallet, lw));
       } else {
-        if (!isToday) {
-          await db.update(usersTable).set({ dailyLikeCount: 0, lastInteractionDate: today }).where(eq(usersTable.wallet, lw));
-        }
+        await db.update(usersTable).set({ dailyLikeCount: currentLikes + 1 }).where(eq(usersTable.wallet, lw));
       }
 
-      if (post.authorType === "kol") {
-        const MAX_KOL_POINTS = 10000;
-        const KOL_PTS = 10;
-        const currentKol = post.kolLikePoints ?? 0;
-        const canAdd = Math.min(KOL_PTS, MAX_KOL_POINTS - currentKol);
-        if (canAdd > 0) {
-          await db.update(postsTable).set({ kolLikePoints: currentKol + canAdd }).where(eq(postsTable.id, id));
-          const kolRows = await db.select().from(usersTable).where(eq(usersTable.wallet, post.authorWallet)).limit(1);
-          const kol = kolRows[0];
-          if (kol) {
-            await db.update(usersTable).set({ points: (kol.points ?? 0) + canAdd }).where(eq(usersTable.wallet, post.authorWallet));
+      // Post author earns tokens when their post is liked (project/kol/developer only, max 2000/day)
+      const isSpaceAuthor = post.authorType === "project" || post.authorType === "kol" || post.authorType === "developer";
+      if (isSpaceAuthor && post.authorWallet !== lw) {
+        const authorRows = await db.select().from(usersTable).where(eq(usersTable.wallet, post.authorWallet)).limit(1);
+        const author = authorRows[0];
+        if (author) {
+          const authorIsToday = (author as any).lastTokenDate === today;
+          const currentEarned = authorIsToday ? ((author as any).dailyTokensEarned ?? 0) : 0;
+          const MAX_AUTHOR_DAILY = 2000;
+          if (currentEarned < MAX_AUTHOR_DAILY) {
+            await db.update(usersTable).set({
+              tokens: ((author as any).tokens ?? 0) + 1,
+              dailyTokensEarned: currentEarned + 1,
+              lastTokenDate: today,
+            } as any).where(eq(usersTable.wallet, post.authorWallet));
+          } else if (!authorIsToday) {
+            await db.update(usersTable).set({ dailyTokensEarned: 0, lastTokenDate: today } as any).where(eq(usersTable.wallet, post.authorWallet));
           }
         }
       }
@@ -352,34 +360,42 @@ router.post("/:id/comment", async (req, res) => {
     const user = userRows[0];
 
     if (user) {
+      const isSpaceUser = user.spaceType === "project" || user.spaceType === "kol" || user.spaceType === "developer";
       const isToday = user.lastInteractionDate === today;
       const currentComments = isToday ? (user.dailyCommentCount ?? 0) : 0;
-      const MAX_DAILY = 5;
-      const PTS_PER_COMMENT = 100;
+      const MAX_DAILY_COMMENTS = 20;
+      const TOKENS_PER_COMMENT = 5;
 
-      if (currentComments < MAX_DAILY) {
+      // Regular users earn tokens from commenting; space users do not
+      if (!isSpaceUser && currentComments < MAX_DAILY_COMMENTS) {
         await db.update(usersTable).set({
-          points: (user.points ?? 0) + PTS_PER_COMMENT,
+          tokens: ((user as any).tokens ?? 0) + TOKENS_PER_COMMENT,
           dailyCommentCount: currentComments + 1,
           lastInteractionDate: today,
-        }).where(eq(usersTable.wallet, lw));
+        } as any).where(eq(usersTable.wallet, lw));
+      } else if (!isToday) {
+        await db.update(usersTable).set({ dailyCommentCount: 1, lastInteractionDate: today }).where(eq(usersTable.wallet, lw));
       } else {
-        if (!isToday) {
-          await db.update(usersTable).set({ dailyCommentCount: 0, lastInteractionDate: today }).where(eq(usersTable.wallet, lw));
-        }
+        await db.update(usersTable).set({ dailyCommentCount: currentComments + 1 }).where(eq(usersTable.wallet, lw));
       }
 
-      if (post.authorType === "kol") {
-        const MAX_KOL_POINTS = 10000;
-        const KOL_PTS = 10;
-        const currentKol = post.kolCommentPoints ?? 0;
-        const canAdd = Math.min(KOL_PTS, MAX_KOL_POINTS - currentKol);
-        if (canAdd > 0) {
-          await db.update(postsTable).set({ kolCommentPoints: currentKol + canAdd }).where(eq(postsTable.id, id));
-          const kolRows = await db.select().from(usersTable).where(eq(usersTable.wallet, post.authorWallet)).limit(1);
-          const kol = kolRows[0];
-          if (kol) {
-            await db.update(usersTable).set({ points: (kol.points ?? 0) + canAdd }).where(eq(usersTable.wallet, post.authorWallet));
+      // Post author earns tokens when their post is commented on (project/kol/developer only, max 2000/day)
+      const isSpaceAuthor = post.authorType === "project" || post.authorType === "kol" || post.authorType === "developer";
+      if (isSpaceAuthor && post.authorWallet !== lw) {
+        const authorRows = await db.select().from(usersTable).where(eq(usersTable.wallet, post.authorWallet)).limit(1);
+        const author = authorRows[0];
+        if (author) {
+          const authorIsToday = (author as any).lastTokenDate === today;
+          const currentEarned = authorIsToday ? ((author as any).dailyTokensEarned ?? 0) : 0;
+          const MAX_AUTHOR_DAILY = 2000;
+          if (currentEarned < MAX_AUTHOR_DAILY) {
+            await db.update(usersTable).set({
+              tokens: ((author as any).tokens ?? 0) + 1,
+              dailyTokensEarned: currentEarned + 1,
+              lastTokenDate: today,
+            } as any).where(eq(usersTable.wallet, post.authorWallet));
+          } else if (!authorIsToday) {
+            await db.update(usersTable).set({ dailyTokensEarned: 0, lastTokenDate: today } as any).where(eq(usersTable.wallet, post.authorWallet));
           }
         }
       }
