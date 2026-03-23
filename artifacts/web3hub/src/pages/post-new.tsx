@@ -19,7 +19,7 @@ const ALL_SECTIONS = [
   "testnet", "ido", "security", "integration", "airdrop",
   "events", "funding", "jobs", "nodes", "showcase",
   "ecosystem", "partners", "hackathon", "ama", "bugbounty",
-  "community", "kol", "developer",
+  "community", "developer",
 ] as const;
 
 const KOL_SECTIONS: typeof ALL_SECTIONS[number][] = [
@@ -36,7 +36,7 @@ const SECTION_LABEL_KEYS: Record<string, string> = {
   funding: "sFundingLabel", jobs: "sJobsLabel", nodes: "sNodesLabel",
   showcase: "sShowcaseLabel", ecosystem: "sEcosystemLabel", partners: "sPartnersLabel",
   hackathon: "sHackathonLabel", ama: "sAmaLabel", bugbounty: "sBugbountyLabel",
-  community: "nav_community", kol: "nav_kol", developer: "nav_developer",
+  community: "nav_community", developer: "nav_developer",
 };
 
 function getSections(spaceType: string): string[] {
