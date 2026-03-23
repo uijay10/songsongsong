@@ -70,32 +70,32 @@ function DailyLuckyBtn({ lastSlotPull, label }: { lastSlotPull: string | null; l
   const canPull = !lastSlotPull || Date.now() - new Date(lastSlotPull).getTime() >= 24 * 60 * 60 * 1000;
 
   if (!canPull && cd) {
-    // Already pulled — show countdown, no interaction
     return (
-      <span className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold select-none cursor-default"
+      <span className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm select-none cursor-default"
         style={{
-          background: "rgba(251,191,36,0.08)",
-          border: "1.5px solid rgba(251,191,36,0.25)",
-          color: "rgba(251,191,36,0.6)",
+          background: "rgba(0,0,0,0.04)",
+          border: "1px solid rgba(0,0,0,0.1)",
+          color: "#555",
           fontVariantNumeric: "tabular-nums",
-          fontFamily: "monospace",
-          letterSpacing: "0.05em",
+          fontWeight: 400,
+          letterSpacing: "0.02em",
         }}>
-        🎰 {cd}
+        今日已完成 · {cd}
       </span>
     );
   }
 
   return (
     <a href="/web3hub/profile"
-      className="daily-lucky-btn shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all"
+      className="daily-lucky-btn shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all"
       style={{
-        background: "linear-gradient(90deg, #f59e0b, #fbbf24)",
-        color: "#1a1a1a",
-        border: "1.5px solid rgba(251,191,36,0.6)",
+        background: "rgba(239,68,68,0.08)",
+        color: "#dc2626",
+        border: "1px solid rgba(239,68,68,0.3)",
         textDecoration: "none",
+        fontWeight: 400,
       }}>
-      🎰 {label}
+      立即抽奖
     </a>
   );
 }
