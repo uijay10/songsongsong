@@ -25,15 +25,15 @@ function SectionBlock({ section }: { section: AboutSection }) {
       )}
       {section.subsections && section.subsections.map((sub, si) => (
         <div key={si} className="mt-4 pl-3">
-          <h3 className="font-semibold text-foreground mb-2 text-base">{sub.heading}</h3>
+          <h3 className="text-xl font-bold text-foreground mb-2">{sub.heading}</h3>
           {sub.intro && (
-            <p className="text-muted-foreground leading-relaxed mb-2 text-sm">{sub.intro}</p>
+            <p className="text-muted-foreground leading-relaxed mb-2">{sub.intro}</p>
           )}
           {sub.items && sub.items.length > 0 && (
-            <ul className="space-y-1.5">
+            <ul className="space-y-2">
               {sub.items.map((item, ii) => (
-                <li key={ii} className="flex gap-2 text-muted-foreground text-sm">
-                  <ChevronRight className="w-3.5 h-3.5 mt-0.5 shrink-0 text-blue-300" />
+                <li key={ii} className="flex gap-2 text-muted-foreground">
+                  <ChevronRight className="w-4 h-4 mt-0.5 shrink-0 text-blue-400" />
                   <span className="leading-relaxed">{item}</span>
                 </li>
               ))}
