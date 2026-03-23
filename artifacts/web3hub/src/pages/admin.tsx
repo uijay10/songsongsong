@@ -26,6 +26,14 @@ async function adminPost(path: string, wallet: string, body: object) {
   }).then(r => r.json());
 }
 
+async function adminDelete(path: string, wallet: string) {
+  return fetch(`${apiBase}/admin${path}?adminWallet=${encodeURIComponent(wallet)}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ adminWallet: wallet }),
+  }).then(r => r.json());
+}
+
 async function adminGet(path: string, wallet: string) {
   const sep = path.includes("?") ? "&" : "?";
   return fetch(`${apiBase}/admin${path}${sep}adminWallet=${encodeURIComponent(wallet)}`).then(r => r.json());
@@ -40,7 +48,7 @@ interface DialogState {
 
 interface SendState {
   wallet: string;
-  field: "points" | "energy" | "pinCount";
+  field: "tokens" | "energy" | "pinCount";
   amount: string;
 }
 
@@ -58,10 +66,9 @@ export default function AdminPage() {
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [sendState, setSendState] = useState<SendState | null>(null);
-  const [sendAll, setSendAll] = useState<{ field: "points" | "energy"; amount: string } | null>(null);
   const [revokeDialog, setRevokeDialog] = useState<string | null>(null);
+  const [deleteAppDialog, setDeleteAppDialog] = useState<number | null>(null);
 
-  // System tab state
   const [memInfo, setMemInfo] = useState<any>(null);
   const [cleanupMode, setCleanupMode] = useState<"percent" | "date">("percent");
   const [cleanupPct, setCleanupPct] = useState(10);
@@ -138,19 +145,30 @@ export default function AdminPage() {
   const approve = async (id: number) => {
     if (!address) return;
     await adminPost(`/applications/${id}/approve`, address, {});
-    flash("✓ " + t("adminConfirm")); loadApps(); setDialog(null);
+    flash("✓ 审核已通过"); loadApps(); setDialog(null);
   };
 
   const reject = async (id: number) => {
     if (!address) return;
     await adminPost(`/applications/${id}/reject`, address, { reason: rejectReason });
-    flash("✓ " + t("adminRejectMsg")); setRejectReason(""); loadApps(); setDialog(null);
+    flash("✓ 已拒绝"); setRejectReason(""); loadApps(); setDialog(null);
+  };
+
+  const deleteApp = async (id: number) => {
+    if (!address) return;
+    const res = await fetch(`${apiBase}/admin/applications/${id}?adminWallet=${encodeURIComponent(address)}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ adminWallet: address }),
+    });
+    await res.json();
+    flash("✓ 记录已删除"); setDeleteAppDialog(null); loadApps();
   };
 
   const banUser = async (wallet: string, ban: boolean) => {
     if (!address) return;
     await adminPost(`/users/${wallet}/ban`, address, { ban });
-    flash(ban ? "Banned" : "Unbanned"); loadUsers();
+    flash(ban ? "✓ 已封禁" : "✓ 已解禁"); loadUsers();
   };
 
   const revokeUser = async (wallet: string) => {
@@ -163,13 +181,7 @@ export default function AdminPage() {
     if (!address || !sendState || !sendState.wallet || !sendState.amount) return;
     const endpoint = sendState.field === "pinCount" ? "pin-count" : sendState.field;
     await adminPost(`/users/${sendState.wallet}/${endpoint}`, address, { op: "add", value: Number(sendState.amount) });
-    flash("✓ Sent!"); setSendState(null); loadUsers();
-  };
-
-  const sendAllPoints = async () => {
-    if (!address || !sendAll?.amount) return;
-    await adminPost("/users/all/points", address, { op: "add", value: Number(sendAll.amount) });
-    flash("✓ Sent to all!"); setSendAll(null); loadUsers();
+    flash("✓ 发送成功！"); setSendState(null); loadUsers();
   };
 
   const downloadCsv = (type: "points-summary" | "bills") => {
@@ -181,8 +193,8 @@ export default function AdminPage() {
     return (
       <div className="py-32 text-center">
         <AlertCircle className="w-16 h-16 text-destructive mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-destructive">Access Denied</h2>
-        <p className="text-muted-foreground mt-2">Admin wallets only.</p>
+        <h2 className="text-2xl font-bold text-destructive">无访问权限</h2>
+        <p className="text-muted-foreground mt-2">仅限管理员钱包。</p>
       </div>
     );
   }
@@ -205,6 +217,13 @@ export default function AdminPage() {
     return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
   };
 
+  const statusLabel = (s: string) => {
+    if (s === "approved") return "已通过";
+    if (s === "rejected") return "已拒绝";
+    if (s === "pending") return "待审核";
+    return s;
+  };
+
   const appTypeLabel = (app: any) => {
     if (app.type === "project") return t("applyProject");
     if (app.type === "kol") return t("adminKol");
@@ -215,7 +234,7 @@ export default function AdminPage() {
   return (
     <div className="max-w-6xl mx-auto py-6 space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-2xl font-bold flex items-center gap-2">🛡️ Admin Panel</h1>
+        <h1 className="text-2xl font-bold flex items-center gap-2">🛡️ 管理员面板</h1>
         {msg && (
           <div className="px-4 py-2 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm font-semibold">
             {msg}
@@ -226,13 +245,13 @@ export default function AdminPage() {
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border">
         <button className={tabCls(tab === "applications")} onClick={() => setTab("applications")}>
-          <ClipboardList className="w-4 h-4 inline mr-1" />{t("myPosts").replace("我的", "申请")} Applications
+          <ClipboardList className="w-4 h-4 inline mr-1" />申请管理
         </button>
         <button className={tabCls(tab === "users")} onClick={() => setTab("users")}>
-          <Users className="w-4 h-4 inline mr-1" />Users
+          <Users className="w-4 h-4 inline mr-1" />用户管理
         </button>
         <button className={tabCls(tab === "send")} onClick={() => setTab("send")}>
-          <Send className="w-4 h-4 inline mr-1" />{t("adminSend")} / CSV
+          <Send className="w-4 h-4 inline mr-1" />发送 / CSV
         </button>
         <button className={tabCls(tab === "system")} onClick={() => setTab("system")}>
           <Cpu className="w-4 h-4 inline mr-1" />系统维护
@@ -246,11 +265,11 @@ export default function AdminPage() {
             {(["pending","approved","rejected",""] as const).map(s => (
               <button key={s} onClick={() => setStatusFilter(s)}
                 className={`${btnCls} ${statusFilter === s ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>
-                {s === "pending" ? "Pending" : s === "approved" ? "Approved" : s === "rejected" ? "Rejected" : "All"}
+                {s === "pending" ? "待审核" : s === "approved" ? "已通过" : s === "rejected" ? "已拒绝" : "全部"}
               </button>
             ))}
             <button onClick={loadApps} className={`${btnCls} bg-muted hover:bg-muted/80 ml-auto`}>
-              <RefreshCw className="w-4 h-4 inline mr-1" />Refresh
+              <RefreshCw className="w-4 h-4 inline mr-1" />刷新
             </button>
           </div>
 
@@ -258,15 +277,14 @@ export default function AdminPage() {
             <div className="bg-card border border-border rounded-2xl overflow-hidden">
               <div className="divide-y divide-border/40">
                 {applications.length === 0 ? (
-                  <div className="p-12 text-center text-muted-foreground">No applications</div>
+                  <div className="p-12 text-center text-muted-foreground">暂无申请记录</div>
                 ) : applications.map(app => (
                   <div key={app.id} className="p-5 hover:bg-muted/20 transition-colors">
                     <div className="flex items-start justify-between gap-4 flex-wrap">
-                      {/* Left: all submitted info */}
                       <div className="space-y-2 flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${statusBadge(app.status)}`}>
-                            {app.status}
+                            {statusLabel(app.status)}
                           </span>
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
                             {appTypeLabel(app)}
@@ -277,28 +295,27 @@ export default function AdminPage() {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
                           <div className="flex gap-2">
-                            <span className="text-muted-foreground shrink-0 w-20">Wallet</span>
+                            <span className="text-muted-foreground shrink-0 w-20">钱包</span>
                             <span className="font-mono text-xs">{app.wallet?.slice(0,10)}...{app.wallet?.slice(-4)}</span>
                           </div>
                           {app.twitter && <div className="flex gap-2"><span className="text-muted-foreground shrink-0 w-20">{t("applyPersonalTwitter")}</span><span className="text-xs truncate">{app.twitter}</span></div>}
                           {app.projectName && <div className="flex gap-2"><span className="text-muted-foreground shrink-0 w-20">{t("applyProjectName")}</span><span className="text-xs truncate">{app.projectName}</span></div>}
                           {app.projectTwitter && <div className="flex gap-2"><span className="text-muted-foreground shrink-0 w-20">{t("applyProjectTwitter")}</span><span className="text-xs truncate">{app.projectTwitter}</span></div>}
-                          {app.tweetLink && <div className="flex gap-2"><span className="text-muted-foreground shrink-0 w-20">Tweet</span><a href={app.tweetLink} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline truncate">{app.tweetLink}</a></div>}
+                          {app.tweetLink && <div className="flex gap-2"><span className="text-muted-foreground shrink-0 w-20">推文链接</span><a href={app.tweetLink} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline truncate">{app.tweetLink}</a></div>}
                           {app.docsLink && <div className="flex gap-2"><span className="text-muted-foreground shrink-0 w-20">{t("applyDocs")}</span><a href={app.docsLink} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline truncate">{app.docsLink}</a></div>}
                           {app.github && <div className="flex gap-2"><span className="text-muted-foreground shrink-0 w-20">GitHub</span><a href={app.github} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline truncate">{app.github}</a></div>}
                           {app.linkedin && <div className="flex gap-2"><span className="text-muted-foreground shrink-0 w-20">LinkedIn</span><a href={app.linkedin} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline truncate">{app.linkedin}</a></div>}
                         </div>
                       </div>
-                      {/* Right: actions */}
-                      <div className="flex gap-2 shrink-0">
+                      <div className="flex gap-2 shrink-0 flex-wrap">
                         {app.status === "pending" && (<>
                           <button onClick={() => setDialog({ type: "approve", appId: app.id })}
                             className="px-3 py-1.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm font-semibold hover:bg-green-200 transition-colors">
-                            ✓ {t("adminConfirm")}
+                            ✓ 通过
                           </button>
                           <button onClick={() => { setDialog({ type: "reject", appId: app.id }); setRejectReason(""); }}
                             className="px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm font-semibold hover:bg-red-200 transition-colors">
-                            ✗ {t("adminRejectReason")}
+                            ✗ 拒绝
                           </button>
                         </>)}
                         {app.status === "approved" && (
@@ -307,6 +324,10 @@ export default function AdminPage() {
                             <ShieldOff className="w-3.5 h-3.5" /> 撤销
                           </button>
                         )}
+                        <button onClick={() => setDeleteAppDialog(app.id)}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm font-semibold hover:bg-red-200 transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" /> 删除记录
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -320,7 +341,6 @@ export default function AdminPage() {
       {/* ─── Users Tab ─── */}
       {tab === "users" && (
         <div className="space-y-4">
-          {/* Category sub-tabs */}
           <div className="flex gap-2 flex-wrap">
             {([
               { key: "space", label: t("adminSpaceUsers") },
@@ -342,19 +362,22 @@ export default function AdminPage() {
               </button>
             ))}
             <button onClick={loadUsers} className={`${btnCls} bg-muted hover:bg-muted/80 ml-auto`}>
-              <RefreshCw className="w-4 h-4 inline mr-1" />Refresh
+              <RefreshCw className="w-4 h-4 inline mr-1" />刷新
             </button>
           </div>
 
-          {/* Send points/energy/pinCount panel */}
           {sendState && (
             <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
-              <h3 className="font-bold text-sm">{t("adminSendTo")}: {sendState.wallet.slice(0,12)}... ({sendState.field})</h3>
+              <h3 className="font-bold text-sm">
+                发送至：{sendState.wallet.slice(0,12)}...（
+                {sendState.field === "tokens" ? "代币" : sendState.field === "energy" ? "能量" : "置顶次数"}
+                ）
+              </h3>
               <div className="flex gap-2 items-center">
                 <input type="number" value={sendState.amount} onChange={e => setSendState({ ...sendState, amount: e.target.value })}
-                  placeholder={t("adminSendAmount")} className="border border-border rounded-xl px-3 py-2 text-sm bg-background w-32" />
-                <button onClick={sendValue} className={`${btnCls} bg-primary text-primary-foreground`}>{t("adminConfirm")}</button>
-                <button onClick={() => setSendState(null)} className={`${btnCls} bg-muted`}>{t("adminCancel")}</button>
+                  placeholder="数量" className="border border-border rounded-xl px-3 py-2 text-sm bg-background w-32" />
+                <button onClick={sendValue} className={`${btnCls} bg-primary text-primary-foreground`}>确认发送</button>
+                <button onClick={() => setSendState(null)} className={`${btnCls} bg-muted`}>取消</button>
               </div>
             </div>
           )}
@@ -364,47 +387,47 @@ export default function AdminPage() {
               <table className="w-full text-sm min-w-[700px]">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="p-3 text-left">Wallet</th>
-                    <th className="p-3 text-left">Username</th>
-                    <th className="p-3 text-right">{t("points")}</th>
+                    <th className="p-3 text-left">钱包地址</th>
+                    <th className="p-3 text-left">用户名</th>
+                    <th className="p-3 text-right">代币</th>
                     <th className="p-3 text-right">{t("energy")}</th>
-                    <th className="p-3 text-right">{t("pinCount")}</th>
-                    <th className="p-3 text-left">Type</th>
-                    <th className="p-3 text-left">Status</th>
-                    <th className="p-3 text-left">Actions</th>
+                    <th className="p-3 text-right">置顶次数</th>
+                    <th className="p-3 text-left">身份类型</th>
+                    <th className="p-3 text-left">状态</th>
+                    <th className="p-3 text-left">操作</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {filteredUsers.length === 0 ? (
-                    <tr><td colSpan={8} className="p-10 text-center text-muted-foreground">No users</td></tr>
+                    <tr><td colSpan={8} className="p-10 text-center text-muted-foreground">暂无用户</td></tr>
                   ) : filteredUsers.map(u => (
                     <tr key={u.id} className={`hover:bg-muted/20 ${u.isBanned ? "opacity-50" : ""}`}>
                       <td className="p-3 font-mono text-xs">{u.wallet.slice(0,8)}...{u.wallet.slice(-4)}</td>
                       <td className="p-3 text-xs">{u.username ?? "-"}</td>
-                      <td className="p-3 text-right font-semibold">{u.points?.toLocaleString()}</td>
+                      <td className="p-3 text-right font-semibold">{(u.tokens ?? 0).toLocaleString()}</td>
                       <td className="p-3 text-right">{u.energy?.toLocaleString()}</td>
                       <td className="p-3 text-right">{u.pinCount ?? 0}</td>
                       <td className="p-3 text-xs">{u.spaceType ? <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary">{u.spaceType}</span> : "-"}</td>
                       <td className="p-3 text-xs">
-                        {u.isBanned ? <span className="text-red-500 font-semibold">Banned</span> : <span className="text-green-500">Active</span>}
+                        {u.isBanned ? <span className="text-red-500 font-semibold">已封禁</span> : <span className="text-green-500">正常</span>}
                       </td>
                       <td className="p-3">
                         <div className="flex gap-1.5 flex-wrap">
-                          <button onClick={() => setSendState({ wallet: u.wallet, field: "points", amount: "" })}
+                          <button onClick={() => setSendState({ wallet: u.wallet, field: "tokens", amount: "" })}
                             className="px-2 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs hover:bg-amber-200 transition-colors">
-                            {t("adminSendPoints").replace("发送", "").replace("Send ", "")} Pts
+                            代币
                           </button>
                           <button onClick={() => setSendState({ wallet: u.wallet, field: "energy", amount: "" })}
                             className="px-2 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs hover:bg-blue-200 transition-colors">
-                            Nrg
+                            能量
                           </button>
                           <button onClick={() => setSendState({ wallet: u.wallet, field: "pinCount", amount: "" })}
                             className="px-2 py-1 rounded-lg bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 text-xs hover:bg-violet-200 transition-colors">
-                            Pin
+                            置顶
                           </button>
                           <button onClick={() => banUser(u.wallet, !u.isBanned)}
                             className={`px-2 py-1 rounded-lg text-xs transition-colors ${u.isBanned ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200" : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200"}`}>
-                            {u.isBanned ? "Unban" : "Ban"}
+                            {u.isBanned ? "解禁" : "封禁"}
                           </button>
                           {u.spaceType && (
                             <button onClick={() => setRevokeDialog(u.wallet)}
@@ -428,85 +451,86 @@ export default function AdminPage() {
         <div className="space-y-5">
           {/* Send to specific wallet */}
           <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
-            <h3 className="font-bold">{t("adminSendTo")}</h3>
-            {(["points","energy","pinCount"] as const).map(field => {
-              const key = `send_${field}`;
-              return (
-                <div key={field} className="space-y-2">
-                  <label className="text-sm font-semibold">
-                    {field === "points" ? t("adminSendPoints") : field === "energy" ? t("adminSendEnergy") : t("adminSendPin")}
-                  </label>
-                  <div className="flex gap-2 flex-wrap">
-                    <input
-                      id={`wallet_${field}`}
-                      type="text"
-                      placeholder={`${t("adminSendTo")}...`}
-                      className="flex-1 min-w-[220px] border border-border rounded-xl px-3 py-2 text-sm bg-background"
-                    />
-                    <input
-                      id={`amount_${field}`}
-                      type="number"
-                      placeholder={t("adminSendAmount")}
-                      className="w-28 border border-border rounded-xl px-3 py-2 text-sm bg-background"
-                    />
-                    <button
-                      onClick={async () => {
-                        const wallet = (document.getElementById(`wallet_${field}`) as HTMLInputElement)?.value?.toLowerCase();
-                        const amount = (document.getElementById(`amount_${field}`) as HTMLInputElement)?.value;
-                        if (!wallet || !amount || !address) return;
-                        const endpoint = field === "pinCount" ? "pin-count" : field;
-                        await adminPost(`/users/${wallet}/${endpoint}`, address, { op: "add", value: Number(amount) });
-                        flash(`✓ Sent ${amount} ${field} to ${wallet.slice(0,8)}...`);
-                        (document.getElementById(`wallet_${field}`) as HTMLInputElement).value = "";
-                        (document.getElementById(`amount_${field}`) as HTMLInputElement).value = "";
-                        loadUsers();
-                      }}
-                      className={`${btnCls} bg-primary text-primary-foreground hover:bg-primary/90`}
-                    >
-                      <Send className="w-4 h-4 inline mr-1" />{t("adminSend")}
-                    </button>
-                  </div>
+            <h3 className="font-bold">发送至指定钱包</h3>
+            {(["tokens","energy","pinCount"] as const).map(field => (
+              <div key={field} className="space-y-2">
+                <label className="text-sm font-semibold">
+                  {field === "tokens" ? "发送代币" : field === "energy" ? "发送能量" : "发送置顶次数"}
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  <input
+                    id={`wallet_${field}`}
+                    type="text"
+                    placeholder="目标钱包地址..."
+                    className="flex-1 min-w-[220px] border border-border rounded-xl px-3 py-2 text-sm bg-background"
+                  />
+                  <input
+                    id={`amount_${field}`}
+                    type="number"
+                    placeholder="数量"
+                    className="w-28 border border-border rounded-xl px-3 py-2 text-sm bg-background"
+                  />
+                  <button
+                    onClick={async () => {
+                      const wallet = (document.getElementById(`wallet_${field}`) as HTMLInputElement)?.value?.toLowerCase();
+                      const amount = (document.getElementById(`amount_${field}`) as HTMLInputElement)?.value;
+                      if (!wallet || !amount || !address) return;
+                      const endpoint = field === "pinCount" ? "pin-count" : field;
+                      const res = await adminPost(`/users/${wallet}/${endpoint}`, address, { op: "add", value: Number(amount) });
+                      if (res.error) {
+                        flash(`✗ 失败：${res.error}`);
+                      } else {
+                        flash(`✓ 已向 ${wallet.slice(0,8)}... 发送 ${amount} ${field === "tokens" ? "代币" : field === "energy" ? "能量" : "置顶次数"}`);
+                      }
+                      (document.getElementById(`wallet_${field}`) as HTMLInputElement).value = "";
+                      (document.getElementById(`amount_${field}`) as HTMLInputElement).value = "";
+                      loadUsers();
+                    }}
+                    className={`${btnCls} bg-primary text-primary-foreground hover:bg-primary/90`}
+                  >
+                    <Send className="w-4 h-4 inline mr-1" />发送
+                  </button>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
 
-          {/* Bulk points to all users */}
+          {/* Bulk tokens to all users */}
           <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
-            <h3 className="font-bold flex items-center gap-2"><Star className="w-5 h-5 text-yellow-500" />Bulk Points (All Users)</h3>
+            <h3 className="font-bold flex items-center gap-2"><Star className="w-5 h-5 text-yellow-500" />批量发送代币（全部用户）</h3>
             <div className="flex gap-2 flex-wrap">
-              <input id="bulk_amt" type="number" placeholder={t("adminSendAmount")}
+              <input id="bulk_amt" type="number" placeholder="数量"
                 className="w-28 border border-border rounded-xl px-3 py-2 text-sm bg-background" />
               <button onClick={async () => {
                 const v = (document.getElementById("bulk_amt") as HTMLInputElement)?.value;
                 if (!v || !address) return;
-                await adminPost("/users/all/points", address, { op: "add", value: Number(v) });
-                flash(`✓ Added ${v} points to all`);
+                await adminPost("/users/all/tokens", address, { op: "add", value: Number(v) });
+                flash(`✓ 已向所有用户发送 ${v} 代币`);
                 (document.getElementById("bulk_amt") as HTMLInputElement).value = "";
               }} className={`${btnCls} bg-green-500 text-white hover:bg-green-600`}>
-                + {t("adminSend")} to All
+                + 批量发送
               </button>
               <button onClick={async () => {
-                if (!confirm("Clear ALL users' points?") || !address) return;
-                await adminPost("/users/all/points", address, { op: "clear" });
-                flash("✓ Cleared all points");
+                if (!confirm("确认清空所有用户的代币余额？") || !address) return;
+                await adminPost("/users/all/tokens", address, { op: "clear" });
+                flash("✓ 已清空所有代币");
               }} className={`${btnCls} bg-red-500 text-white hover:bg-red-600`}>
-                Clear All
+                清空全部
               </button>
             </div>
           </div>
 
           {/* CSV export */}
           <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
-            <h3 className="font-bold flex items-center gap-2"><Download className="w-5 h-5 text-blue-500" />Export CSV</h3>
+            <h3 className="font-bold flex items-center gap-2"><Download className="w-5 h-5 text-blue-500" />导出 CSV</h3>
             <div className="flex gap-3 flex-wrap">
               <button onClick={() => downloadCsv("points-summary")}
                 className={`${btnCls} bg-blue-500 text-white hover:bg-blue-600`}>
-                <Download className="w-4 h-4 inline mr-1" />Points Summary
+                <Download className="w-4 h-4 inline mr-1" />总积分（全用户+代币详情）
               </button>
               <button onClick={() => downloadCsv("bills")}
                 className={`${btnCls} bg-violet-500 text-white hover:bg-violet-600`}>
-                <Download className="w-4 h-4 inline mr-1" />Bills
+                <Download className="w-4 h-4 inline mr-1" />用户账单
               </button>
             </div>
           </div>
@@ -516,7 +540,6 @@ export default function AdminPage() {
       {/* ─── System Tab ─── */}
       {tab === "system" && (
         <div className="space-y-5">
-          {/* Memory card */}
           <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold flex items-center gap-2"><Cpu className="w-5 h-5 text-blue-500" />实时系统状态</h3>
@@ -550,34 +573,27 @@ export default function AdminPage() {
             )}
           </div>
 
-          {/* Cleanup card */}
           <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
             <h3 className="font-bold flex items-center gap-2"><Trash2 className="w-5 h-5 text-red-500" />帖子清理工具</h3>
             <p className="text-sm text-muted-foreground">清理将永久删除最旧的帖子，操作不可恢复，请谨慎操作。</p>
 
-            {/* Mode selector */}
             <div className="flex gap-3">
-              <button
-                onClick={() => setCleanupMode("percent")}
+              <button onClick={() => setCleanupMode("percent")}
                 className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${cleanupMode === "percent" ? "bg-red-500 text-white shadow" : "bg-muted hover:bg-muted/80"}`}>
                 按比例清除
               </button>
-              <button
-                onClick={() => setCleanupMode("date")}
+              <button onClick={() => setCleanupMode("date")}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${cleanupMode === "date" ? "bg-red-500 text-white shadow" : "bg-muted hover:bg-muted/80"}`}>
                 <Calendar className="w-4 h-4" />按时间段清除
               </button>
             </div>
 
-            {/* Percent mode */}
             {cleanupMode === "percent" && (
               <div className="space-y-3">
                 <div className="flex items-center gap-4">
-                  <input
-                    type="range" min={1} max={80} value={cleanupPct}
+                  <input type="range" min={1} max={80} value={cleanupPct}
                     onChange={e => setCleanupPct(Number(e.target.value))}
-                    className="flex-1 accent-red-500"
-                  />
+                    className="flex-1 accent-red-500" />
                   <span className="text-2xl font-bold text-red-500 w-16 text-right">{cleanupPct}%</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -595,7 +611,6 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* Date mode */}
             {cleanupMode === "date" && (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -618,10 +633,8 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* Action buttons */}
             {!cleanupConfirm ? (
-              <button
-                onClick={() => setCleanupConfirm(true)}
+              <button onClick={() => setCleanupConfirm(true)}
                 disabled={cleanupMode === "date" && (!cleanupFrom || !cleanupTo)}
                 className="px-5 py-2.5 rounded-xl bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
                 <Trash2 className="w-4 h-4" />执行清理
@@ -653,38 +666,58 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ─── Confirm/Reject Dialog ─── */}
+      {/* ─── Approve / Reject Dialog ─── */}
       {dialog && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
           onClick={() => setDialog(null)}>
           <div className="bg-card border border-border rounded-2xl p-7 max-w-sm w-full mx-4 shadow-2xl space-y-5"
             onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-bold">
-              {dialog.type === "approve" ? "✓ " + t("adminApproveMsg") : "✗ " + t("adminRejectMsg")}
+              {dialog.type === "approve" ? "✓ 确认通过此申请？" : "✗ 确认拒绝此申请？"}
             </h2>
-
             {dialog.type === "reject" && (
               <div>
                 <label className="text-sm font-semibold block mb-2">{t("adminRejectReason")}</label>
-                <textarea
-                  value={rejectReason}
-                  onChange={e => setRejectReason(e.target.value)}
-                  placeholder={t("adminRejectPlaceholder")}
-                  rows={3}
-                  className="w-full p-3 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm resize-none"
-                />
+                <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)}
+                  placeholder={t("adminRejectPlaceholder")} rows={3}
+                  className="w-full p-3 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm resize-none" />
               </div>
             )}
-
             <div className="flex gap-3">
               <button onClick={() => setDialog(null)}
                 className="flex-1 py-3 rounded-xl border border-border font-semibold text-sm hover:bg-muted transition-colors">
-                {t("adminCancel")}
+                取消
               </button>
-              <button
-                onClick={() => dialog.type === "approve" ? approve(dialog.appId) : reject(dialog.appId)}
+              <button onClick={() => dialog.type === "approve" ? approve(dialog.appId) : reject(dialog.appId)}
                 className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-colors ${dialog.type === "approve" ? "bg-green-500 text-white hover:bg-green-600" : "bg-red-500 text-white hover:bg-red-600"}`}>
-                {t("adminConfirm")}
+                确认
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Delete App Record Dialog ─── */}
+      {deleteAppDialog !== null && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setDeleteAppDialog(null)}>
+          <div className="bg-card border border-border rounded-2xl p-7 max-w-sm w-full mx-4 shadow-2xl space-y-5"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <Trash2 className="w-7 h-7 text-red-500" />
+              </div>
+              <h2 className="text-lg font-bold">删除申请记录</h2>
+              <p className="text-sm text-muted-foreground">此操作将永久删除该申请记录，不可恢复。</p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteAppDialog(null)}
+                className="flex-1 py-3 rounded-xl border border-border font-semibold text-sm hover:bg-muted transition-colors">
+                取消
+              </button>
+              <button onClick={() => deleteApp(deleteAppDialog)}
+                className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-colors">
+                确认删除
               </button>
             </div>
           </div>
@@ -715,7 +748,7 @@ export default function AdminPage() {
               </button>
               <button onClick={() => revokeUser(revokeDialog)}
                 className="flex-1 py-3 rounded-xl bg-orange-500 text-white font-bold text-sm hover:bg-orange-600 transition-colors">
-                确定
+                确定撤销
               </button>
             </div>
           </div>

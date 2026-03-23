@@ -141,6 +141,45 @@ router.post("/users/:wallet/energy", requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ error: String(e) }); }
 });
 
+router.delete("/applications/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    await db.delete(spaceApplicationsTable).where(eq(spaceApplicationsTable.id, id));
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: String(e) }); }
+});
+
+router.post("/users/:wallet/tokens", requireAdmin, async (req, res) => {
+  try {
+    const wallet = req.params.wallet.toLowerCase();
+    const { op, value } = req.body as { op: "set" | "add" | "sub" | "clear"; value?: number };
+    const users = await db.select().from(usersTable).where(eq(usersTable.wallet, wallet)).limit(1);
+    if (!users.length) return res.status(404).json({ error: "User not found" });
+    const cur = users[0].tokens;
+    let next = cur;
+    if (op === "set") next = Number(value ?? 0);
+    else if (op === "add") next = cur + Number(value ?? 0);
+    else if (op === "sub") next = Math.max(0, cur - Number(value ?? 0));
+    else if (op === "clear") next = 0;
+    await db.update(usersTable).set({ tokens: next }).where(eq(usersTable.wallet, wallet));
+    res.json({ success: true, tokens: next });
+  } catch (e) { res.status(500).json({ error: String(e) }); }
+});
+
+router.post("/users/all/tokens", requireAdmin, async (req, res) => {
+  try {
+    const { op, value } = req.body as { op: "add" | "sub" | "clear"; value?: number };
+    if (op === "clear") {
+      await db.update(usersTable).set({ tokens: 0 });
+    } else if (op === "add") {
+      await db.execute(sql`UPDATE users SET tokens = tokens + ${Number(value ?? 0)}`);
+    } else if (op === "sub") {
+      await db.execute(sql`UPDATE users SET tokens = GREATEST(0, tokens - ${Number(value ?? 0)})`);
+    }
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: String(e) }); }
+});
+
 router.post("/users/:wallet/points", requireAdmin, async (req, res) => {
   try {
     const wallet = req.params.wallet.toLowerCase();
@@ -211,26 +250,21 @@ router.post("/users/:wallet/revoke", requireAdmin, async (req, res) => {
 
 router.get("/points-summary", requireAdmin, async (req, res) => {
   try {
-    const users = await db.select({
-      wallet: usersTable.wallet,
-      username: usersTable.username,
-      points: usersTable.points,
-      energy: usersTable.energy,
-      pinCount: usersTable.pinCount,
-      createdAt: usersTable.createdAt,
-    }).from(usersTable).orderBy(desc(usersTable.points));
+    const users = await db.select().from(usersTable).orderBy(desc(usersTable.tokens));
 
     const fmt = (v: unknown) => (v == null ? "" : String(v));
     const csv = [
-      ["Wallet","Username","Points","Energy","PinCount","Joined"].join(","),
+      ["钱包地址","用户名","代币余额","积分","能量","置顶次数","身份类型","身份状态","邀请数","注册时间"].join(","),
       ...users.map(u => [
-        fmt(u.wallet), fmt(u.username), fmt(u.points), fmt(u.energy), fmt(u.pinCount), fmt(u.createdAt)
+        fmt(u.wallet), fmt(u.username), fmt(u.tokens), fmt(u.points), fmt(u.energy),
+        fmt(u.pinCount), fmt(u.spaceType ?? "普通用户"), fmt(u.spaceStatus ?? "-"),
+        fmt(u.inviteCount), fmt(u.createdAt)
       ].join(","))
     ].join("\n");
 
-    res.setHeader("Content-Type", "text/csv");
-    res.setHeader("Content-Disposition", "attachment; filename=points-summary.csv");
-    res.send(csv);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", "attachment; filename=tokens-summary.csv");
+    res.send("\uFEFF" + csv);
   } catch (e) { res.status(500).json({ error: String(e) }); }
 });
 
