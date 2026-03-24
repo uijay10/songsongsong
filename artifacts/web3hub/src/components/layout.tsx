@@ -221,22 +221,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* ── Nav rows ── */}
         <div className="border-t border-border/10" style={{background: "#0A0C14"}}>
-          <div className="max-w-7xl mx-auto px-2 py-1.5 space-y-1">
-            {/* Row 1 */}
-            <div className="flex items-center justify-center gap-0.5 overflow-x-auto scrollbar-none">
-              {NAV_ROW1_KEYS.map(({ key, href }) => (
-                <Link key={key} href={href} className={navLinkClass(href)}>
-                  {location !== href && (
-                    <span className="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/10 group-hover:scale-105 transition-all duration-200 origin-center" />
-                  )}
-                  <span className="relative z-10">{t(key)}</span>
-                </Link>
-              ))}
-            </div>
-
-            {/* Row 2 */}
-            <div className="flex items-center justify-center gap-0.5 overflow-x-auto scrollbar-none">
-              {NAV_ROW2_KEYS.map(({ key, href }) => (
+          <div className="max-w-7xl mx-auto px-2 py-1.5">
+            <div className="flex flex-wrap items-center justify-center gap-x-0.5 gap-y-0.5">
+              {[...NAV_ROW1_KEYS, ...NAV_ROW2_KEYS].map(({ key, href }) => (
                 <Link key={key} href={href} className={navLinkClass(href)}>
                   {location !== href && (
                     <span className="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/10 group-hover:scale-105 transition-all duration-200 origin-center" />
