@@ -88,7 +88,7 @@ export default function AboutPage() {
 
         {/* Footer note */}
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Web3 Release · 2025
+          Web3 Release · 2026
         </p>
       </div>
     </div>
