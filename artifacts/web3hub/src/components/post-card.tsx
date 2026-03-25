@@ -21,7 +21,7 @@ function useCountdown(targetIso: string | null | undefined) {
 }
 import { createPortal } from "react-dom";
 import { filterContent, filterErrorMessage } from "@/lib/content-filter";
-import { Heart, MessageCircle, Copy, Check, Pin, User, Eye, Clock, Globe, Twitter as TwitterIcon, Phone, X } from "lucide-react";
+import { Heart, MessageCircle, Copy, Check, Pin, User, Eye, Clock, Globe, Twitter as TwitterIcon, X } from "lucide-react";
 
 const SECTION_KEY_MAP: Record<string, string> = {
   testnet: "sTestnetLabel", ido: "sIdoLabel", security: "sSecurityLabel",
@@ -292,12 +292,12 @@ function UserInfoModal({ wallet, authorName, authorAvatar, authorType, authorTag
             {/* Contact */}
             {fetched && (extra?.contact && extra?.contactPublic ? (
               <div className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2">
-                <Phone className="w-3.5 h-3.5 shrink-0 text-pink-500" />
+                <span className="shrink-0 text-[10px] font-black text-pink-500 leading-none tracking-tight">KIT</span>
                 <span className="text-xs text-gray-700 dark:text-gray-200 select-all flex-1 truncate">{extra.contact}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2">
-                <Phone className="w-3.5 h-3.5 shrink-0 text-gray-300 dark:text-gray-600" />
+                <span className="shrink-0 text-[10px] font-black text-gray-300 dark:text-gray-600 leading-none tracking-tight">KIT</span>
                 <span className="text-xs text-gray-300 dark:text-gray-600">—</span>
               </div>
             ))}
