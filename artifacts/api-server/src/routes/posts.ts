@@ -9,37 +9,22 @@ const router: IRouter = Router();
 const PIN_SLOTS = 14; // max simultaneous pinned posts on homepage
 
 /**
- * Deterministic auto-view computation — no extra DB columns.
- * Uses post.id as seed; returns total auto-views accrued up to now.
- * Project posts: target 2180–53560, starts 5–10 min after creation, ends 24h later.
- * KOL / developer posts: target 160–2068, same timing.
+ * Deterministic auto-view total — fixed per post, based on post id as seed.
+ * Project posts: 2000–26000 · KOL/Developer: 300–1500 · Normal: 200–1000.
+ * Real views (p.views from DB) are added on top in formatPost.
  */
-function computeAutoViews(id: number, createdAt: Date, authorType: string | null): number {
-  if (authorType !== "project" && authorType !== "kol" && authorType !== "developer") return 0;
+function computeAutoViews(id: number, authorType: string | null): number {
+  // Two-step hash for good distribution across small and large ids
+  const h = Math.abs((id * 2654435761 + id * id * 40503) % 100_000);
+  const rand = h / 100_000; // 0–1 deterministic float
 
-  const startDelay = (5 + (id % 6)) * 60_000;          // 5–10 min in ms
-  const startMs = createdAt.getTime() + startDelay;
-  const endMs   = createdAt.getTime() + 24 * 3_600_000; // 24 h
-  const now     = Date.now();
-
-  if (now < startMs) return 0;
-
-  const elapsed  = Math.min(now, endMs) - startMs;
-  const duration = endMs - startMs;
-  const progress = elapsed / duration; // 0–1
-
-  // Deterministic target from post id
-  let target: number;
   if (authorType === "project") {
-    const range = 53560 - 2180;
-    target = 2180 + ((id * 7919 + id * id * 17) % range);
+    return 2000 + Math.floor(rand * 24_001); // 2000–26000
+  } else if (authorType === "kol" || authorType === "developer") {
+    return 300 + Math.floor(rand * 1_201);   // 300–1500
   } else {
-    const range = 2068 - 160;
-    target = 160 + ((id * 6271 + id * id * 11) % range);
+    return 200 + Math.floor(rand * 801);     // 200–1000
   }
-  // Ease-out: fast start, gentle tail — mimics organic traffic
-  const eased = 1 - Math.pow(1 - progress, 1.8);
-  return Math.floor(target * eased);
 }
 
 function todayStr() {
@@ -47,7 +32,7 @@ function todayStr() {
 }
 
 function formatPost(p: typeof postsTable.$inferSelect & { authorNameLive?: string | null; authorAvatarLive?: string | null; authorTagsLive?: string[] | null }) {
-  const autoViews = computeAutoViews(p.id, p.createdAt, p.authorType);
+  const autoViews = computeAutoViews(p.id, p.authorType);
   return {
     id: p.id,
     title: p.title,
