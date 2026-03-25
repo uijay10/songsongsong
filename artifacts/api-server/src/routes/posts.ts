@@ -67,6 +67,7 @@ function formatPost(p: typeof postsTable.$inferSelect & { authorNameLive?: strin
     pinnedUntil: p.pinnedUntil ? p.pinnedUntil.toISOString() : null,
     pinQueued: p.pinQueued,
     pinQueuedAt: p.pinQueuedAt ? p.pinQueuedAt.toISOString() : null,
+    expiresAt: (p as any).expiresAt ? (p as any).expiresAt.toISOString() : null,
     createdAt: p.createdAt.toISOString(),
   };
 }
@@ -116,6 +117,8 @@ router.get("/", async (req, res) => {
   await expireAndPromote();
 
   const conditions = [];
+  // Always filter out expired posts
+  conditions.push(sql`(${postsTable.expiresAt} IS NULL OR ${postsTable.expiresAt} > now())`);
   if (section) conditions.push(eq(postsTable.section, section));
   if (authorType) conditions.push(eq(postsTable.authorType, authorType));
   if (homeMode) conditions.push(eq(postsTable.authorType, "project"));
@@ -132,10 +135,15 @@ router.get("/", async (req, res) => {
 
   const where = conditions.length ? and(...conditions) : undefined;
 
+  // Jobs section: KOL/dev posts float above normal-user posts
+  const orderBy = section === "jobs"
+    ? [asc(sql`CASE WHEN ${postsTable.authorType} IS NULL THEN 1 ELSE 0 END`), desc(postsTable.createdAt)]
+    : [desc(postsTable.createdAt)];
+
   const all = await db.select({ count: sql<number>`count(*)` }).from(postsTable).where(where);
   const posts = await db.select().from(postsTable)
     .where(where)
-    .orderBy(desc(postsTable.createdAt))
+    .orderBy(...orderBy)
     .limit(limit)
     .offset(offset);
 
@@ -235,6 +243,9 @@ router.post("/", async (req, res) => {
 
   await db.update(usersTable).set({ lastPostAt: new Date() }).where(eq(usersTable.wallet, lw));
 
+  // Normal user posts expire after 3 days
+  const postExpiresAt = isNormalPoster ? new Date(Date.now() + 3 * 24 * 3600_000) : null;
+
   const inserted = await db.insert(postsTable).values({
     title,
     content,
@@ -247,6 +258,7 @@ router.post("/", async (req, res) => {
     comments: 0,
     kolLikePoints: 0,
     kolCommentPoints: 0,
+    expiresAt: postExpiresAt,
     isPinned: false,
     pinQueued: false,
   }).returning();

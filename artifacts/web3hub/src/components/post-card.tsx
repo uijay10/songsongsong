@@ -1,7 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+function useCountdown(targetIso: string | null | undefined) {
+  const [remaining, setRemaining] = useState("");
+  useEffect(() => {
+    if (!targetIso) { setRemaining(""); return; }
+    const tick = () => {
+      const diff = new Date(targetIso).getTime() - Date.now();
+      if (diff <= 0) { setRemaining(""); return; }
+      const d = Math.floor(diff / 86_400_000);
+      const h = Math.floor((diff % 86_400_000) / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      const s = Math.floor((diff % 60_000) / 1_000);
+      setRemaining(d > 0 ? `${d}d ${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}` : `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [targetIso]);
+  return remaining;
+}
 import { createPortal } from "react-dom";
 import { filterContent, filterErrorMessage } from "@/lib/content-filter";
-import { Heart, MessageCircle, Copy, Check, Pin, User, Eye } from "lucide-react";
+import { Heart, MessageCircle, Copy, Check, Pin, User, Eye, Clock } from "lucide-react";
 
 const SECTION_KEY_MAP: Record<string, string> = {
   testnet: "sTestnetLabel", ido: "sIdoLabel", security: "sSecurityLabel",
@@ -43,6 +63,7 @@ interface PostCardPost {
   comments: number;
   isPinned?: boolean;
   pinnedUntil?: string | null;
+  expiresAt?: string | null;
   createdAt: string;
 }
 
@@ -170,6 +191,8 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
   const [adminPinHours, setAdminPinHours] = useState<number | "">( 72);
   const [adminPinCustom, setAdminPinCustom] = useState(false);
   const [expanded, setExpanded] = useState(false);
+
+  const expiryCountdown = useCountdown(post.expiresAt ?? null);
 
   const isLong = post.content.length > CONTENT_LIMIT;
   const displayContent = expanded || !isLong
@@ -303,6 +326,11 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
             <Pin className="w-3 h-3" /> {t("pinCount")}
           </div>
         )}
+        {expiryCountdown && (
+          <div className="flex items-center gap-1 text-orange-500 text-xs font-medium mb-2">
+            <Clock className="w-3 h-3" /> 到期：<span className="font-mono font-bold">{expiryCountdown}</span>
+          </div>
+        )}
         <div className="flex items-start gap-3">
           <Link href={authorHref}>
             <div className="w-8 h-8 rounded-full shrink-0 border border-border overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/40 bg-transparent"
@@ -412,6 +440,11 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
         <div className="flex items-center gap-1 text-violet-500 text-xs font-semibold mb-3">
           <Pin className="w-3.5 h-3.5" /> {t("pinned")}
           {post.pinnedUntil && <span className="ml-1 opacity-60 font-normal">(expires {formatDistanceToNow(new Date(post.pinnedUntil))})</span>}
+        </div>
+      )}
+      {expiryCountdown && (
+        <div className="flex items-center gap-1 text-orange-500 text-xs font-medium mb-3">
+          <Clock className="w-3.5 h-3.5" /> 到期：<span className="font-mono font-bold">{expiryCountdown}</span>
         </div>
       )}
 

@@ -20,6 +20,7 @@ export const postsTable = pgTable("posts", {
   pinnedUntil: timestamp("pinned_until"),
   pinQueued: boolean("pin_queued").notNull().default(false),
   pinQueuedAt: timestamp("pin_queued_at"),
+  expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
