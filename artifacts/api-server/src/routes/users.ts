@@ -30,6 +30,7 @@ function fmtUser(u: typeof usersTable.$inferSelect) {
     twitter: u.twitter,
     website: u.website,
     contact: (u as any).contact ?? null,
+    contactPublic: (u as any).contactPublic ?? false,
     language: u.language,
     pinCount: u.pinCount,
     spaceRejectedAt: (u as any).spaceRejectedAt?.toISOString() ?? null,
@@ -118,6 +119,7 @@ router.post("/upsert", async (req, res) => {
   if (twitter !== undefined) updateData.twitter = twitter;
   if (website !== undefined) updateData.website = website;
   if ((req.body as any).contact !== undefined) updateData.contact = (req.body as any).contact;
+  if ((req.body as any).contactPublic !== undefined) updateData.contactPublic = (req.body as any).contactPublic;
   if (language !== undefined) updateData.language = language;
   if (tags !== undefined) updateData.tags = Array.isArray(tags) ? JSON.stringify(tags.slice(0, 2)) : null;
 

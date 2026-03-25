@@ -88,6 +88,13 @@ export default function PublicProfile() {
               </div>
             </div>
 
+            {user?.contact && user?.contactPublic && (
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
+                <span className="text-xs text-muted-foreground/60">{t("contactLabel")}：</span>
+                <span className="select-all">{user.contact}</span>
+              </div>
+            )}
+
             {(user?.twitter || user?.telegram || user?.discord) && (
               <div className="flex flex-wrap gap-3 mt-2 text-sm text-muted-foreground">
                 {user.twitter && (

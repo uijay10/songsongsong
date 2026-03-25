@@ -38,6 +38,7 @@ export const usersTable = pgTable("users", {
   normalDailyPostDate: text("normal_daily_post_date"),
   tags: text("tags"),
   contact: text("contact"),
+  contactPublic: boolean("contact_public").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
