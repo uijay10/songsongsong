@@ -248,8 +248,29 @@ router.post("/", async (req, res) => {
     await db.delete(postsTable).where(and(eq(postsTable.authorWallet, lw), eq(postsTable.section, "jobs")));
   }
 
-  // Normal user posts expire after 3 days
-  const postExpiresAt = isNormalPoster ? new Date(Date.now() + 3 * 24 * 3600_000) : null;
+  // KOL / developer: enforce max 5 posts per section — delete the oldest when posting the 6th
+  const isKolOrDev = spaceType === "kol" || spaceType === "developer";
+  if (isKolOrDev) {
+    const existing = await db
+      .select({ id: postsTable.id })
+      .from(postsTable)
+      .where(and(eq(postsTable.authorWallet, lw), eq(postsTable.section, section)))
+      .orderBy(asc(postsTable.createdAt));
+    if (existing.length >= 5) {
+      // Delete the oldest post(s) so the count stays at 4 before the new one is added
+      const toDelete = existing.slice(0, existing.length - 4);
+      for (const p of toDelete) {
+        await db.delete(postsTable).where(eq(postsTable.id, p.id));
+      }
+    }
+  }
+
+  // Expiry: normal users 3 days, KOL/dev 15 days, project unlimited
+  const postExpiresAt = isNormalPoster
+    ? new Date(Date.now() + 3 * 24 * 3600_000)
+    : isKolOrDev
+      ? new Date(Date.now() + 15 * 24 * 3600_000)
+      : null;
 
   const inserted = await db.insert(postsTable).values({
     title,
