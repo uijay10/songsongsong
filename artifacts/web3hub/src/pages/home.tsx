@@ -279,18 +279,14 @@ export default function Home() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-end gap-3 pt-2">
         <DailyLuckyBtn lastSlotPull={me?.lastSlotPull ?? null} label={t("dailyLucky")} />
-        {hasJoined ? (
-          <span className="shrink-0 inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-500/10 to-green-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/60 cursor-default select-none pointer-events-none">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />{t("alreadyJoined")}
-          </span>
-        ) : isPending ? (
-          <span className="shrink-0 inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 cursor-default select-none pointer-events-none">
-            {t("spacePending")}
-          </span>
-        ) : (
-          <Link href="/apply" className="shrink-0 inline-flex items-center gap-1 px-5 py-2 rounded-full text-sm font-bold bg-[#FF69B4] text-white hover:bg-[#ff4fa8] shadow-sm hover:shadow transition-all">
-            {t("register")}
-          </Link>
+        {isConnected && address && (
+          <button
+            type="button"
+            onClick={() => { setLocation("/profile"); }}
+            className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-300/50 transition-all whitespace-nowrap"
+          >
+            {t("dashboard")}
+          </button>
         )}
       </div>
 
@@ -300,13 +296,6 @@ export default function Home() {
           <p className="text-lg sm:text-xl font-bold leading-snug flex-1" style={{ color: "#FF69B4" }}>
             {t("encouragement")}
           </p>
-          <button
-            type="button"
-            onClick={() => { if (isConnected && address) { setLocation("/profile"); } else { setShowWalletModal(true); } }}
-            className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-300/50 transition-all whitespace-nowrap"
-          >
-            {t("dashboard")}
-          </button>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 max-w-xl">
