@@ -193,9 +193,6 @@ export default function ApplySpace() {
               <Field label={`${t("applyProjectTwitter")} *`} error={errors.projectTwitter?.message}>
                 <input {...register("projectTwitter")} className={inputCls} placeholder="@YourProject" />
               </Field>
-              <Field label={`${t("applyPersonalTwitter")} *`} error={errors.twitter?.message}>
-                <input {...register("twitter")} className={inputCls} placeholder="@YourHandle" />
-              </Field>
               <Field label={`${t("applyPostArticle")} *`} note={articleInstr}>
                 <ArticleTemplate template={articleTemplate} xLinkLabel={xLinkLabel} register={register} error={errors.tweetLink?.message} />
               </Field>
