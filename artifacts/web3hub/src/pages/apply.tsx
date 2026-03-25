@@ -188,7 +188,7 @@ export default function ApplySpace() {
           {selectedType === ApplySpaceRequestType.project && (
             <>
               <Field label={`${t("applyProjectName")} *`} error={errors.projectName?.message}>
-                <input {...register("projectName")} className={inputCls} placeholder="Web3Hub" />
+                <input {...register("projectName")} className={inputCls} placeholder="Web3 Release" />
               </Field>
               <Field label={`${t("applyProjectTwitter")} *`} error={errors.projectTwitter?.message}>
                 <input {...register("projectTwitter")} className={inputCls} placeholder="@YourProject" />
