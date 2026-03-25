@@ -23,12 +23,20 @@ const ALL_SECTIONS = [
   "community", "developer",
 ] as const;
 
+const PROJECT_SECTIONS: typeof ALL_SECTIONS[number][] = [
+  "recruiting",
+  "testnet", "ido", "security", "integration", "airdrop",
+  "events", "funding", "nodes",
+  "ecosystem", "partners", "hackathon", "ama", "bugbounty",
+  "community", "developer",
+];
+
 const KOL_SECTIONS: typeof ALL_SECTIONS[number][] = [
-  "testnet", "events", "ecosystem", "partners", "hackathon", "ama", "bugbounty", "community", "recruiting",
+  "testnet", "events", "ecosystem", "partners", "hackathon", "ama", "bugbounty", "community", "jobs",
 ];
 
 const DEV_SECTIONS: typeof ALL_SECTIONS[number][] = [
-  "developer", "hackathon", "bugbounty", "security", "integration", "jobs", "recruiting", "community",
+  "developer", "hackathon", "bugbounty", "security", "integration", "jobs", "community",
 ];
 
 const NORMAL_SECTIONS: typeof ALL_SECTIONS[number][] = ["jobs"];
@@ -46,7 +54,7 @@ function getSections(spaceType: string): string[] {
   if (spaceType === "kol") return KOL_SECTIONS as unknown as string[];
   if (spaceType === "developer") return DEV_SECTIONS as unknown as string[];
   if (!spaceType) return NORMAL_SECTIONS as unknown as string[];
-  return ALL_SECTIONS as unknown as string[];
+  return PROJECT_SECTIONS as unknown as string[];
 }
 
 type Step = "form" | "confirm" | "done";

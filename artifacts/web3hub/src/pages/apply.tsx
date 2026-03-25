@@ -8,6 +8,8 @@ import { ApplySpaceRequestType } from "@workspace/api-client-react";
 import { Building2, Code2, Megaphone, CheckCircle2, Copy, Check } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
+const REQUIRED = "必填";
+
 const schema = z.object({
   type: z.nativeEnum(ApplySpaceRequestType),
   twitter: z.string().optional(),
@@ -17,6 +19,30 @@ const schema = z.object({
   docsLink: z.string().optional(),
   github: z.string().optional(),
   linkedin: z.string().optional(),
+}).superRefine((data, ctx) => {
+  const req = (field: keyof typeof data, path: string) => {
+    const val = data[field] as string | undefined;
+    if (!val || val.trim() === "") {
+      ctx.addIssue({ code: "custom", path: [path], message: REQUIRED });
+    }
+  };
+  if (data.type === ApplySpaceRequestType.project) {
+    req("projectName", "projectName");
+    req("projectTwitter", "projectTwitter");
+    req("twitter", "twitter");
+    req("tweetLink", "tweetLink");
+    req("docsLink", "docsLink");
+  }
+  if (data.type === ApplySpaceRequestType.kol) {
+    req("twitter", "twitter");
+    req("tweetLink", "tweetLink");
+  }
+  if (data.type === ApplySpaceRequestType.developer) {
+    req("twitter", "twitter");
+    req("tweetLink", "tweetLink");
+    req("github", "github");
+    req("linkedin", "linkedin");
+  }
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -34,7 +60,7 @@ function Field({ label, note, error, children }: {
   );
 }
 
-function ArticleTemplate({ template, xLinkLabel, register }: { template: string; xLinkLabel: string; register: any }) {
+function ArticleTemplate({ template, xLinkLabel, register, error }: { template: string; xLinkLabel: string; register: any; error?: string }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard.writeText(template).then(() => {
@@ -58,6 +84,7 @@ function ArticleTemplate({ template, xLinkLabel, register }: { template: string;
         placeholder="https://x.com/..."
       />
       <p className="text-xs text-muted-foreground">← {xLinkLabel}</p>
+      {error && <p className="text-destructive text-xs mt-1">{error}</p>}
     </div>
   );
 }
@@ -155,16 +182,16 @@ export default function ApplySpace() {
               <Field label={`${t("applyProjectName")} *`} error={errors.projectName?.message}>
                 <input {...register("projectName")} className={inputCls} placeholder="Web3Hub" />
               </Field>
-              <Field label={`${t("applyProjectTwitter")} *`}>
+              <Field label={`${t("applyProjectTwitter")} *`} error={errors.projectTwitter?.message}>
                 <input {...register("projectTwitter")} className={inputCls} placeholder="@YourProject" />
               </Field>
-              <Field label={`${t("applyPersonalTwitter")} *`}>
+              <Field label={`${t("applyPersonalTwitter")} *`} error={errors.twitter?.message}>
                 <input {...register("twitter")} className={inputCls} placeholder="@YourHandle" />
               </Field>
-              <Field label={t("applyPostArticle")} note={articleInstr}>
-                <ArticleTemplate template={articleTemplate} xLinkLabel={xLinkLabel} register={register} />
+              <Field label={`${t("applyPostArticle")} *`} note={articleInstr}>
+                <ArticleTemplate template={articleTemplate} xLinkLabel={xLinkLabel} register={register} error={errors.tweetLink?.message} />
               </Field>
-              <Field label={t("applyDocs")}>
+              <Field label={`${t("applyDocs")} *`} error={errors.docsLink?.message}>
                 <input {...register("docsLink")} className={inputCls} placeholder="https://..." />
               </Field>
             </>
@@ -173,11 +200,11 @@ export default function ApplySpace() {
           {/* KOL fields */}
           {selectedType === ApplySpaceRequestType.kol && (
             <>
-              <Field label={`${t("applyPersonalTwitter")} *`}>
+              <Field label={`${t("applyPersonalTwitter")} *`} error={errors.twitter?.message}>
                 <input {...register("twitter")} className={inputCls} placeholder="@YourHandle" />
               </Field>
-              <Field label={t("applyPostArticle")} note={articleInstr} error={errors.tweetLink?.message}>
-                <ArticleTemplate template={articleTemplate} xLinkLabel={xLinkLabel} register={register} />
+              <Field label={`${t("applyPostArticle")} *`} note={articleInstr}>
+                <ArticleTemplate template={articleTemplate} xLinkLabel={xLinkLabel} register={register} error={errors.tweetLink?.message} />
               </Field>
             </>
           )}
@@ -185,16 +212,16 @@ export default function ApplySpace() {
           {/* Developer fields */}
           {selectedType === ApplySpaceRequestType.developer && (
             <>
-              <Field label={`${t("applyPersonalTwitter")} *`}>
+              <Field label={`${t("applyPersonalTwitter")} *`} error={errors.twitter?.message}>
                 <input {...register("twitter")} className={inputCls} placeholder="@YourHandle" />
               </Field>
-              <Field label={t("applyPostArticle")} note={articleInstr}>
-                <ArticleTemplate template={articleTemplate} xLinkLabel={xLinkLabel} register={register} />
+              <Field label={`${t("applyPostArticle")} *`} note={articleInstr}>
+                <ArticleTemplate template={articleTemplate} xLinkLabel={xLinkLabel} register={register} error={errors.tweetLink?.message} />
               </Field>
               <Field label={`${t("applyGithub")} *`} error={errors.github?.message}>
                 <input {...register("github")} className={inputCls} placeholder="https://github.com/..." />
               </Field>
-              <Field label={t("applyLinkedin")}>
+              <Field label={`${t("applyLinkedin")} *`} error={errors.linkedin?.message}>
                 <input {...register("linkedin")} className={inputCls} placeholder="https://linkedin.com/in/..." />
               </Field>
             </>
