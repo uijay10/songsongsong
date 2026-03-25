@@ -357,8 +357,8 @@ export default function PostNew() {
             <div className="text-xs text-muted-foreground text-right mt-1">{content.length}/5000</div>
           </div>
 
-          {/* Pin option */}
-          {pinCount > 0 && (
+          {/* Pin option — project users only */}
+          {pinCount > 0 && spaceType === "project" && (
             <label className="flex items-center gap-3 p-4 rounded-xl border-2 border-dashed cursor-pointer transition-colors
               hover:border-amber-300 has-[:checked]:border-amber-400 has-[:checked]:bg-amber-50 dark:has-[:checked]:bg-amber-950/20">
               <input type="checkbox" checked={wantToPin} onChange={e => setWantToPin(e.target.checked)}
