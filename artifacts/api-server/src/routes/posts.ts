@@ -200,6 +200,19 @@ router.post("/", async (req, res) => {
       }
     }
 
+    // Normal user restrictions: jobs section only + 1 post per 24h
+    const isNormalUser = !spaceType || (spaceType !== "project" && spaceType !== "kol" && spaceType !== "developer");
+    if (isNormalUser) {
+      if (section !== "jobs") {
+        return res.status(403).json({ error: "NORMAL_USER_SECTION_RESTRICTED", message: "普通用户只能发布到求职/招聘分区" });
+      }
+      const lastPost = user.lastPostAt ? new Date((user as any).lastPostAt).getTime() : null;
+      if (lastPost && Date.now() - lastPost < 24 * 60 * 60 * 1000) {
+        const nextPost = new Date(lastPost + 24 * 60 * 60 * 1000);
+        return res.status(429).json({ error: "NORMAL_DAILY_LIMIT", nextPost: nextPost.toISOString() });
+      }
+    }
+
     // Daily post limit — all approved types: 10 posts / 24 h
     const dailyLimit = spaceType === "project" ? 10 : spaceType === "kol" ? 10 : spaceType === "developer" ? 10 : 0;
     if (dailyLimit > 0) {

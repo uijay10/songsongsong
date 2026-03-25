@@ -152,6 +152,11 @@ export default function Profile() {
   const [deletingId, setDeletingId] = useState<number|null>(null);
   const [tokenCount, setTokenCount] = useState<number>(0);
   const [lastSlotPull, setLastSlotPull] = useState<string | null>(null);
+  const [energyCount, setEnergyCount] = useState<number | null>(null);
+  const [showExchangeModal, setShowExchangeModal] = useState(false);
+  const [exchangeAmt, setExchangeAmt] = useState(200);
+  const [exchanging, setExchanging] = useState(false);
+  const [exchangeErr, setExchangeErr] = useState("");
 
   const { t, lang } = useLang();
   const isSpaceOwner = me?.spaceStatus === "approved" || me?.spaceStatus === "active";
@@ -172,6 +177,7 @@ export default function Profile() {
       setSelectedTags(me.tags ?? []);
       setTokenCount(me.tokens ?? 0);
       setLastSlotPull(me.lastSlotPull ?? null);
+      setEnergyCount(me.energy ?? 0);
     }
   }, [me]);
 
@@ -256,7 +262,34 @@ export default function Profile() {
   const inviteCode = me?.inviteCode ?? "—";
   const inviteCount = me?.inviteCount ?? 0;
   const points = me?.points ?? 0;
-  const energy = me?.energy ?? 0;
+  const energy = energyCount !== null ? energyCount : (me?.energy ?? 0);
+  const isNormalUser = !spaceType;
+
+  const handleExchange = async () => {
+    if (!address || exchanging) return;
+    setExchanging(true);
+    setExchangeErr("");
+    try {
+      const res = await fetch(`${apiBase}/users/exchange-energy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet: address, amount: exchangeAmt }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setExchangeErr(data.error === "INSUFFICIENT_TOKENS" ? "代币不足" : "兑换失败，请重试");
+      } else {
+        setTokenCount(data.tokens);
+        setEnergyCount(data.energy);
+        setShowExchangeModal(false);
+        setExchangeAmt(200);
+      }
+    } catch {
+      setExchangeErr("网络错误，请重试");
+    } finally {
+      setExchanging(false);
+    }
+  };
   const pinCount = me?.pinCount ?? 0;
 
   /* ── ADMIN VIEW ─────────────────────────────────────────── */
@@ -465,15 +498,32 @@ export default function Profile() {
         )}
 
 
-        {/* 4. 我的能量 + 置顶次数 */}
+        {/* 4. 我的能量 + 置顶次数 + 兑换按钮 */}
         <InfoRow label={t("energyLabel")}>
-          <div className="flex items-center gap-4 flex-wrap">
-            <span className="flex items-center gap-1.5 text-base font-bold text-blue-500">
-              <Zap className="w-4 h-4" /> {energy.toLocaleString()} <span className="text-xs text-muted-foreground font-normal">{t("energy")}</span>
-            </span>
-            <span className="flex items-center gap-1.5 text-base font-bold text-violet-500">
-              <Pin className="w-4 h-4" /> {pinCount} <span className="text-xs text-muted-foreground font-normal">{t("pinLabel")}</span>
-            </span>
+          <div className="flex items-center gap-4 flex-wrap justify-between">
+            <div className="flex items-center gap-4 flex-wrap">
+              <span className="flex items-center gap-1.5 text-base font-bold text-blue-500">
+                <Zap className="w-4 h-4" /> {energy.toLocaleString()} <span className="text-xs text-muted-foreground font-normal">{t("energy")}</span>
+              </span>
+              <span className="flex items-center gap-1.5 text-base font-bold text-violet-500">
+                <Pin className="w-4 h-4" /> {pinCount} <span className="text-xs text-muted-foreground font-normal">{t("pinLabel")}</span>
+              </span>
+            </div>
+            {isNormalUser ? (
+              <button
+                onClick={() => { setExchangeErr(""); setShowExchangeModal(true); }}
+                className="px-4 py-1.5 rounded-full text-sm font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors"
+              >
+                兑换能量
+              </button>
+            ) : (
+              <button disabled
+                className="px-4 py-1.5 rounded-full text-sm font-semibold bg-muted text-muted-foreground cursor-not-allowed"
+                title="仅普通用户可用"
+              >
+                兑换能量
+              </button>
+            )}
           </div>
         </InfoRow>
 
@@ -580,6 +630,24 @@ export default function Profile() {
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-green-500 text-white font-bold text-base hover:bg-green-600 shadow-sm shadow-green-200 dark:shadow-green-900/30 transition-all hover:shadow-md">
             <PenSquare className="w-5 h-5" /> {t("postBtnActive")}
           </Link>
+        ) : isNormalUser ? (
+          energy > 0 ? (
+            <div className="space-y-2">
+              <Link href="/post/new"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-green-500 text-white font-bold text-base hover:bg-green-600 shadow-sm shadow-green-200 dark:shadow-green-900/30 transition-all hover:shadow-md">
+                <PenSquare className="w-5 h-5" /> 发布求职/招聘
+              </Link>
+              <p className="text-xs text-muted-foreground">每24小时可发布一次，仅限求职/招聘分区</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <button disabled
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-muted text-muted-foreground font-bold text-base cursor-not-allowed opacity-60">
+                <PenSquare className="w-5 h-5" /> 发布求职/招聘
+              </button>
+              <p className="text-xs text-muted-foreground">需先兑换能量才能发帖（兑换能量按钮在上方）</p>
+            </div>
+          )
         ) : (
           <div className="relative inline-block group">
             <button
@@ -621,6 +689,58 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {/* ── 兑换能量弹窗 ── */}
+      {showExchangeModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setShowExchangeModal(false)}>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-border/50 dark:border-slate-800 p-6 space-y-5"
+            onClick={e => e.stopPropagation()}>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">代币兑换能量</h3>
+              <p className="text-sm text-muted-foreground mt-1">规则：200 代币 = 1 点能量，每次消耗后立即到账</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                当前代币余额：<span className="font-bold text-amber-500">{tokenCount.toLocaleString()} $WBR</span>
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {[200, 400, 600, 800, 1000, 2000].filter(v => v <= tokenCount || v === 200).map(v => (
+                <button key={v}
+                  onClick={() => setExchangeAmt(v)}
+                  disabled={v > tokenCount}
+                  className={`py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
+                    exchangeAmt === v
+                      ? "border-green-500 bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300"
+                      : v > tokenCount
+                        ? "border-border/30 bg-muted/30 text-muted-foreground/40 cursor-not-allowed"
+                        : "border-border/50 bg-muted/30 text-foreground hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-950/20"
+                  }`}>
+                  <span className="block text-xs text-muted-foreground mb-0.5">{v} 代币</span>
+                  兑换 {v / 200} 点能量
+                </button>
+              ))}
+            </div>
+
+            {exchangeErr && (
+              <p className="text-sm text-red-500 font-medium">{exchangeErr}</p>
+            )}
+
+            <div className="flex gap-3">
+              <button onClick={() => setShowExchangeModal(false)}
+                className="flex-1 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted/50 transition-colors">
+                取消
+              </button>
+              <button
+                onClick={handleExchange}
+                disabled={exchanging || exchangeAmt > tokenCount}
+                className="flex-1 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 disabled:bg-muted disabled:text-muted-foreground text-white text-sm font-bold transition-colors">
+                {exchanging ? "兑换中…" : `确认兑换 ${exchangeAmt / 200} 点`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

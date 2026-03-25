@@ -30,6 +30,8 @@ const DEV_SECTIONS: typeof ALL_SECTIONS[number][] = [
   "developer", "hackathon", "bugbounty", "security", "integration", "jobs", "community",
 ];
 
+const NORMAL_SECTIONS: typeof ALL_SECTIONS[number][] = ["jobs"];
+
 const SECTION_LABEL_KEYS: Record<string, string> = {
   testnet: "sTestnetLabel", ido: "sIdoLabel", security: "sSecurityLabel",
   integration: "sIntegrationLabel", airdrop: "sAirdropLabel", events: "sEventsLabel",
@@ -42,6 +44,7 @@ const SECTION_LABEL_KEYS: Record<string, string> = {
 function getSections(spaceType: string): string[] {
   if (spaceType === "kol") return KOL_SECTIONS as unknown as string[];
   if (spaceType === "developer") return DEV_SECTIONS as unknown as string[];
+  if (!spaceType) return NORMAL_SECTIONS as unknown as string[];
   return ALL_SECTIONS as unknown as string[];
 }
 
@@ -136,6 +139,12 @@ export default function PostNew() {
             setStep("form"); setShowRecharge(true);
           } else if (errCode === "DAILY_LIMIT") {
             setStep("form"); setError(t("postErrDailyLimit").replace("{n}", String(body?.limit ?? "")));
+          } else if (errCode === "NORMAL_DAILY_LIMIT") {
+            setStep("form");
+            const next = body?.nextPost ? new Date(body.nextPost).toLocaleString() : "";
+            setError(`普通用户每24小时只能发布一次，下次可发：${next}`);
+          } else if (errCode === "NORMAL_USER_SECTION_RESTRICTED") {
+            setStep("form"); setError("普通用户只能发布到求职/招聘分区");
           } else if (errCode === "CONTENT_FILTER") {
             setStep("form"); setError(body?.message || t("postErrContentFilter"));
           } else {
@@ -272,6 +281,11 @@ export default function PostNew() {
                 <option key={s} value={s}>{t(SECTION_LABEL_KEYS[s] ?? s)}</option>
               ))}
             </select>
+            {!spaceType && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-medium">
+                普通用户每24小时可发布一次，仅限求职/招聘分区，帖子不显示在首页
+              </p>
+            )}
             {spaceType === "kol" && (
               <p className="text-xs text-muted-foreground mt-1">{t("postKolSectionNote")}</p>
             )}

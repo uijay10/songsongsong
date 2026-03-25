@@ -20,6 +20,7 @@ function fmtUser(u: typeof usersTable.$inferSelect) {
     energy: u.energy,
     tokens: (u as any).tokens ?? 0,
     lastSlotPull: (u as any).lastSlotPull?.toISOString() ?? null,
+    lastPostAt: (u as any).lastPostAt?.toISOString() ?? null,
     spaceStatus: u.spaceStatus,
     spaceType: u.spaceType,
     inviteCode: u.inviteCode,
@@ -234,6 +235,40 @@ router.post("/checkin", async (req, res) => {
 
   const nextCheckin = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   res.json({ success: true, points: updated[0].points, nextCheckin: nextCheckin.toISOString(), message: "+1000 points!" });
+});
+
+/* ── Exchange tokens for energy (normal users only) ── */
+router.post("/exchange-energy", async (req, res) => {
+  const { wallet, amount } = req.body;
+  if (!wallet || !amount) return res.status(400).json({ error: "wallet and amount required" });
+  const amt = Number(amount);
+  if (!Number.isInteger(amt) || amt < 200 || amt % 200 !== 0) {
+    return res.status(400).json({ error: "amount must be a multiple of 200, minimum 200" });
+  }
+
+  const lw = wallet.toLowerCase();
+  const users = await db.select().from(usersTable).where(eq(usersTable.wallet, lw)).limit(1);
+  if (users.length === 0) return res.status(404).json({ error: "User not found" });
+  const u = users[0];
+
+  if (u.spaceType) {
+    return res.status(403).json({ error: "Only regular users can exchange tokens for energy" });
+  }
+
+  const currentTokens = (u as any).tokens ?? 0;
+  if (currentTokens < amt) {
+    return res.status(402).json({ error: "INSUFFICIENT_TOKENS", tokens: currentTokens });
+  }
+
+  const energyGained = amt / 200;
+  const newTokens = currentTokens - amt;
+  const newEnergy = (u.energy ?? 0) + energyGained;
+
+  await db.update(usersTable)
+    .set({ tokens: newTokens, energy: newEnergy } as any)
+    .where(eq(usersTable.wallet, lw));
+
+  res.json({ success: true, tokens: newTokens, energy: newEnergy });
 });
 
 export default router;
