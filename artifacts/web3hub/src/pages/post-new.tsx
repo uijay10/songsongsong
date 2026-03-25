@@ -292,7 +292,7 @@ export default function PostNew() {
             </select>
             {!spaceType && (
               <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-medium">
-                普通用户每24小时可发布一次，仅限求职/招聘分区，帖子不显示在首页
+                普通用户每24小时可发布一次，仅限个人求职信息。
               </p>
             )}
             {spaceType === "kol" && (
