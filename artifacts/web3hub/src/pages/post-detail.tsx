@@ -11,7 +11,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { zhCN, enUS, de, ru, fr, ja, ko, vi } from "date-fns/locale";
 import { useLang } from "@/lib/i18n";
 import { isAdmin } from "@/lib/admin";
-import { AdminPinModal } from "@/components/post-card";
+import { AdminPinModal, TagBadge } from "@/components/post-card";
 
 function getApiBase() {
   const base = import.meta.env.BASE_URL ?? "/";
@@ -326,6 +326,7 @@ export default function PostDetail() {
             <div className="flex items-center gap-1.5 flex-wrap">
               <Link href={authorHref} className="font-semibold text-sm hover:underline truncate">{displayName}</Link>
               <RoleBadge spaceType={post.authorType} size="xs" />
+              {(post as any).authorTags?.map((tag: string) => <TagBadge key={tag} tag={tag} />)}
             </div>
             <p className="text-xs text-muted-foreground font-mono truncate">{truncateAddress(post.authorWallet)}</p>
           </div>

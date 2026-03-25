@@ -168,6 +168,7 @@ router.get("/list", async (req, res) => {
     spaceType: u.spaceType,
     twitter: u.twitter,
     website: u.website,
+    tags: (u as any).tags ? JSON.parse((u as any).tags) : [],
     createdAt: u.createdAt.toISOString(),
   })) });
 });

@@ -254,11 +254,12 @@ router.get("/:id", async (req, res) => {
   if (!posts.length) return res.status(404).json({ error: "Post not found" });
 
   const p = posts[0];
-  const users = await db.select({ wallet: usersTable.wallet, username: usersTable.username, avatar: usersTable.avatar })
+  const users = await db.select({ wallet: usersTable.wallet, username: usersTable.username, avatar: usersTable.avatar, tags: (usersTable as any).tags })
     .from(usersTable).where(eq(usersTable.wallet, p.authorWallet)).limit(1);
   const u = users[0];
+  const parsedTags = (u as any)?.tags ? JSON.parse((u as any).tags) : [];
 
-  res.json(formatPost({ ...p, authorNameLive: u?.username ?? null, authorAvatarLive: u?.avatar ?? null }));
+  res.json(formatPost({ ...p, authorNameLive: u?.username ?? null, authorAvatarLive: u?.avatar ?? null, authorTagsLive: parsedTags }));
 });
 
 router.post("/:id/like", async (req, res) => {

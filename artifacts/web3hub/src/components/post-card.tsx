@@ -55,7 +55,7 @@ const TAG_COLORS: Record<string, string> = {
   NFT: "bg-pink-500/15 text-pink-500", GameFi: "bg-orange-500/15 text-orange-500",
   AI: "bg-purple-500/15 text-purple-500",
 };
-function TagBadge({ tag }: { tag: string }) {
+export function TagBadge({ tag }: { tag: string }) {
   const cls = TAG_COLORS[tag] ?? "bg-muted text-muted-foreground";
   return <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${cls}`}>{tag}</span>;
 }

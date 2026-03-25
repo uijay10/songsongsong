@@ -4,6 +4,7 @@ import { Search, ExternalLink, Calendar } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { generateGradient, truncateAddress } from "@/lib/utils";
 import { RoleBadge } from "@/components/role-badge";
+import { TagBadge } from "@/components/post-card";
 
 function getApiBase() {
   const base = import.meta.env.BASE_URL ?? "/";
@@ -19,6 +20,7 @@ interface Member {
   username?: string | null;
   avatar?: string | null;
   spaceType?: string | null;
+  tags?: string[] | null;
   twitter?: string | null;
   website?: string | null;
   createdAt: string;
@@ -46,6 +48,7 @@ function MemberCard({ member }: { member: Member }) {
         <div className="flex items-center gap-2 flex-wrap mb-0.5">
           <span className="font-semibold text-sm text-foreground truncate">{name}</span>
           <RoleBadge spaceType={member.spaceType} size="xs" />
+          {member.tags?.map(tag => <TagBadge key={tag} tag={tag} />)}
         </div>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <Calendar className="w-3 h-3 shrink-0" />
