@@ -103,7 +103,7 @@ function SpaceStatusBadge({ status, rejectReason }: { status?: string | null; re
           <Link href="/apply" className="text-xs text-primary hover:underline">{t("applySpace")}</Link>
         </div>
         {rejectReason && (
-          <p className="text-xs text-muted-foreground ml-1">拒绝理由：{rejectReason}</p>
+          <p className="text-xs text-muted-foreground ml-1">{t("rejectReasonLabel")}{rejectReason}</p>
         )}
       </div>
     );
