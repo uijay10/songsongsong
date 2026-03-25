@@ -279,7 +279,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
           <div className="flex items-center gap-3 flex-wrap justify-center">
-            <span className="text-sm text-muted-foreground dark:text-slate-400 font-semibold">感恩捐赠！</span>
+            <span className="text-sm text-muted-foreground dark:text-slate-400 font-semibold">{t("donateLabel")}</span>
             <button onClick={copyAddr}
               className="font-mono text-sm bg-muted/60 dark:bg-slate-700 hover:bg-muted dark:hover:bg-slate-600 px-3 py-1.5 rounded-full border border-border/50 dark:border-slate-600 transition-colors text-muted-foreground dark:text-slate-300">
               {addrCopied ? "✓ Copied!" : `${DONATE_ADDR.slice(0,10)}...${DONATE_ADDR.slice(-6)}`}
