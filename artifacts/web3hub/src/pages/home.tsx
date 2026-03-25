@@ -160,8 +160,7 @@ function PostPinnedCard({ post, idx = 0 }: { post: any; idx?: number }) {
       {/* Row 3: 主题 (post title) */}
       <p className="text-sm font-bold text-foreground line-clamp-1 leading-snug px-3 mb-1">{post.title}</p>
 
-      {/* Row 4: 内容 */}
-      <p className="text-xs text-muted-foreground line-clamp-2 leading-snug px-3 flex-1">{post.content || ""}</p>
+      <div className="flex-1" />
 
       {/* 倒计时 — bottom-left */}
       {cd && (
@@ -199,10 +198,7 @@ function PostRegularCard({ post, num }: { post: any; num: number }) {
         <p className="text-base font-semibold text-foreground truncate">{displayName}</p>
         <p className="text-sm text-muted-foreground truncate mt-0.5">{post.title}</p>
       </div>
-      {/* 内容 */}
-      <div className="flex-1 min-w-0 px-2 overflow-hidden">
-        <p className="text-sm text-muted-foreground line-clamp-2 break-words" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{post.content || ""}</p>
-      </div>
+      <div className="flex-1" />
       {/* 标签 */}
       {post.authorTags?.length > 0 && (
         <div className="shrink-0 flex items-center gap-1">
