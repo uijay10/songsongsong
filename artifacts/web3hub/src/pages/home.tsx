@@ -158,7 +158,7 @@ function PostPinnedCard({ post, idx = 0 }: { post: any; idx?: number }) {
       </div>
 
       {/* Row 3: 主题 (post title) */}
-      <p className="text-sm font-bold text-foreground line-clamp-1 leading-snug px-3 mb-1">{post.title}</p>
+      <p className="text-sm font-bold text-foreground line-clamp-2 leading-snug px-3 mb-1">{post.title}</p>
 
       <div className="flex-1" />
 
@@ -193,12 +193,10 @@ function PostRegularCard({ post, num }: { post: any; num: number }) {
       <div className="shrink-0">
         <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="lg" />
       </div>
-      {/* 名字 + 主题 */}
-      <div className="w-36 shrink-0 min-w-0">
-        <p className="text-base font-semibold text-foreground truncate">{displayName}</p>
-        <p className="text-sm text-muted-foreground truncate mt-0.5">{post.title}</p>
-      </div>
-      <div className="flex-1" />
+      {/* 名字 */}
+      <p className="w-28 shrink-0 text-base font-semibold text-foreground truncate">{displayName}</p>
+      {/* 主题 */}
+      <p className="flex-1 min-w-0 text-sm text-muted-foreground truncate">{post.title}</p>
       {/* 标签 */}
       {post.authorTags?.length > 0 && (
         <div className="shrink-0 flex items-center gap-1">
