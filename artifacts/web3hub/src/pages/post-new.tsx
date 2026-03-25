@@ -104,6 +104,12 @@ export default function PostNew() {
   };
 
   const isNormalPoster = !spaceType || (spaceType !== "project" && spaceType !== "kol" && spaceType !== "developer");
+  const normalPostsUsed = isNormalPoster ? (() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const storedDate = me?.normalDailyPostDate ?? null;
+    return storedDate === todayStr ? (me?.normalDailyPostCount ?? 0) : 0;
+  })() : 0;
+  const normalPostsRemaining = Math.max(0, 10 - normalPostsUsed);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,8 +159,7 @@ export default function PostNew() {
             setStep("form"); setError(t("postErrDailyLimit").replace("{n}", String(body?.limit ?? "")));
           } else if (errCode === "NORMAL_DAILY_LIMIT") {
             setStep("form");
-            const next = body?.nextPost ? new Date(body.nextPost).toLocaleString() : "";
-            setError(`普通用户每24小时只能发布一次，下次可发：${next}`);
+            setError(`今日发布已达上限（${body?.limit ?? 10}次），请明天再试。`);
           } else if (errCode === "NORMAL_USER_SECTION_RESTRICTED") {
             setStep("form"); setError("普通用户只能发布到求职/招聘分区");
           } else if (errCode === "CONTENT_FILTER") {
@@ -295,7 +300,7 @@ export default function PostNew() {
             </select>
             {!spaceType && (
               <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-medium">
-                普通用户每24小时可发布一次，仅限个人求职信息。
+                普通用户每24小时最多发布10次，今日还可发布 <span className="font-bold">{normalPostsRemaining}</span> 次，仅限个人求职信息。
               </p>
             )}
             {spaceType === "kol" && (

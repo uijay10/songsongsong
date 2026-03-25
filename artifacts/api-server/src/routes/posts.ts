@@ -210,17 +210,22 @@ router.post("/", async (req, res) => {
       }
     }
 
-    // Normal user restrictions: jobs section only + 1 post per 24h
+    // Normal user restrictions: jobs section only + 10 posts per 24h
     const isNormalUser = !spaceType || (spaceType !== "project" && spaceType !== "kol" && spaceType !== "developer");
     if (isNormalUser) {
       if (section !== "jobs") {
         return res.status(403).json({ error: "NORMAL_USER_SECTION_RESTRICTED", message: "普通用户只能发布到求职/招聘分区" });
       }
-      const lastPost = user.lastPostAt ? new Date((user as any).lastPostAt).getTime() : null;
-      if (lastPost && Date.now() - lastPost < 24 * 60 * 60 * 1000) {
-        const nextPost = new Date(lastPost + 24 * 60 * 60 * 1000);
-        return res.status(429).json({ error: "NORMAL_DAILY_LIMIT", nextPost: nextPost.toISOString() });
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const storedDate = (user as any).normalDailyPostDate ?? null;
+      const usedToday = storedDate === todayStr ? ((user as any).normalDailyPostCount ?? 0) : 0;
+      const NORMAL_DAILY_MAX = 10;
+      if (usedToday >= NORMAL_DAILY_MAX) {
+        return res.status(429).json({ error: "NORMAL_DAILY_LIMIT", used: usedToday, limit: NORMAL_DAILY_MAX });
       }
+      // Store updated count on user after successful insert (done below)
+      (req as any)._normalPostUsed = usedToday;
+      (req as any)._normalPostTodayStr = todayStr;
     }
 
     // Daily post limit — all approved types: 10 posts / 24 h
@@ -241,7 +246,17 @@ router.post("/", async (req, res) => {
     }
   }
 
-  await db.update(usersTable).set({ lastPostAt: new Date() }).where(eq(usersTable.wallet, lw));
+  // Update lastPostAt + increment normal user daily post counter
+  if (isNormalPoster && (req as any)._normalPostTodayStr) {
+    const newCount = ((req as any)._normalPostUsed ?? 0) + 1;
+    await db.update(usersTable).set({
+      lastPostAt: new Date(),
+      normalDailyPostCount: newCount,
+      normalDailyPostDate: (req as any)._normalPostTodayStr,
+    }).where(eq(usersTable.wallet, lw));
+  } else {
+    await db.update(usersTable).set({ lastPostAt: new Date() }).where(eq(usersTable.wallet, lw));
+  }
 
   // Normal user: delete all their previous jobs-section posts so only one is ever visible
   if (isNormalPoster) {

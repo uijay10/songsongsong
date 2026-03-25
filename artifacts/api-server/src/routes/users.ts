@@ -36,6 +36,8 @@ function fmtUser(u: typeof usersTable.$inferSelect) {
     spaceRejectReason: (u as any).spaceRejectReason ?? null,
     dailyApplyCount: (u as any).dailyApplyCount ?? 0,
     lastApplyDate: (u as any).lastApplyDate ?? null,
+    normalDailyPostCount: (u as any).normalDailyPostCount ?? 0,
+    normalDailyPostDate: (u as any).normalDailyPostDate ?? null,
     tags: (u as any).tags ? JSON.parse((u as any).tags) : [],
     createdAt: u.createdAt.toISOString(),
   };
