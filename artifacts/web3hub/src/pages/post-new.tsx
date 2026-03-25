@@ -103,10 +103,13 @@ export default function PostNew() {
     setError(""); return true;
   };
 
+  const isNormalPoster = !spaceType || (spaceType !== "project" && spaceType !== "kol" && spaceType !== "developer");
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!address || !validateForm()) return;
-    if (!isAdminUser && energy <= 0) { setShowRecharge(true); return; }
+    // Normal users (no approved space type) skip the energy requirement — they have a 24h posting limit instead
+    if (!isAdminUser && !isNormalPoster && energy <= 0) { setShowRecharge(true); return; }
     setStep("confirm");
   };
 
@@ -260,7 +263,7 @@ export default function PostNew() {
             </div>
             <h1 className="text-2xl font-bold">{t("createPostTitle")}</h1>
           </div>
-          {!isAdminUser && (
+          {!isAdminUser && !isNormalPoster && (
             <div className="flex items-center gap-2">
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold ${
                 energy <= 0 ? "bg-red-100 dark:bg-red-950/30 text-red-600" :

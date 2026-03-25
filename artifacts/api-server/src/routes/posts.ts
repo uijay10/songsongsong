@@ -176,9 +176,11 @@ router.post("/", async (req, res) => {
 
   const spaceType = user.spaceType ?? "";
   const isAdmin = (user.energy ?? 0) >= 99_000_000_000_000;
+  const isNormalPoster = !spaceType || (spaceType !== "project" && spaceType !== "kol" && spaceType !== "developer");
 
   if (!isAdmin) {
-    if ((user.energy ?? 0) <= 0) {
+    // Normal users (no approved space) are exempt from energy checks — they have their own 24h posting limit
+    if (!isNormalPoster && (user.energy ?? 0) <= 0) {
       return res.status(402).json({ error: "INSUFFICIENT_ENERGY" });
     }
 
@@ -225,7 +227,10 @@ router.post("/", async (req, res) => {
       }
     }
 
-    await db.update(usersTable).set({ energy: (user.energy ?? 1) - 1 }).where(eq(usersTable.wallet, lw));
+    // Only deduct energy for approved space users, not normal users
+    if (!isNormalPoster) {
+      await db.update(usersTable).set({ energy: (user.energy ?? 1) - 1 }).where(eq(usersTable.wallet, lw));
+    }
   }
 
   await db.update(usersTable).set({ lastPostAt: new Date() }).where(eq(usersTable.wallet, lw));
