@@ -581,28 +581,30 @@ export default function Profile() {
 
         {/* 6c. 联系方式可见性 */}
         <InfoRow label={t("contactVisibilityLabel")}>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => { setContactPublic(true); setDirty(true); }}
-              className={`px-4 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${
+              style={contactPublic ? { backgroundColor: "#22c55e", color: "#fff", borderColor: "#22c55e" } : {}}
+              className={`px-5 py-2 rounded-xl border-2 text-sm font-bold transition-all select-none ${
                 contactPublic
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
+                  ? "shadow-md"
+                  : "border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-green-400 hover:text-green-600"
               }`}
             >
-              {t("contactPublicLabel")}
+              ✓ {t("contactPublicLabel")}
             </button>
             <button
               type="button"
               onClick={() => { setContactPublic(false); setDirty(true); }}
-              className={`px-4 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${
+              style={!contactPublic ? { backgroundColor: "#22c55e", color: "#fff", borderColor: "#22c55e" } : {}}
+              className={`px-5 py-2 rounded-xl border-2 text-sm font-bold transition-all select-none ${
                 !contactPublic
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
+                  ? "shadow-md"
+                  : "border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-green-400 hover:text-green-600"
               }`}
             >
-              {t("contactPrivateLabel")}
+              🔒 {t("contactPrivateLabel")}
             </button>
           </div>
         </InfoRow>
