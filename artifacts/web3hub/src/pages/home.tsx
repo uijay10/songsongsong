@@ -6,6 +6,7 @@ import { Search, PenSquare, ChevronLeft, ChevronRight, CheckCircle2, Eye } from 
 import { Link } from "wouter";
 import { useLang } from "@/lib/i18n";
 import { generateGradient } from "@/lib/utils";
+import { TagBadge } from "@/components/post-card";
 import { formatDistanceToNow } from "date-fns";
 import { enUS, zhCN, de, ru, fr, ja, ko, vi } from "date-fns/locale";
 
@@ -146,10 +147,12 @@ function PostPinnedCard({ post, idx = 0 }: { post: any; idx?: number }) {
         <span className="text-xs text-muted-foreground">{timeAgo}</span>
       </div>
 
-      {/* Row 2: LOGO | 名字 (left) | 分区 (right) */}
-      <div className="flex items-center mb-2 pl-3">
+      {/* Row 2: LOGO | 名字+标签 (left) | 分区 (right) */}
+      <div className="flex items-center mb-2 pl-3 gap-1.5">
         <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="lg" />
-        <p className="ml-2 text-sm font-bold text-foreground leading-snug truncate flex-1">{displayName}</p>
+        <p className="ml-1 text-sm font-bold text-foreground leading-snug truncate shrink-0 max-w-[80px]">{displayName}</p>
+        {post.authorTags?.map((tag: string) => <TagBadge key={tag} tag={tag} />)}
+        <div className="flex-1" />
         <span className="text-xs text-primary font-semibold px-2 py-0.5 rounded-full bg-primary/10 shrink-0 mr-2">{sectionLabel}</span>
       </div>
 
@@ -199,6 +202,12 @@ function PostRegularCard({ post, num }: { post: any; num: number }) {
       <div className="flex-1 min-w-0 px-2 overflow-hidden">
         <p className="text-sm text-muted-foreground line-clamp-2 break-words" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{post.content || ""}</p>
       </div>
+      {/* 标签 */}
+      {post.authorTags?.length > 0 && (
+        <div className="shrink-0 flex items-center gap-1">
+          {post.authorTags.map((tag: string) => <TagBadge key={tag} tag={tag} />)}
+        </div>
+      )}
       {/* 区域 */}
       <span className="shrink-0 text-sm font-semibold px-3.5 py-1.5 rounded-full bg-primary/10 text-primary">{sectionLabel}</span>
       {/* 查看帖子详情 */}
