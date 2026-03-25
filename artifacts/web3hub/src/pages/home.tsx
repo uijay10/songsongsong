@@ -142,17 +142,18 @@ function PostPinnedCard({ post, idx = 0 }: { post: any; idx?: number }) {
       style={{ animationDelay: `${(idx % 8) * 0.6}s` }}>
       <span className="absolute inset-0 rounded-2xl pointer-events-none" />
 
-      {/* Row 1: 时间 — top-right only */}
-      <div className="flex justify-end px-3 pt-2 mb-1">
-        <span className="text-xs text-muted-foreground">{timeAgo}</span>
+      {/* Row 1: 标签 (left) | 时间 (right) */}
+      <div className="flex items-center justify-between px-3 pt-2 mb-1 gap-1">
+        <div className="flex items-center gap-1 flex-wrap">
+          {post.authorTags?.map((tag: string) => <TagBadge key={tag} tag={tag} />)}
+        </div>
+        <span className="text-xs text-muted-foreground shrink-0">{timeAgo}</span>
       </div>
 
-      {/* Row 2: LOGO | 名字+标签 (left) | 分区 (right) */}
+      {/* Row 2: LOGO | 名字 (left) | 分区 (right) */}
       <div className="flex items-center mb-2 pl-3 gap-1.5">
         <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="lg" />
-        <p className="ml-1 text-sm font-bold text-foreground leading-snug truncate shrink-0 max-w-[80px]">{displayName}</p>
-        {post.authorTags?.map((tag: string) => <TagBadge key={tag} tag={tag} />)}
-        <div className="flex-1" />
+        <p className="ml-1 text-sm font-bold text-foreground leading-snug truncate flex-1">{displayName}</p>
         <span className="text-xs text-primary font-semibold px-2 py-0.5 rounded-full bg-primary/10 shrink-0 mr-2">{sectionLabel}</span>
       </div>
 
