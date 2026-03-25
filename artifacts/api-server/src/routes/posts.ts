@@ -243,6 +243,11 @@ router.post("/", async (req, res) => {
 
   await db.update(usersTable).set({ lastPostAt: new Date() }).where(eq(usersTable.wallet, lw));
 
+  // Normal user: delete all their previous jobs-section posts so only one is ever visible
+  if (isNormalPoster) {
+    await db.delete(postsTable).where(and(eq(postsTable.authorWallet, lw), eq(postsTable.section, "jobs")));
+  }
+
   // Normal user posts expire after 3 days
   const postExpiresAt = isNormalPoster ? new Date(Date.now() + 3 * 24 * 3600_000) : null;
 
