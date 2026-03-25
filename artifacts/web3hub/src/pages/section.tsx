@@ -61,6 +61,7 @@ const SECTION_I18N_KEYS: Record<string, { label: string; desc: string }> = {
   events:      { label: "sEventsLabel",      desc: "sEventsDesc" },
   funding:     { label: "sFundingLabel",     desc: "sFundingDesc" },
   jobs:        { label: "sJobsLabel",        desc: "sJobsDesc" },
+  recruiting:  { label: "sRecruitingLabel",  desc: "sRecruitingDesc" },
   nodes:       { label: "sNodesLabel",       desc: "sNodesDesc" },
   ecosystem:   { label: "sEcosystemLabel",   desc: "sEcosystemDesc" },
   partners:    { label: "sPartnersLabel",    desc: "sPartnersDesc" },

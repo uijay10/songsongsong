@@ -16,6 +16,7 @@ function getApiBase() {
 }
 
 const ALL_SECTIONS = [
+  "recruiting",
   "testnet", "ido", "security", "integration", "airdrop",
   "events", "funding", "jobs", "nodes",
   "ecosystem", "partners", "hackathon", "ama", "bugbounty",
@@ -23,11 +24,11 @@ const ALL_SECTIONS = [
 ] as const;
 
 const KOL_SECTIONS: typeof ALL_SECTIONS[number][] = [
-  "testnet", "events", "ecosystem", "partners", "hackathon", "ama", "bugbounty", "community",
+  "testnet", "events", "ecosystem", "partners", "hackathon", "ama", "bugbounty", "community", "recruiting",
 ];
 
 const DEV_SECTIONS: typeof ALL_SECTIONS[number][] = [
-  "developer", "hackathon", "bugbounty", "security", "integration", "jobs", "community",
+  "developer", "hackathon", "bugbounty", "security", "integration", "jobs", "recruiting", "community",
 ];
 
 const NORMAL_SECTIONS: typeof ALL_SECTIONS[number][] = ["jobs"];
@@ -35,7 +36,7 @@ const NORMAL_SECTIONS: typeof ALL_SECTIONS[number][] = ["jobs"];
 const SECTION_LABEL_KEYS: Record<string, string> = {
   testnet: "sTestnetLabel", ido: "sIdoLabel", security: "sSecurityLabel",
   integration: "sIntegrationLabel", airdrop: "sAirdropLabel", events: "sEventsLabel",
-  funding: "sFundingLabel", jobs: "sJobsLabel", nodes: "sNodesLabel",
+  funding: "sFundingLabel", jobs: "sJobsLabel", recruiting: "sRecruitingLabel", nodes: "sNodesLabel",
   ecosystem: "sEcosystemLabel", partners: "sPartnersLabel",
   hackathon: "sHackathonLabel", ama: "sAmaLabel", bugbounty: "sBugbountyLabel",
   community: "nav_community", developer: "nav_developer",

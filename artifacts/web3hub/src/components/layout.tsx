@@ -18,6 +18,7 @@ const NAV_ROW1_KEYS = [
   { key: "nav_events",      href: "/section/events" },
   { key: "nav_funding",     href: "/section/funding" },
   { key: "nav_jobs",        href: "/section/jobs" },
+  { key: "nav_recruiting",  href: "/section/recruiting" },
   { key: "nav_nodes",       href: "/section/nodes" },
 ];
 
