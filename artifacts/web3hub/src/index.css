@@ -305,3 +305,41 @@ html {
 .animate-slow-blink {
   animation: slow-blink 2.4s ease-in-out infinite;
 }
+
+/* ── Promo Banner ── */
+@keyframes promo-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(255,215,0,0.2), 0 0 24px rgba(168,85,247,0.12); }
+  50%       { box-shadow: 0 0 22px rgba(255,215,0,0.45), 0 0 45px rgba(168,85,247,0.22), 0 0 70px rgba(255,105,180,0.10); }
+}
+@keyframes promo-sweep {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+@keyframes promo-star {
+  0%, 100% { opacity: 0;   transform: scale(0.4) rotate(0deg);   }
+  50%       { opacity: 1;   transform: scale(1)   rotate(180deg); }
+}
+@keyframes promo-shine {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center;  }
+}
+.promo-banner {
+  animation: promo-glow 3s ease-in-out infinite;
+}
+.promo-sweep {
+  animation: promo-sweep 4.5s ease-in-out infinite;
+}
+.promo-text-shine {
+  background: linear-gradient(90deg, #FFD700 0%, #fffde7 35%, #FFD700 55%, #FFA500 80%, #FFD700 100%);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: promo-shine 3s linear infinite;
+}
+.promo-star-1 { animation: promo-star 2.2s ease-in-out infinite 0s; }
+.promo-star-2 { animation: promo-star 2.2s ease-in-out infinite 0.5s; }
+.promo-star-3 { animation: promo-star 2.2s ease-in-out infinite 1.0s; }
+.promo-star-4 { animation: promo-star 2.2s ease-in-out infinite 1.5s; }
+.promo-star-5 { animation: promo-star 2.2s ease-in-out infinite 1.9s; }
+.promo-star-6 { animation: promo-star 2.2s ease-in-out infinite 0.7s; }
