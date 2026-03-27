@@ -93,85 +93,122 @@ export default function PostNew() {
   const [aiResult, setAiResult] = useState("");
   const [aiCopied, setAiCopied] = useState(false);
 
-  const buildPrompt = (userInput: string, isEn: boolean) => {
+  const generateContent = (userInput: string) => {
+    const isCN = lang === "zh-CN" || lang === "zh" || ["ja", "ko", "vi"].includes(lang);
+    const input = userInput.trim();
+
+    // ── Keyword detectors ──
+    const isTestnet = /测试网|testnet|test net/i.test(input);
+    const isIDO = /\bido\b|launchpad|发售|募资/i.test(input);
+    const isAirdrop = /空投|airdrop/i.test(input);
+    const isAudit = /审计|audit/i.test(input);
+    const isRecruit = /招募|招聘|recruit|hire|hiring|looking for/i.test(input);
+    const isNode = /节点|node/i.test(input);
+    const isHackathon = /黑客松|hackathon/i.test(input);
+    const isAMA = /\bama\b/i.test(input);
+    const isFunding = /融资|funding|投资|raise|raised/i.test(input);
+    const isBugBounty = /漏洞|bug bounty|赏金/i.test(input);
+
+    // Extract project name — first all-caps or CamelCase word, or after 项目/project
+    const nameMatch = input.match(/项目\s*([A-Za-z0-9_]+)|([A-Za-z0-9_]+)\s*项目|project\s+([A-Za-z0-9_]+)|([A-Z][A-Za-z0-9]{1,15})\b/);
+    const projectName = nameMatch ? (nameMatch[1] || nameMatch[2] || nameMatch[3] || nameMatch[4]) || "Our Project" : "Our Project";
+
+    // Extract numbers / amounts
+    const numMatches = input.match(/[\d,，.]+\s*(?:亿|万|千|百|[kKmMbBtT])?/g) || [];
+    const firstNum = numMatches[0]?.trim() || "";
+
+    // ── REPLY MODE ──
     if (aiMode === "reply") {
-      if (isEn) return `You are a Web3 Release professional assistant, dedicated to helping users respond to interactions and message bell notifications on https://web3release.com/.
+      const hasLike = /点赞|liked|like/i.test(input);
+      const hasComment = /评论|comment/i.test(input);
+      const hasFollow = /关注|follow/i.test(input);
+      const actionWord = isCN
+        ? (hasLike ? "点赞" : hasComment ? "评论" : hasFollow ? "关注" : "互动")
+        : (hasLike ? "like" : hasComment ? "comment" : hasFollow ? "follow" : "interaction");
 
-User interaction received:
-${userInput}
+      if (isCN) {
+        return `💬 回复内容
 
-Please strictly follow this format:
+非常感谢您的${actionWord}与支持！🙏 这对我们项目来说是莫大的鼓励！
 
-**Reply Introduction**
-(Brief and friendly, expressing gratitude immediately)
+我们目前正在全力推进${projectName !== "Our Project" ? ` ${projectName}` : ""}各项进展，欢迎加入我们的 Guild，获取一手资讯、专属奖励和早期参与机会！有任何问题欢迎随时 DM 我，期待与您深入交流 🚀
 
-**Complete Reply**
-(80-180 characters, professional and enthusiastic, crypto-native tone, use emojis appropriately, express gratitude, respond to the other party, include a call to action — e.g. invite them to join the Guild, participate in testing, or further discussion)
+━━━━━━━━━━━━━
+💡 运营建议：
+• 用能量（Energy）置顶您的帖子，获取首页更多曝光
+• 可邀请对方加入您的 Guild，建立长期合作关系`;
+      }
+      return `💬 Reply Draft
 
-**Additional Suggestions**
-(Optional: How to use Energy or Pinned Zone to increase exposure; whether to invite the other party to join the Guild)
+Thanks so much for the ${actionWord}! 🙏 It really means a lot to us and keeps the team going!
 
-Tone: Professional and excited, sincerely community-friendly, suitable for Web3 users, avoid being overly sales-oriented. Maintain a natural conversational feel.`;
-      return `你是 Web3 Release 专业助手，专门帮助用户回复互动消息、处理消息铃通知，平台地址：https://web3release.com/
+We're pushing hard on ${projectName !== "Our Project" ? projectName : "our project"} right now — would love to have you in our Guild for exclusive updates, rewards, and early access opportunities! Feel free to DM anytime, happy to chat more 🚀
 
-收到的互动内容：
-${userInput}
-
-请严格按照以下格式输出：
-
-**回复引言**
-（简短友好，立即表达感谢）
-
-**完整回复**
-（80-180 字，专业且兴奋，crypto-native 语气，适当使用 emoji，表达感谢并作出回应，包含行动号召，如邀请对方加入 Guild、参与测试或进一步交流）
-
-**附加建议**
-（可选：如何使用能量或置顶区增加曝光；是否建议邀请对方加入 Guild）
-
-语气：专业且兴奋，真诚社区友好，适合 Web3 用户，避免过于销售化，保持自然对话感。`;
+━━━━━━━━━━━━━
+💡 Growth Tips:
+• Use Energy to pin your post for maximum homepage exposure
+• Invite them to your Guild to build a long-term relationship`;
     }
 
-    if (isEn) return `You are a Web3 Release professional assistant, dedicated to helping users post high-quality requests on https://web3release.com/. This applies to all sections of the platform.
+    // ── NEW POST MODE ──
+    // Determine section type label + emojis
+    const typeInfo = isTestnet ? { cn: "测试网", en: "Testnet", emoji: "🧪", tag: isIDO ? "#IDO" : "#Testnet" }
+      : isIDO ? { cn: "IDO/Launchpad", en: "IDO/Launchpad", emoji: "🚀", tag: "#IDO #Launchpad" }
+      : isAirdrop ? { cn: "空投活动", en: "Airdrop Campaign", emoji: "🎁", tag: "#Airdrop" }
+      : isAudit ? { cn: "安全审计需求", en: "Security Audit", emoji: "🔐", tag: "#SecurityAudit" }
+      : isRecruit ? { cn: "团队招募", en: "Recruiting", emoji: "👥", tag: "#Recruiting #Hiring" }
+      : isNode ? { cn: "节点招募", en: "Node Recruitment", emoji: "⛓️", tag: "#NodeRecruitment" }
+      : isHackathon ? { cn: "黑客松", en: "Hackathon", emoji: "💻", tag: "#Hackathon" }
+      : isAMA ? { cn: "AMA 互动", en: "AMA Session", emoji: "🎙️", tag: "#AMA" }
+      : isFunding ? { cn: "融资公告", en: "Funding Round", emoji: "💰", tag: "#Funding" }
+      : isBugBounty ? { cn: "漏洞赏金", en: "Bug Bounty", emoji: "🐛", tag: "#BugBounty" }
+      : { cn: "项目动态", en: "Project Update", emoji: "📢", tag: "#Web3 #Community" };
 
-User Input:
-${userInput}
+    const numStr = firstNum ? (isCN ? `${firstNum}枚` : `${firstNum}`) : "";
 
-Please strictly adhere to the following format:
+    if (isCN) {
+      return `📌 标题建议
+${typeInfo.emoji} ${projectName} ${typeInfo.cn}正式启动${numStr ? `！${numStr}${isAirdrop || isTestnet ? "代币开放领取" : ""}` : "！"}
 
-**Title**
-(Concise, impactful, and eye-catching, including keywords, maximum 120 characters)
+━━━━━━━━━━━━━
+📝 帖子内容
 
-**Detailed Content**
-(150-350 words, professional, clear, crypto-native tone, highlighting project strengths, specific needs, and calls to action; appropriate use of emojis)
+${projectName} 现已正式开启${typeInfo.cn}阶段！${numStr && (isTestnet || isAirdrop) ? `总计 ${numStr}代币面向全球社区开放，` : ""}我们诚邀所有 Web3 社区成员参与，共同见证${projectName}的重要里程碑 ${typeInfo.emoji}
 
-**Tags**
-(Suitable for the corresponding section: Testnet Launch, IDO/Launchpad, Security Audit, Recruiting, Integration News, Airdrop Campaign, Events & Rewards, Funding Rounds, Node Recruitment, Ecosystem, Partner Recruitment, Hackathon, AMA Session, Bug Bounty, Community Chat, Developer Zone)
+${isTestnet ? `✅ 参与测试网，率先体验核心功能\n✅ 完成任务，赢取丰厚早期参与奖励\n✅ 加入社区，与核心团队直接交流` : isIDO ? `✅ 白名单资格限时开放，先到先得\n✅ 早期参与享受最优惠价格\n✅ 持有代币享受生态专属权益` : isAudit ? `✅ 寻求专业安全审计团队合作\n✅ 全面覆盖智能合约与协议层\n✅ 审计完成后公开报告，保障社区信任` : isRecruit ? `✅ 开放多个核心岗位，诚邀 Web3 精英加入\n✅ 具有竞争力的薪酬 + 代币激励\n✅ 远程办公，全球协作` : `✅ 重要进展公告\n✅ 社区参与机会开放\n✅ 早期参与者获得专属奖励`}
 
-**Additional Suggestions**
-(How to use Energy or Pinned Zone to increase exposure; whether to recommend adding Guild)
+🎯 立即加入 ${projectName} 社区，不错过任何机会！
 
-Tone: Professional and excited, sincerely community-friendly, suitable for Web3 users, avoid being overly sales-oriented. Maintain a natural conversational feel.`;
+━━━━━━━━━━━━━
+🏷️ 推荐标签
+${typeInfo.tag} #${projectName} #Web3Release #Web3
 
-    return `你是 Web3 Release 专业助手，专门帮助用户在 https://web3release.com/ 发布高质量需求帖，适用于平台全部分区。
+━━━━━━━━━━━━━
+💡 运营建议
+• 发布后使用能量（Energy）置顶帖子，登上首页获取最大曝光
+• 建议同步创建 Guild 并在帖子中邀请社区加入`;
+    }
 
-用户输入：
-${userInput}
+    return `📌 Title Suggestion
+${typeInfo.emoji} ${projectName} ${typeInfo.en} is LIVE${numStr ? ` — ${numStr} Tokens Available!` : "!"}
 
-请严格按照以下格式输出：
+━━━━━━━━━━━━━
+📝 Post Content
 
-**标题**
-（简短有力、吸引眼球，包含关键词，最多 120 字符）
+${projectName} has officially launched its ${typeInfo.en} phase! ${numStr && (isTestnet || isAirdrop) ? `With a total of ${numStr} tokens available to the global community, ` : ""}we invite all Web3 community members to participate and be part of this major milestone ${typeInfo.emoji}
 
-**详细内容**
-（150-350 字，专业、清晰、crypto-native 语气，突出项目亮点、具体需求、行动号召，适当使用 emoji）
+${isTestnet ? `✅ Test core features before mainnet launch\n✅ Complete tasks and earn generous early-bird rewards\n✅ Connect directly with the core team` : isIDO ? `✅ Whitelist spots are limited — first come, first served\n✅ Early participants get the best entry price\n✅ Token holders gain exclusive ecosystem privileges` : isAudit ? `✅ Seeking professional security audit partners\n✅ Full coverage of smart contracts & protocol layer\n✅ Public report post-audit to build community trust` : isRecruit ? `✅ Multiple core positions open for Web3 talent\n✅ Competitive salary + token incentives\n✅ Remote-friendly, globally distributed team` : `✅ Important project milestone announcement\n✅ Community participation opportunities now open\n✅ Early participants receive exclusive rewards`}
 
-**标签**
-（适合对应分区：测试网发布、IDO/Launchpad、安全审计、招募、集成新闻、空投活动、活动奖励、融资轮次、节点招募、生态系统、合作伙伴招募、黑客松、AMA、漏洞赏金、社区聊天、开发者专区）
+🎯 Join the ${projectName} community now and don't miss out!
 
-**附加建议**
-（如何使用能量或置顶区增加曝光；是否建议加入 Guild）
+━━━━━━━━━━━━━
+🏷️ Suggested Tags
+${typeInfo.tag} #${projectName} #Web3Release #Web3
 
-语气：专业且兴奋，真诚社区友好，适合 Web3 用户，避免过于销售化，保持自然对话感。`;
+━━━━━━━━━━━━━
+💡 Growth Tips
+• After posting, use Energy to pin your post to the homepage for maximum exposure
+• Create a Guild and invite community members directly from your post`;
   };
 
   const copyAiPrompt = (text: string) => {
@@ -387,38 +424,30 @@ ${userInput}
                 </button>
               </div>
               <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
-                {aiMode === "post" ? t("aiAssistantDesc") : (lang === "zh-CN" ? "描述你收到的互动内容（点赞/评论/消息铃通知），生成专业回复提示词后粘贴到 AI 工具使用" : "Describe the interaction you received (like/comment/bell notification), generate a reply prompt to use with any free AI tool")}
+                {aiMode === "post"
+                  ? (lang === "zh-CN" ? "描述你的项目需求，AI 助手自动生成标题、内容和标签" : "Describe your project needs — the assistant will generate a title, content, and tags for you")
+                  : (lang === "zh-CN" ? "描述你收到的互动内容（点赞/评论/消息通知），一键生成专业回复" : "Describe the interaction you received and get a professional reply generated instantly")}
               </p>
               <textarea
                 value={aiInput}
                 onChange={e => setAiInput(e.target.value)}
-                placeholder={aiMode === "post" ? t("aiAssistantPlaceholder") : (lang === "zh-CN" ? "例如：有人点赞了我的测试网帖子，并留言说很感兴趣..." : "e.g. Someone liked my testnet post and commented they're very interested...")}
+                placeholder={aiMode === "post"
+                  ? (lang === "zh-CN" ? "例如：我的项目THQ需要发布测试网，测试代币总共10亿..." : "e.g. My project THQ needs to launch testnet with 1 billion test tokens...")
+                  : (lang === "zh-CN" ? "例如：有人点赞了我的测试网帖子，并留言说很感兴趣..." : "e.g. Someone liked my testnet post and commented they're very interested...")}
                 rows={3}
                 className="w-full rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2"
                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", caretColor: "#FFD700" }}
               />
-              <div className="flex gap-2.5">
-                <button
-                  onClick={() => { setAiResult(buildPrompt(aiInput.trim(), false)); setAiCopied(false); }}
-                  disabled={!aiInput.trim()}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40"
-                  style={{ background: "rgba(255,215,0,0.15)", color: "#FFD700", border: "1px solid rgba(255,215,0,0.3)" }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,215,0,0.25)")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,215,0,0.15)")}
-                >
-                  {t("aiAssistantGenCN")}
-                </button>
-                <button
-                  onClick={() => { setAiResult(buildPrompt(aiInput.trim(), true)); setAiCopied(false); }}
-                  disabled={!aiInput.trim()}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40"
-                  style={{ background: "rgba(100,180,255,0.12)", color: "#60a5fa", border: "1px solid rgba(100,180,255,0.25)" }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(100,180,255,0.22)")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(100,180,255,0.12)")}
-                >
-                  {t("aiAssistantGenEN")}
-                </button>
-              </div>
+              <button
+                onClick={() => { setAiResult(generateContent(aiInput.trim())); setAiCopied(false); }}
+                disabled={!aiInput.trim()}
+                className="w-full py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40"
+                style={{ background: "linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,150,50,0.2))", color: "#FFD700", border: "1px solid rgba(255,215,0,0.4)" }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
+                onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+              >
+                ✨ {lang === "zh-CN" || lang === "zh" || lang === "ja" || lang === "ko" || lang === "vi" ? "生成内容" : "Generate"}
+              </button>
               {aiResult && (
                 <div className="relative rounded-xl p-3 text-xs leading-relaxed font-mono max-h-48 overflow-y-auto"
                   style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.85)", whiteSpace: "pre-wrap" }}>
@@ -434,7 +463,7 @@ ${userInput}
               )}
               {!aiResult && (
                 <p className="text-xs text-center py-2" style={{ color: "rgba(255,255,255,0.35)" }}>
-                  {t("aiAssistantHint")}
+                  {lang === "zh-CN" ? "输入需求后点击生成，内容将直接填充到此处" : "Enter your needs and click Generate — content appears here instantly"}
                 </p>
               )}
             </div>
