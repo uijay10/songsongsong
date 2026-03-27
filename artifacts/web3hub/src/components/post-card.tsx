@@ -340,6 +340,18 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
   const [adminPinCustom, setAdminPinCustom] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [userInfoOpen, setUserInfoOpen] = useState(false);
+  const [commentList, setCommentList] = useState<any[]>([]);
+  const [commentLoading, setCommentLoading] = useState(false);
+
+  useEffect(() => {
+    if (!commentOpen) return;
+    setCommentLoading(true);
+    fetch(`${apiBase}/posts/${post.id}/comments`)
+      .then(r => r.ok ? r.json() : { comments: [] })
+      .then(d => setCommentList(d.comments ?? []))
+      .catch(() => {})
+      .finally(() => setCommentLoading(false));
+  }, [commentOpen, post.id]);
 
   const expiryCountdown = useCountdown(post.expiresAt ?? null);
 
@@ -385,7 +397,10 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
       }
       setComments(data.comments ?? comments + 1);
       setCommentText("");
-      setCommentOpen(false);
+      fetch(`${apiBase}/posts/${post.id}/comments`)
+        .then(r => r.ok ? r.json() : { comments: [] })
+        .then(d => setCommentList(d.comments ?? []))
+        .catch(() => {});
     } finally {
       setCommenting(false);
     }
@@ -572,6 +587,26 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
         )}
         {commentOpen && (
           <div className="mt-3 flex flex-col gap-1.5">
+            {commentLoading && (
+              <p className="text-xs text-muted-foreground py-1">{t("commentLoading")}</p>
+            )}
+            {!commentLoading && commentList.length > 0 && (
+              <div className="flex flex-col divide-y divide-border/30">
+                {commentList.map((c: any) => (
+                  <div key={c.id} className="flex gap-2 py-2">
+                    <div className="w-6 h-6 rounded-full shrink-0 border border-border/40"
+                      style={{ background: generateGradient(c.wallet) }} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-[10px] font-semibold text-foreground">{c.authorName ?? truncateAddress(c.wallet)}</span>
+                        <span className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(c.createdAt))} ago</span>
+                      </div>
+                      <p className="text-xs text-foreground/85 break-words leading-snug" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{c.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             {commentError && <p className="text-xs text-red-500">{commentError}</p>}
             <div className="flex gap-2">
               <input value={commentText} onChange={e => setCommentText(e.target.value)}
@@ -708,7 +743,28 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
 
       {/* Comment box */}
       {commentOpen && (
-        <div className="mt-3 flex flex-col gap-1.5">
+        <div className="mt-3 flex flex-col gap-2">
+          {/* Existing comments list */}
+          {commentLoading && (
+            <p className="text-xs text-muted-foreground py-1">{t("commentLoading")}</p>
+          )}
+          {!commentLoading && commentList.length > 0 && (
+            <div className="flex flex-col divide-y divide-border/30">
+              {commentList.map((c: any) => (
+                <div key={c.id} className="flex gap-2.5 py-2.5">
+                  <div className="w-7 h-7 rounded-full shrink-0 border border-border/40"
+                    style={{ background: generateGradient(c.wallet) }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-semibold text-foreground">{c.authorName ?? truncateAddress(c.wallet)}</span>
+                      <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(c.createdAt))} ago</span>
+                    </div>
+                    <p className="text-sm text-foreground/85 break-words leading-snug" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{c.content}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {commentError && <p className="text-sm text-red-500">{commentError}</p>}
           <div className="flex gap-2">
             <input value={commentText} onChange={e => setCommentText(e.target.value)}
