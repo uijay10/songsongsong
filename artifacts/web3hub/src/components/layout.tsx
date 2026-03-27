@@ -5,9 +5,22 @@ import { useGetMe } from "@workspace/api-client-react";
 import { useLang, type LangCode } from "@/lib/i18n";
 import { isAdmin } from "@/lib/admin";
 import { DISCLAIMER_CONTENT } from "@/lib/disclaimer-content";
-import { LogOut, ChevronDown, LayoutDashboard, ShieldCheck, PenSquare, FileText, X } from "lucide-react";
+import { LogOut, ChevronDown, LayoutDashboard, ShieldCheck, PenSquare, FileText, X, Bell } from "lucide-react";
 import { cn, truncateAddress, generateGradient } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { enUS, zhCN, de, ru, fr, ja, ko, vi } from "date-fns/locale";
+
+function getApiBase() {
+  const base = import.meta.env.BASE_URL ?? "/";
+  const parts = base.replace(/\/$/, "").split("/");
+  parts.pop();
+  return parts.join("/") + "/api";
+}
+
+const DATE_LOCALES_LAYOUT: Record<string, Locale> = {
+  "en": enUS, "zh-CN": zhCN, "de": de, "ru": ru, "fr": fr, "ja": ja, "ko": ko, "vi": vi,
+};
 
 const NAV_ROW1_KEYS = [
   { key: "nav_testnet",     href: "/section/testnet" },
@@ -61,9 +74,57 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { t, lang, setLang } = useLang();
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const bellRef = useRef<HTMLDivElement>(null);
   const admin = isAdmin(address);
   const meLoading = !address || (!!address && meData === undefined);
   const isSpaceOwner = meData?.user?.spaceStatus === "approved" || meData?.user?.spaceStatus === "active";
+
+  // Notification state
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifList, setNotifList] = useState<any[]>([]);
+  const [unread, setUnread] = useState(0);
+  const apiBase = getApiBase();
+
+  useEffect(() => {
+    if (!address) return;
+    const fetchNotifs = async () => {
+      try {
+        const res = await fetch(`${apiBase}/notifications?wallet=${address}`);
+        if (!res.ok) return;
+        const d = await res.json();
+        setNotifList(d.notifications ?? []);
+        setUnread(d.unread ?? 0);
+      } catch {}
+    };
+    fetchNotifs();
+    const id = setInterval(fetchNotifs, 30000);
+    return () => clearInterval(id);
+  }, [address]);
+
+  const openBell = async () => {
+    setNotifOpen(v => !v);
+    if (!notifOpen && unread > 0 && address) {
+      try {
+        await fetch(`${apiBase}/notifications/mark-read`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wallet: address }),
+        });
+        setUnread(0);
+        setNotifList(prev => prev.map(n => ({ ...n, isRead: true })));
+      } catch {}
+    }
+  };
+
+  useEffect(() => {
+    function handleClickOutsideBell(e: MouseEvent) {
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutsideBell);
+    return () => document.removeEventListener("mousedown", handleClickOutsideBell);
+  }, []);
 
   const toggleDarkMode = () => {
     setIsDark((prev: boolean) => {
@@ -149,7 +210,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </Link>
             </div>
 
-            <div className="flex items-center gap-3 ml-auto">
+            <div className="flex items-center gap-2 ml-auto">
               {/* Language selector */}
               <div className="relative hidden sm:block">
                 <select
@@ -171,6 +232,69 @@ export function Layout({ children }: { children: React.ReactNode }) {
               >
                 {isDark ? "☀️" : "🌙"}
               </button>
+
+              {/* ── Notification Bell ── */}
+              {isConnected && (
+                <div className="relative" ref={bellRef}>
+                  <button
+                    onClick={openBell}
+                    className="relative w-9 h-9 flex items-center justify-center rounded-full border border-border hover:bg-muted/50 transition-colors"
+                    title={t("notifTitle") || "通知"}
+                  >
+                    <Bell className="w-4.5 h-4.5 text-muted-foreground" style={{ width: 18, height: 18 }} />
+                    {unread > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center rounded-full text-[10px] font-bold text-white px-1"
+                        style={{ background: "#FF69B4", lineHeight: 1 }}>
+                        {unread > 99 ? "99+" : unread}
+                      </span>
+                    )}
+                  </button>
+                  {notifOpen && (
+                    <div className="absolute right-0 mt-2 w-80 max-h-[420px] overflow-y-auto rounded-2xl shadow-2xl z-50 border border-border/50 dark:border-slate-700"
+                      style={{ background: "#fff" }}>
+                      <div className="px-4 py-3 border-b border-border/30 flex items-center justify-between">
+                        <span className="font-semibold text-sm text-foreground">{t("notifTitle") || "通知"}</span>
+                        {notifList.length > 0 && (
+                          <span className="text-xs text-muted-foreground">{notifList.length} {t("notifCount") || "条"}</span>
+                        )}
+                      </div>
+                      {notifList.length === 0 ? (
+                        <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+                          {t("notifEmpty") || "暂无通知"}
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-border/20">
+                          {notifList.map((n: any) => (
+                            <Link key={n.id} href={n.postId ? `/post/${n.postId}` : "#"}
+                              onClick={() => setNotifOpen(false)}
+                              className={`flex items-start gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer ${!n.isRead ? "bg-pink-50/60 dark:bg-pink-950/10" : ""}`}>
+                              <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-base"
+                                style={{ background: n.type === "like" ? "#fff0f6" : "#eff6ff" }}>
+                                {n.type === "like" ? "❤️" : "💬"}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-foreground leading-snug">
+                                  <span className="font-semibold">{n.fromName ?? truncateAddress(n.fromWallet ?? "")}</span>
+                                  {" "}{n.type === "like" ? (t("notifLiked") || "赞了你的帖子") : (t("notifCommented") || "评论了你的帖子")}
+                                </p>
+                                {n.postTitle && (
+                                  <p className="text-xs text-muted-foreground mt-0.5 truncate">《{n.postTitle}》</p>
+                                )}
+                                <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                                  {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: DATE_LOCALES_LAYOUT[lang] ?? enUS })}
+                                </p>
+                              </div>
+                              {!n.isRead && (
+                                <div className="w-2 h-2 rounded-full shrink-0 mt-1" style={{ background: "#FF69B4" }} />
+                              )}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Space owner → red Post button; loading → hide; not owner → Apply link */}
               {isConnected && isSpaceOwner ? (

@@ -62,6 +62,17 @@ export default function PostDetail() {
     enabled: !!postId && !isNaN(postId),
   });
 
+  const { data: commentsData, refetch: refetchComments } = useQuery({
+    queryKey: ["/api/posts/comments", postId],
+    queryFn: async () => {
+      const res = await fetch(`${apiBase}/posts/${postId}/comments`);
+      if (!res.ok) return { comments: [] };
+      return res.json();
+    },
+    enabled: !!postId && !isNaN(postId),
+  });
+  const commentList: any[] = commentsData?.comments ?? [];
+
   const post = data?.post ?? data;
 
   const [likes, setLikes] = useState<number | null>(null);
@@ -116,6 +127,7 @@ export default function PostDetail() {
       setComments(d.comments ?? commentCount + 1);
       setCommentText("");
       setCommentOpen(false);
+      refetchComments();
     } finally {
       setCommenting(false);
     }
@@ -462,6 +474,40 @@ export default function PostDetail() {
             </p>
           )}
         </div>
+      )}
+
+      {/* ── Comment List ── */}
+      {commentList.length > 0 && (
+        <div className="px-4 py-3 space-y-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("commentListTitle") || "评论"} ({commentList.length})</p>
+          {commentList.map((c: any) => (
+            <div key={c.id} className="flex gap-3 items-start">
+              <Link href={`/profile/${c.wallet}`} className="shrink-0">
+                <div
+                  className="w-8 h-8 rounded-full border border-border/40 overflow-hidden"
+                  style={c.authorAvatar
+                    ? { backgroundImage: `url(${c.authorAvatar})`, backgroundSize: "cover", backgroundPosition: "center" }
+                    : { background: generateGradient(c.wallet) }}
+                />
+              </Link>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <Link href={`/profile/${c.wallet}`} className="text-sm font-semibold hover:underline truncate max-w-[120px]">
+                    {c.authorName ?? truncateAddress(c.wallet)}
+                  </Link>
+                  <span className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: dateLocale })}
+                  </span>
+                </div>
+                <p className="text-sm text-foreground/85 leading-relaxed mt-0.5 break-words whitespace-pre-wrap">{c.content}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {commentList.length === 0 && commentCount > 0 && (
+        <div className="px-4 py-4 text-center text-sm text-muted-foreground">{t("commentLoading") || "加载评论中..."}</div>
       )}
 
     </div>

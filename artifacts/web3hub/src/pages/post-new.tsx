@@ -5,7 +5,7 @@ import { useCreatePost, useGetMe } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLang } from "@/lib/i18n";
 import { useLocation } from "wouter";
-import { AlertCircle, CheckCircle2, PenSquare, Zap, X, Pin } from "lucide-react";
+import { AlertCircle, CheckCircle2, PenSquare, Zap, X, Pin, Sparkles, Copy, Check } from "lucide-react";
 
 function getApiBase() {
   const base = import.meta.env.BASE_URL ?? "/";
@@ -85,6 +85,24 @@ export default function PostNew() {
   const [pinQueued, setPinQueued] = useState(false);
   const [pinQueuedEstimate, setPinQueuedEstimate] = useState<string | null>(null);
   const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false);
+
+  // AI Assistant
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiInput, setAiInput] = useState("");
+  const [aiResult, setAiResult] = useState("");
+  const [aiCopied, setAiCopied] = useState(false);
+
+  const buildPrompt = (userInput: string, isEn: boolean) => {
+    if (isEn) return `You are a professional Web3 Release demand-writing assistant, helping users publish high-quality posts on https://web3release.com/\n\nUser requirement: ${userInput}\n\nPlease output in the following format:\n\n**Title** (Short, impactful, keyword-rich, max 120 chars)\n\n**Detailed Content** (Professional, clear, crypto-native tone, highlight project strengths, specific needs, call-to-action, use emojis where appropriate)\n\n**Recommended Tags** (Suitable for platform sections: Testnet, IDO, Security Audit, Recruiting, Airdrop, Events, Funding, Nodes, Hackathon, etc.)\n\nTone: Professional and exciting, suitable for Web3 users, avoid being overly sales-oriented.`;
+    return `你是一个 Web3 Release 专业需求撰写助手，专门帮助用户在 https://web3release.com/ 发布高质量需求帖。\n\n用户的需求：${userInput}\n\n请严格按照以下格式输出：\n\n**标题**（简短有力、吸引眼球，包含关键词，最多 120 字符）\n\n**详细内容**（专业、清晰、crypto-native 语气，突出项目亮点、具体需求、行动号召，适当使用 emoji）\n\n**推荐标签**（适合平台分区：测试网发布、IDO/Launchpad、安全审计、招募、空投、活动奖励、融资轮次、节点招募、黑客松等）\n\n输出语气：专业且兴奋，适合 Web3 用户，避免过于销售化。`;
+  };
+
+  const copyAiPrompt = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setAiCopied(true);
+      setTimeout(() => setAiCopied(false), 2000);
+    });
+  };
 
   const availableSections = getSections(spaceType);
   const inputCls = "w-full p-3 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground";
@@ -249,6 +267,83 @@ export default function PostNew() {
         </div>
       )}
 
+      {/* ── AI Assistant Modal ── */}
+      {aiOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setAiOpen(false)} />
+          <div className="relative w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
+            style={{ background: "#0A0C14", border: "1px solid rgba(255,215,0,0.25)" }}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="flex items-center gap-2.5">
+                <Sparkles className="w-5 h-5" style={{ color: "#FFD700" }} />
+                <span className="font-bold text-white text-base">{t("aiAssistantTitle")}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: "rgba(255,215,0,0.12)", color: "#FFD700" }}>
+                  {t("aiAssistantFree")}
+                </span>
+              </div>
+              <button onClick={() => setAiOpen(false)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors">
+                <X className="w-4 h-4 text-white/60" />
+              </button>
+            </div>
+            {/* Body */}
+            <div className="px-5 py-4 space-y-4">
+              <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
+                {t("aiAssistantDesc")}
+              </p>
+              <textarea
+                value={aiInput}
+                onChange={e => setAiInput(e.target.value)}
+                placeholder={t("aiAssistantPlaceholder")}
+                rows={3}
+                className="w-full rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", caretColor: "#FFD700" }}
+              />
+              <div className="flex gap-2.5">
+                <button
+                  onClick={() => { setAiResult(buildPrompt(aiInput.trim(), false)); setAiCopied(false); }}
+                  disabled={!aiInput.trim()}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40"
+                  style={{ background: "rgba(255,215,0,0.15)", color: "#FFD700", border: "1px solid rgba(255,215,0,0.3)" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,215,0,0.25)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,215,0,0.15)")}
+                >
+                  {t("aiAssistantGenCN")}
+                </button>
+                <button
+                  onClick={() => { setAiResult(buildPrompt(aiInput.trim(), true)); setAiCopied(false); }}
+                  disabled={!aiInput.trim()}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40"
+                  style={{ background: "rgba(100,180,255,0.12)", color: "#60a5fa", border: "1px solid rgba(100,180,255,0.25)" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(100,180,255,0.22)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(100,180,255,0.12)")}
+                >
+                  {t("aiAssistantGenEN")}
+                </button>
+              </div>
+              {aiResult && (
+                <div className="relative rounded-xl p-3 text-xs leading-relaxed font-mono max-h-48 overflow-y-auto"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.85)", whiteSpace: "pre-wrap" }}>
+                  {aiResult}
+                  <button
+                    onClick={() => copyAiPrompt(aiResult)}
+                    className="sticky bottom-0 left-0 mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                    style={{ background: aiCopied ? "rgba(34,197,94,0.2)" : "rgba(255,215,0,0.2)", color: aiCopied ? "#22c55e" : "#FFD700" }}
+                  >
+                    {aiCopied ? <><Check className="w-3 h-3" />{t("aiAssistantCopied")}</> : <><Copy className="w-3 h-3" />{t("aiAssistantCopy")}</>}
+                  </button>
+                </div>
+              )}
+              {!aiResult && (
+                <p className="text-xs text-center py-2" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  {t("aiAssistantHint")}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Energy Confirmation Overlay ── */}
       {step === "confirm" && (
         <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
@@ -373,7 +468,18 @@ export default function PostNew() {
 
           {/* Content */}
           <div>
-            <label className="block text-sm font-semibold mb-2">{t("postFormContent")} *</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-semibold">{t("postFormContent")} *</label>
+              <button
+                type="button"
+                onClick={() => { setAiOpen(true); setAiResult(""); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
+                style={{ background: "linear-gradient(135deg, #1a1040 0%, #2a1060 100%)", color: "#FFD700", border: "1px solid rgba(255,215,0,0.35)" }}
+              >
+                <Sparkles className="w-3 h-3" />
+                {t("aiAssistantBtn")}
+              </button>
+            </div>
             <textarea value={content} onChange={e => setContent(e.target.value)}
               placeholder={t("postFormContent") + "..."} rows={8}
               className={`${inputCls} resize-y min-h-[160px]`} maxLength={5000} />
@@ -407,7 +513,7 @@ export default function PostNew() {
 
           <button type="submit" disabled={createPost.isPending}
             className="w-full py-4 rounded-xl font-bold text-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all active:scale-[0.98] disabled:opacity-50">
-            {t("postFormSubmit")}
+            {t("aiPublishBtn")}
           </button>
         </form>
       </div>
