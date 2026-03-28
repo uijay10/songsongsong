@@ -20,5 +20,6 @@ export function RoleBadge({ spaceType, size = "xs" }: RoleBadgeProps) {
   if (spaceType === "developer") {
     return <span className={`${base} bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-300`}>{t("roleDeveloper")}</span>;
   }
+  if (!spaceType) return null;
   return <span className={`${base} bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300`}>{t("roleMember")}</span>;
 }

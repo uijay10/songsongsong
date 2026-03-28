@@ -52,8 +52,9 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function formatPost(p: typeof postsTable.$inferSelect & { authorNameLive?: string | null; authorAvatarLive?: string | null; authorTagsLive?: string[] | null }) {
-  const autoViews = computeAutoViews(p.id, p.createdAt, p.authorType);
+function formatPost(p: typeof postsTable.$inferSelect & { authorNameLive?: string | null; authorAvatarLive?: string | null; authorTagsLive?: string[] | null; authorTypeLive?: string | null }) {
+  const liveType = p.authorTypeLive !== undefined ? p.authorTypeLive : p.authorType;
+  const autoViews = computeAutoViews(p.id, p.createdAt, liveType);
   return {
     id: p.id,
     title: p.title,
@@ -62,7 +63,7 @@ function formatPost(p: typeof postsTable.$inferSelect & { authorNameLive?: strin
     authorWallet: p.authorWallet,
     authorName: p.authorNameLive ?? p.authorName,
     authorAvatar: p.authorAvatarLive ?? p.authorAvatar,
-    authorType: p.authorType,
+    authorType: liveType,
     authorTags: p.authorTagsLive ?? [],
     views: (p.views ?? 0) + autoViews,
     likes: p.likes,
@@ -155,13 +156,13 @@ router.get("/", async (req, res) => {
 
   const wallets = [...new Set(posts.map(p => p.authorWallet))];
   const users = wallets.length
-    ? await db.select({ wallet: usersTable.wallet, username: usersTable.username, avatar: usersTable.avatar, tags: (usersTable as any).tags })
+    ? await db.select({ wallet: usersTable.wallet, username: usersTable.username, avatar: usersTable.avatar, tags: (usersTable as any).tags, spaceType: usersTable.spaceType })
         .from(usersTable).where(sql`${usersTable.wallet} = ANY(ARRAY[${sql.join(wallets.map(w => sql`${w}`), sql`, `)}]::text[])`)
     : [];
   const userMap = Object.fromEntries(users.map(u => [u.wallet, { ...u, parsedTags: (u as any).tags ? JSON.parse((u as any).tags) : [] }]));
 
   res.json({
-    posts: posts.map(p => formatPost({ ...p, authorNameLive: userMap[p.authorWallet]?.username ?? null, authorAvatarLive: userMap[p.authorWallet]?.avatar ?? null, authorTagsLive: userMap[p.authorWallet]?.parsedTags ?? [] })),
+    posts: posts.map(p => formatPost({ ...p, authorNameLive: userMap[p.authorWallet]?.username ?? null, authorAvatarLive: userMap[p.authorWallet]?.avatar ?? null, authorTagsLive: userMap[p.authorWallet]?.parsedTags ?? [], authorTypeLive: userMap[p.authorWallet]?.spaceType ?? null })),
     total: Number(all[0]?.count ?? 0),
     page,
     totalPages: Math.ceil(Number(all[0]?.count ?? 0) / limit),
@@ -452,12 +453,12 @@ router.get("/:id", async (req, res) => {
   if (!posts.length) return res.status(404).json({ error: "Post not found" });
 
   const p = posts[0];
-  const users = await db.select({ wallet: usersTable.wallet, username: usersTable.username, avatar: usersTable.avatar, tags: (usersTable as any).tags })
+  const users = await db.select({ wallet: usersTable.wallet, username: usersTable.username, avatar: usersTable.avatar, tags: (usersTable as any).tags, spaceType: usersTable.spaceType })
     .from(usersTable).where(eq(usersTable.wallet, p.authorWallet)).limit(1);
   const u = users[0];
   const parsedTags = (u as any)?.tags ? JSON.parse((u as any).tags) : [];
 
-  res.json(formatPost({ ...p, authorNameLive: u?.username ?? null, authorAvatarLive: u?.avatar ?? null, authorTagsLive: parsedTags }));
+  res.json(formatPost({ ...p, authorNameLive: u?.username ?? null, authorAvatarLive: u?.avatar ?? null, authorTagsLive: parsedTags, authorTypeLive: u?.spaceType ?? null }));
 });
 
 router.post("/:id/like", async (req, res) => {
