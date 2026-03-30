@@ -36,13 +36,6 @@ const NAV_ROW1_KEYS = [
 ];
 
 const NAV_ROW2_KEYS = [
-  { key: "nav_showcase",   href: "/members" },
-  { key: "nav_ecosystem",  href: "/section/ecosystem" },
-  { key: "nav_partners",   href: "/section/partners" },
-  { key: "nav_hackathon",  href: "/section/hackathon" },
-  { key: "nav_ama",        href: "/section/ama" },
-  { key: "nav_bugbounty",  href: "/section/bugbounty" },
-  { key: "nav_community",  href: "/community" },
   { key: "nav_developer",  href: "/developer" },
 ];
 
@@ -197,16 +190,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )}
               >
                 {t("navHome")}
-              </Link>
-              <Link href="/about"
-                className={cn(
-                  "px-3.5 py-1.5 rounded-full text-sm font-semibold border transition-all",
-                  location === "/about"
-                    ? "bg-blue-600 text-white border-blue-600 shadow"
-                    : "bg-blue-600 text-white border-blue-600 shadow hover:bg-blue-700"
-                )}
-              >
-                {t("nav_about")}
               </Link>
             </div>
 

@@ -222,29 +222,6 @@ export default function Home() {
   const isPending = spaceStatus === "pending";
   const [search, setSearch] = useState("");
 
-  // Promo banner countdown — fixed end: 2026-04-25 23:59:59 UTC
-  const PROMO_END = new Date("2026-04-25T23:59:59Z").getTime();
-  const [countdown, setCountdown] = useState(() => {
-    const diff = Math.max(0, PROMO_END - Date.now());
-    return {
-      d: Math.floor(diff / 86400000),
-      h: Math.floor((diff % 86400000) / 3600000),
-      m: Math.floor((diff % 3600000) / 60000),
-      s: Math.floor((diff % 60000) / 1000),
-    };
-  });
-  useEffect(() => {
-    const id = setInterval(() => {
-      const diff = Math.max(0, PROMO_END - Date.now());
-      setCountdown({
-        d: Math.floor(diff / 86400000),
-        h: Math.floor((diff % 86400000) / 3600000),
-        m: Math.floor((diff % 3600000) / 60000),
-        s: Math.floor((diff % 60000) / 1000),
-      });
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -315,66 +292,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Promo Banner */}
-      <div
-        className="promo-banner relative overflow-hidden rounded-2xl pointer-events-none select-none"
-        style={{
-          background: "linear-gradient(135deg, #0d0a2e 0%, #1a1040 30%, #2a1060 60%, #1a0832 100%)",
-          border: "1px solid rgba(255,215,0,0.3)",
-        }}
-      >
-        {/* Sweep shimmer */}
-        <div
-          className="promo-sweep absolute top-0 bottom-0"
-          style={{
-            width: "40%",
-            background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.12), rgba(255,255,255,0.08), transparent)",
-          }}
-        />
-        {/* Star sparkles */}
-        <span className="promo-star-1 absolute text-[#FFD700]" style={{ top: "18%", left: "3%",  fontSize: 11 }}>✦</span>
-        <span className="promo-star-2 absolute text-[#FF69B4]" style={{ top: "65%", left: "10%", fontSize: 8  }}>★</span>
-        <span className="promo-star-3 absolute text-[#FFD700]" style={{ top: "20%", right: "4%", fontSize: 13 }}>✦</span>
-        <span className="promo-star-4 absolute text-[#FFA500]" style={{ top: "60%", right: "12%",fontSize: 9  }}>✦</span>
-        <span className="promo-star-5 absolute text-[#FFD700]" style={{ top: "55%", left: "48%", fontSize: 7  }}>★</span>
-        <span className="promo-star-6 absolute text-[#FF69B4]" style={{ top: "25%", left: "30%", fontSize: 7  }}>✦</span>
-        {/* Content */}
-        <div className="relative z-10 px-6 py-3 text-center">
-          <p className="promo-text-shine text-base sm:text-xl font-extrabold leading-tight tracking-wide">
-            {t("promoBannerMain")}
-          </p>
-          <p className="text-xs sm:text-sm font-semibold mt-1" style={{ color: "rgba(255,240,180,0.88)" }}>
-            {t("promoBannerSub")}
-          </p>
-          {/* Countdown */}
-          <div className="flex items-center justify-center gap-2 sm:gap-3 mt-2">
-            {[
-              { val: countdown.d, label: t("cdDays") },
-              { val: countdown.h, label: t("cdHours") },
-              { val: countdown.m, label: t("cdMins") },
-              { val: countdown.s, label: t("cdSecs") },
-            ].map(({ val, label }, i) => (
-              <div key={i} className="flex flex-col items-center">
-                <span
-                  className="font-mono font-extrabold text-lg sm:text-2xl leading-none tabular-nums"
-                  style={{ color: "#FFD700", textShadow: "0 0 8px rgba(255,215,0,0.6)" }}
-                >
-                  {String(val).padStart(2, "0")}
-                </span>
-                <span className="text-[9px] sm:text-[10px] font-semibold mt-0.5" style={{ color: "rgba(255,215,0,0.65)" }}>
-                  {label}
-                </span>
-              </div>
-            )).reduce<React.ReactNode[]>((acc, el, i) => {
-              if (i > 0) acc.push(
-                <span key={`sep-${i}`} className="font-bold text-base sm:text-xl self-start mt-0.5" style={{ color: "rgba(255,215,0,0.5)" }}>:</span>
-              );
-              acc.push(el);
-              return acc;
-            }, [])}
-          </div>
-        </div>
-      </div>
 
       {/* Encouragement + Search */}
       <div className="rounded-2xl px-6 py-5 space-y-4 border border-blue-200/60" style={{background: "linear-gradient(135deg, #dbeafe 0%, #eff6ff 50%, #e0f2fe 100%)"}}>
