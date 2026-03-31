@@ -6,7 +6,8 @@ import { useLocation } from "wouter";
 import {
   Users, ClipboardList, Zap, Star, Ban, Download,
   CheckCircle, XCircle, RefreshCw, Pin, Send,
-  ChevronDown, AlertCircle, ShieldOff, Cpu, Trash2, Calendar
+  ChevronDown, AlertCircle, ShieldOff, Cpu, Trash2, Calendar,
+  Globe, Sparkles, ExternalLink
 } from "lucide-react";
 
 function getApiBase() {
@@ -39,7 +40,7 @@ async function adminGet(path: string, wallet: string) {
   return fetch(`${apiBase}/admin${path}${sep}adminWallet=${encodeURIComponent(wallet)}`).then(r => r.json());
 }
 
-type Tab = "applications" | "users" | "send" | "system";
+type Tab = "applications" | "users" | "send" | "system" | "ai";
 
 interface DialogState {
   type: "approve" | "reject";
@@ -77,6 +78,13 @@ export default function AdminPage() {
   const [cleanupConfirm, setCleanupConfirm] = useState(false);
   const [cleanupLoading, setCleanupLoading] = useState(false);
   const [cleanupResult, setCleanupResult] = useState<string>("");
+
+  const [aiUrl, setAiUrl] = useState("");
+  const [aiEvents, setAiEvents] = useState<any[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiMsg, setAiMsg] = useState("");
+  const [aiSelected, setAiSelected] = useState<Set<number>>(new Set());
+  const [aiPublishing, setAiPublishing] = useState(false);
 
   const admin = isAdmin(address);
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3000); };
@@ -255,6 +263,9 @@ export default function AdminPage() {
         </button>
         <button className={tabCls(tab === "system")} onClick={() => setTab("system")}>
           <Cpu className="w-4 h-4 inline mr-1" />系统维护
+        </button>
+        <button className={tabCls(tab === "ai")} onClick={() => setTab("ai")}>
+          <Sparkles className="w-4 h-4 inline mr-1" />AI 抓取
         </button>
       </div>
 
@@ -663,6 +674,176 @@ export default function AdminPage() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ─── AI 抓取 Tab ─── */}
+      {tab === "ai" && (
+        <div className="space-y-5">
+          <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
+            <h3 className="font-bold flex items-center gap-2">
+              <Globe className="w-5 h-5 text-violet-500" />
+              从网页提取 Web3 事件
+            </h3>
+            <p className="text-sm text-muted-foreground">粘贴任意 Web3 资讯页面的 URL，AI 将自动识别并提取有效事件（测试网、空投、IDO 等）。</p>
+            <div className="flex gap-2 flex-col sm:flex-row">
+              <input
+                type="url"
+                value={aiUrl}
+                onChange={e => setAiUrl(e.target.value)}
+                placeholder="https://..."
+                className="flex-1 border border-border rounded-xl px-4 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-violet-400/30"
+                onKeyDown={async e => {
+                  if (e.key === "Enter" && !aiLoading) {
+                    if (!aiUrl.startsWith("http") || !address) return;
+                    setAiLoading(true); setAiMsg(""); setAiEvents([]); setAiSelected(new Set());
+                    try {
+                      const res = await fetch(`${apiBase}/ai/extract`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ adminWallet: address, url: aiUrl }),
+                      });
+                      const d = await res.json();
+                      if (!res.ok) { setAiMsg(`❌ 错误: ${d.error}`); return; }
+                      setAiEvents(d.events ?? []);
+                      if ((d.events ?? []).length === 0) setAiMsg("⚠ 未从该页面提取到有效事件");
+                      else { setAiSelected(new Set((d.events ?? []).map((_: any, i: number) => i))); }
+                    } catch (e) { setAiMsg(`❌ 请求失败: ${String(e)}`); }
+                    finally { setAiLoading(false); }
+                  }
+                }}
+              />
+              <button
+                onClick={async () => {
+                  if (!aiUrl.startsWith("http") || !address || aiLoading) return;
+                  setAiLoading(true); setAiMsg(""); setAiEvents([]); setAiSelected(new Set());
+                  try {
+                    const res = await fetch(`${apiBase}/ai/extract`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ adminWallet: address, url: aiUrl }),
+                    });
+                    const d = await res.json();
+                    if (!res.ok) { setAiMsg(`❌ 错误: ${d.error}`); return; }
+                    setAiEvents(d.events ?? []);
+                    if ((d.events ?? []).length === 0) setAiMsg("⚠ 未从该页面提取到有效事件");
+                    else { setAiSelected(new Set((d.events ?? []).map((_: any, i: number) => i))); }
+                  } catch (e) { setAiMsg(`❌ 请求失败: ${String(e)}`); }
+                  finally { setAiLoading(false); }
+                }}
+                disabled={aiLoading || !aiUrl.startsWith("http")}
+                className="px-5 py-2.5 rounded-xl bg-violet-600 text-white font-bold text-sm hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shrink-0">
+                {aiLoading ? (
+                  <><RefreshCw className="w-4 h-4 animate-spin" />提取中...</>
+                ) : (
+                  <><Sparkles className="w-4 h-4" />开始提取</>
+                )}
+              </button>
+            </div>
+            {aiMsg && (
+              <div className={`px-4 py-2.5 rounded-xl text-sm font-medium ${aiMsg.startsWith("❌") ? "bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400" : "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400"}`}>
+                {aiMsg}
+              </div>
+            )}
+          </div>
+
+          {aiEvents.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-3">
+                  <h3 className="font-bold">提取到 {aiEvents.length} 条事件</h3>
+                  <button
+                    onClick={() => setAiSelected(aiSelected.size === aiEvents.length ? new Set() : new Set(aiEvents.map((_, i) => i)))}
+                    className="text-xs text-violet-600 dark:text-violet-400 hover:underline">
+                    {aiSelected.size === aiEvents.length ? "全不选" : "全选"}
+                  </button>
+                </div>
+                <button
+                  onClick={async () => {
+                    if (!address || aiSelected.size === 0 || aiPublishing) return;
+                    setAiPublishing(true);
+                    const toPublish = [...aiSelected].map(i => aiEvents[i]).filter(Boolean);
+                    try {
+                      const res = await fetch(`${apiBase}/ai/publish`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ adminWallet: address, events: toPublish }),
+                      });
+                      const d = await res.json();
+                      if (!res.ok) { flash(`❌ 发布失败: ${d.error}`); return; }
+                      flash(`✓ 成功发布 ${d.inserted} 条事件！`);
+                      setAiEvents([]); setAiSelected(new Set()); setAiUrl("");
+                    } catch (e) { flash(`❌ ${String(e)}`); }
+                    finally { setAiPublishing(false); }
+                  }}
+                  disabled={aiSelected.size === 0 || aiPublishing}
+                  className="px-5 py-2.5 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                  {aiPublishing ? <><RefreshCw className="w-4 h-4 animate-spin" />发布中...</> : <>✓ 发布选中 {aiSelected.size} 条</>}
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {aiEvents.map((ev, i) => {
+                  const isChecked = aiSelected.has(i);
+                  const importanceCls = ev.importance === "high"
+                    ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                    : ev.importance === "medium"
+                    ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => setAiSelected(prev => {
+                        const next = new Set(prev);
+                        if (next.has(i)) next.delete(i); else next.add(i);
+                        return next;
+                      })}
+                      className={`p-4 rounded-xl border cursor-pointer transition-all ${isChecked ? "border-violet-400 bg-violet-50 dark:bg-violet-950/20" : "border-border bg-card hover:border-violet-200"}`}>
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-1 w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${isChecked ? "border-violet-500 bg-violet-500" : "border-border"}`}>
+                          {isChecked && <CheckCircle className="w-3 h-3 text-white" />}
+                        </div>
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div className="flex items-start gap-2 flex-wrap">
+                            <p className="font-semibold text-sm leading-snug flex-1">{ev.title}</p>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold shrink-0 ${importanceCls}`}>
+                              {ev.importance === "high" ? "高" : ev.importance === "medium" ? "中" : "低"}
+                            </span>
+                            <span className="text-xs text-muted-foreground shrink-0">
+                              {(ev.ai_confidence * 100).toFixed(0)}% 置信
+                            </span>
+                          </div>
+                          {ev.project_name && (
+                            <p className="text-xs text-violet-600 dark:text-violet-400 font-semibold">{ev.project_name}</p>
+                          )}
+                          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{ev.description}</p>
+                          <div className="flex items-center gap-2 flex-wrap text-xs">
+                            <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{ev.section}</span>
+                            {ev.tags?.slice(0, 4).map((tag: string) => (
+                              <span key={tag} className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{tag}</span>
+                            ))}
+                            {ev.start_time && (
+                              <span className="text-muted-foreground">
+                                {ev.start_time ? new Date(ev.start_time).toLocaleDateString("zh-CN") : ""}
+                                {ev.end_time ? ` → ${new Date(ev.end_time).toLocaleDateString("zh-CN")}` : ""}
+                              </span>
+                            )}
+                            {ev.source_url && (
+                              <a href={ev.source_url} target="_blank" rel="noopener noreferrer"
+                                onClick={e => e.stopPropagation()}
+                                className="flex items-center gap-0.5 text-blue-500 hover:underline">
+                                <ExternalLink className="w-3 h-3" />原文
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

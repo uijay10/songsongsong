@@ -6,6 +6,7 @@ import postsRouter from "./posts";
 import spacesRouter from "./spaces";
 import adminRouter from "./admin";
 import notificationsRouter from "./notifications";
+import aiRouter from "./ai";
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -15,5 +16,6 @@ router.use("/posts", postsRouter);
 router.use("/spaces", spacesRouter);
 router.use("/admin", adminRouter);
 router.use("/notifications", notificationsRouter);
+router.use("/ai", aiRouter);
 
 export default router;

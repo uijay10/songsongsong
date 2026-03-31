@@ -274,8 +274,10 @@ export default function PostDetail() {
     );
   }
 
-  const displayName = post.authorName ?? truncateAddress(post.authorWallet);
-  const authorHref = `/profile/${post.authorWallet}`;
+  const displayName = post.authorType === "ai"
+    ? (post.authorName || "AI精选")
+    : (post.authorName ?? truncateAddress(post.authorWallet));
+  const authorHref = post.authorType === "ai" ? "#" : `/profile/${post.authorWallet}`;
   const sectionLabel = t(SECTION_KEY_MAP[post.section] ?? post.section) || post.section;
   const postDate = new Date(post.createdAt);
   const isSelfPost = address?.toLowerCase() === post.authorWallet?.toLowerCase();
@@ -407,6 +409,25 @@ export default function PostDetail() {
           <span className="text-xs text-primary/80 bg-primary/8 px-2.5 py-1 rounded-full">#{sectionLabel}</span>
         </div>
 
+        {/* AI badge */}
+        {post.authorType === "ai" && (
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-white"
+              style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)" }}>
+              🤖 AI精选
+            </span>
+            {(post as any).importance && (
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                (post as any).importance === "high" ? "bg-red-100 dark:bg-red-900/30 text-red-600" :
+                (post as any).importance === "medium" ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600" :
+                "bg-gray-100 dark:bg-gray-800 text-gray-500"
+              }`}>
+                {(post as any).importance === "high" ? "重要" : (post as any).importance === "medium" ? "一般" : "低优"}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Title */}
         <h1 className="text-[1.35rem] font-semibold text-foreground leading-snug mb-3 break-words">{post.title}</h1>
 
@@ -415,6 +436,17 @@ export default function PostDetail() {
           style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
           {post.content}
         </p>
+
+        {/* Source link for AI posts */}
+        {post.authorType === "ai" && (post as any).sourceUrl && (
+          <a href={(post as any).sourceUrl} target="_blank" rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium">
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2 stroke-round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            查看原文
+          </a>
+        )}
       </div>
 
       {/* ── Timestamp ── */}

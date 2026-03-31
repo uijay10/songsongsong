@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -21,6 +21,11 @@ export const postsTable = pgTable("posts", {
   pinQueued: boolean("pin_queued").notNull().default(false),
   pinQueuedAt: timestamp("pin_queued_at"),
   expiresAt: timestamp("expires_at"),
+  sourceUrl: text("source_url"),
+  aiConfidence: real("ai_confidence"),
+  importance: text("importance"),
+  eventStartTime: timestamp("event_start_time"),
+  eventEndTime: timestamp("event_end_time"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

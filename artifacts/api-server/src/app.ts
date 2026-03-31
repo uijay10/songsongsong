@@ -55,6 +55,11 @@ async function ensureTables() {
         created_at TIMESTAMP DEFAULT NOW() NOT NULL
       )
     `);
+    await db.execute(sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS source_url TEXT`);
+    await db.execute(sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS ai_confidence REAL`);
+    await db.execute(sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS importance TEXT`);
+    await db.execute(sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS event_start_time TIMESTAMP`);
+    await db.execute(sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS event_end_time TIMESTAMP`);
     console.log("[db] ensureTables: OK");
   } catch (e) {
     console.error("[db] ensureTables error:", e);

@@ -30,6 +30,8 @@ const SECTION_KEY_MAP: Record<string, string> = {
   showcase: "sShowcaseLabel", ecosystem: "sEcosystemLabel", partners: "sPartnersLabel",
   hackathon: "sHackathonLabel", ama: "sAmaLabel", bugbounty: "sBugbountyLabel",
   community: "nav_community", kol: "nav_kol", developer: "nav_developer",
+  presale: "sPresaleLabel", mainnet: "sMainnetLabel", unlock: "sUnlockLabel",
+  exchange: "sExchangeLabel", quest: "sQuestLabel",
 };
 import { formatDistanceToNow } from "date-fns";
 import { useLikePost } from "@workspace/api-client-react";
@@ -371,8 +373,10 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
   const readMoreLabel = lang === "zh-CN" ? "查看全文" : "Show more";
   const collapseLabel = lang === "zh-CN" ? "收起" : "Show less";
 
-  const displayName = post.authorName ?? truncateAddress(post.authorWallet);
-  const authorHref = `/profile/${post.authorWallet}`;
+  const displayName = post.authorType === "ai"
+    ? (post.authorName || "AI精选")
+    : (post.authorName ?? truncateAddress(post.authorWallet));
+  const authorHref = post.authorType === "ai" ? "#" : `/profile/${post.authorWallet}`;
 
   const handleLike = () => {
     if (!isConnected || liked) return;
@@ -762,6 +766,16 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
           <div className="text-xs text-muted-foreground mt-0.5">{formatDistanceToNow(new Date(post.createdAt))} ago</div>
         </div>
       </div>
+
+      {/* AI badge for AI-extracted posts */}
+      {post.authorType === "ai" && (
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-white"
+            style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)" }}>
+            🤖 AI精选
+          </span>
+        </div>
+      )}
 
       {/* Content */}
       <h3 className="font-bold text-base mb-2 text-foreground">{post.title}</h3>
