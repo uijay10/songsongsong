@@ -182,15 +182,13 @@
             // 写入 localStorage，与后台 admin.html 共享同一 key
             const applications = JSON.parse(localStorage.getItem('projectApplications') || '[]');
             applications.unshift({
-                id:          Date.now(),
+                id:          'claim_' + Date.now(),
                 eventTitle:  currentEventTitle,
                 projectName,
                 contact,
                 reason:      reason || '未填写',
-                eventLink:   '#',
                 status:      'pending',
                 submitTime:  new Date().toLocaleString('zh-CN'),
-                reviewTime:  '',
                 reviewNote:  ''
             });
             localStorage.setItem('projectApplications', JSON.stringify(applications));

@@ -152,7 +152,7 @@
         }
 
         function saveLocalClaims() {
-            const submitted = claims.filter(c => !String(c.id).startsWith('mock_'));
+            const submitted = claims.filter(c => String(c.id).startsWith('claim_'));
             localStorage.setItem('projectApplications', JSON.stringify(submitted));
         }
 
