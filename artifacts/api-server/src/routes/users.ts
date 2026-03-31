@@ -40,6 +40,7 @@ function fmtUser(u: typeof usersTable.$inferSelect) {
     normalDailyPostCount: (u as any).normalDailyPostCount ?? 0,
     normalDailyPostDate: (u as any).normalDailyPostDate ?? null,
     tags: (u as any).tags ? JSON.parse((u as any).tags) : [],
+    subscriptions: (u as any).subscriptions ? JSON.parse((u as any).subscriptions) : [],
     createdAt: u.createdAt.toISOString(),
   };
 }
@@ -120,8 +121,13 @@ router.post("/upsert", async (req, res) => {
   if (website !== undefined) updateData.website = website;
   if ((req.body as any).contact !== undefined) updateData.contact = (req.body as any).contact;
   if ((req.body as any).contactPublic !== undefined) updateData.contactPublic = (req.body as any).contactPublic;
+  if ((req.body as any).discord !== undefined) updateData.discord = (req.body as any).discord;
+  if ((req.body as any).telegram !== undefined) updateData.telegram = (req.body as any).telegram;
+  if ((req.body as any).whitepaper !== undefined) updateData.whitepaper = (req.body as any).whitepaper;
   if (language !== undefined) updateData.language = language;
   if (tags !== undefined) updateData.tags = Array.isArray(tags) ? JSON.stringify(tags.slice(0, 2)) : null;
+  const subs = (req.body as any).subscriptions;
+  if (subs !== undefined) updateData.subscriptions = Array.isArray(subs) ? JSON.stringify(subs) : null;
 
   const updated = Object.keys(updateData).length > 0
     ? await db.update(usersTable).set(updateData).where(eq(usersTable.wallet, lw)).returning()
