@@ -24,6 +24,7 @@
     <div class="max-w-4xl mx-auto px-6 py-8">
         <div class="flex justify-between items-center mb-6 px-1">
             <span id="result-count" class="text-slate-500 text-sm font-medium">共 0 条事件</span>
+            <span id="expire-info" class="text-xs text-slate-400"></span>
         </div>
         <div id="event-list" class="space-y-8"></div>
     </div>
@@ -38,6 +39,8 @@
             "代币解锁", "交易所上线", "链上任务", "开发者专区"
         ];
 
+        const RETENTION_DAYS = 60;
+
         function formatDate(dateStr) {
             if (!dateStr) return '日期待定';
             try {
@@ -48,6 +51,20 @@
                 return `${year}年${month}月${day}日`;
             } catch (e) {
                 return dateStr;
+            }
+        }
+
+        function isWithinRetention(dateStr) {
+            if (!dateStr) return true;
+            try {
+                const eventDate = new Date(dateStr);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const diffTime = eventDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays >= 0 && diffDays <= RETENTION_DAYS;
+            } catch (e) {
+                return true;
             }
         }
 
@@ -85,7 +102,6 @@
                     });
                     btn.classList.add('bg-blue-600', 'text-white', 'shadow-md');
                     btn.classList.remove('bg-white', 'border', 'border-slate-200');
-
                     filterEvents(cat);
                 });
 
@@ -97,19 +113,24 @@
             const container = document.getElementById('event-list');
             container.innerHTML = '';
 
-            let filtered = allEvents;
+            let filtered = allEvents.filter(event => isWithinRetention(event.start_time));
 
             if (selectedCategory !== '全部') {
-                filtered = allEvents.filter(event => {
+                filtered = filtered.filter(event => {
                     const cats = Array.isArray(event.category) ? event.category : [event.category || ''];
                     return cats.some(c => c === selectedCategory);
                 });
             }
 
             document.getElementById('result-count').textContent = `共 ${filtered.length} 条事件`;
+            document.getElementById('expire-info').textContent = `（已过滤过期活动，保留期 ${RETENTION_DAYS} 天）`;
 
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-20 text-slate-500">暂无「${selectedCategory}」相关事件</div>`;
+                container.innerHTML = `
+                    <div class="text-center py-20 text-slate-500">
+                        暂无符合条件的活动<br>
+                        <span class="text-xs">（当前栏目或保留期内没有匹配事件）</span>
+                    </div>`;
                 return;
             }
 
@@ -176,7 +197,7 @@
                                     查看详情 →
                                 </a>
                                 <button onclick="toggleClaim('${event.title.replace(/'/g, "\\'")}')"
-                                        class="px-5 py-2 text-sm font-medium rounded-2xl transition-all ${claimBtnClass}">
+                                        class="px-6 py-2 text-sm font-medium rounded-2xl transition-all ${claimBtnClass}">
                                     ${claimBtnText}
                                 </button>
                             </div>
@@ -195,8 +216,7 @@
                 allEvents = await res.json();
                 console.log('加载成功，共', allEvents.length, '条');
 
-                document.getElementById('result-count').textContent = `共 ${allEvents.length} 条事件`;
-                renderEvents(allEvents);
+                filterEvents('全部');
             } catch (err) {
                 console.error(err);
                 document.getElementById('event-list').innerHTML = `<div class="text-red-500 text-center py-20">数据加载失败</div>`;
