@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 项目事件聚合</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { content: [], theme: { extend: {} } };
+    </script>
+</head>
+<body class="bg-slate-50 font-sans">
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 shadow-lg">
+        <div class="max-w-5xl mx-auto px-6 text-center">
+            <h1 class="text-4xl font-bold">AI 项目事件聚合</h1>
+            <p class="mt-3 text-blue-100 text-lg">自动抓取 · 轻量认领 · 需求匹配</p>
+        </div>
+    </header>
+
+    <nav class="bg-white shadow sticky top-0 z-50 border-b">
+        <div class="max-w-5xl mx-auto px-6 py-5 flex flex-wrap gap-3 justify-center" id="nav-bar"></div>
+    </nav>
+
+    <!-- 搜索框 -->
+    <div class="max-w-5xl mx-auto px-6 pt-6 pb-4">
+        <div class="relative max-w-2xl mx-auto">
+            <input id="search-input" type="text" 
+                   placeholder="搜索标题、描述、标签..." 
+                   class="w-full px-6 py-3.5 pl-14 bg-white border border-slate-200 rounded-3xl focus:outline-none focus:border-blue-500 text-base shadow-sm">
+            <span class="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-6">
+        <div class="flex justify-between items-center mb-6">
+            <span id="result-count" class="text-slate-500 text-sm font-medium">共 0 条事件</span>
+            <span id="expire-info" class="text-xs text-slate-400"></span>
+        </div>
+        <div id="event-list" class="space-y-8"></div>
+    </div>
+
+    <script>
+        let allEvents = [];
+        let claimedEvents = JSON.parse(localStorage.getItem('claimedEvents') || '[]');   // 我要关注
+        let projectClaimed = JSON.parse(localStorage.getItem('projectClaimed') || '[]'); // 项目方认领
+
+        let currentCategory = '全部';
+        let currentSearchTerm = '';
+        let currentSort = 'time'; // 'time' 或 'importance'
+
+        const categories = [
+            "全部", "测试网", "IDO/Launchpad", "预售", "融资公告", 
+            "空投", "招聘", "节点招募", "主网上线", 
+            "代币解锁", "交易所上线", "链上任务", "开发者专区", "我已认领"
+        ];
+
+        const RETENTION_DAYS = 60;
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '日期待定';
+            const date = new Date(dateStr);
+            return `${date.getFullYear()}年${date.getMonth()+1}月${date.getDate()}日`;
+        }
+
+        function isWithinRetention(dateStr) {
+            if (!dateStr) return true;
+            const eventDate = new Date(dateStr);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const diffDays = Math.ceil((eventDate - today) / (1000*60*60*24));
+            return diffDays >= 0 && diffDays <= RETENTION_DAYS;
+        }
+
+        function isClaimed(title) {
+            return claimedEvents.includes(title);
+        }
+        function isProjectClaimed(title) {
+            return projectClaimed.includes(title);
+        }
+
+        function toggleClaim(title, type = 'user') {
+            let arr = type === 'user' ? claimedEvents : projectClaimed;
+            let key = type === 'user' ? 'claimedEvents' : 'projectClaimed';
+
+            if (arr.includes(title)) {
+                arr = arr.filter(t => t !== title);
+            } else {
+                arr.push(title);
+            }
+            localStorage.setItem(key, JSON.stringify(arr));
+            refreshCurrentView();
+        }
+
+        function createNavBar() {
+            const nav = document.getElementById('nav-bar');
+            nav.innerHTML = '';
+
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.textContent = cat;
+                btn.dataset.category = cat;
+                btn.className = `px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
+                    cat === '全部' ? 'bg-blue-600 text-white shadow-md' : 'bg-white hover:bg-slate-100 border border-slate-200'
+                }`;
+
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#nav-bar button').forEach(b => b.classList.remove('bg-blue-600','text-white','shadow-md'));
+                    btn.classList.add('bg-blue-600','text-white','shadow-md');
+                    currentCategory = cat;
+                    refreshCurrentView();
+                });
+                nav.appendChild(btn);
+            });
+        }
+
+        function setupSearch() {
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                currentSearchTerm = e.target.value.toLowerCase().trim();
+                refreshCurrentView();
+            });
+        }
+
+        function refreshCurrentView() {
+            let filtered = allEvents.filter(e => isWithinRetention(e.start_time));
+
+            // 栏目过滤（包含“我已认领”）
+            if (currentCategory === '我已认领') {
+                filtered = filtered.filter(e => isClaimed(e.title) || isProjectClaimed(e.title));
+            } else if (currentCategory !== '全部') {
+                filtered = filtered.filter(e => {
+                    const cats = Array.isArray(e.category) ? e.category : [e.category || ''];
+                    return cats.some(c => c === currentCategory);
+                });
+            }
+
+            // 搜索
+            if (currentSearchTerm) {
+                filtered = filtered.filter(e => {
+                    const text = `${e.title || ''} ${e.description || ''} ${e.source || ''} ${(e.tags || []).join(' ')}`.toLowerCase();
+                    return text.includes(currentSearchTerm);
+                });
+            }
+
+            // 排序
+            if (currentSort === 'time') {
+                filtered.sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
+            } else if (currentSort === 'importance') {
+                const order = { '重要': 3, 'high': 3, '一般': 2, 'medium': 2, 'low': 1 };
+                filtered.sort((a, b) => (order[b.importance] || 0) - (order[a.importance] || 0));
+            }
+
+            document.getElementById('result-count').textContent = `共 ${filtered.length} 条事件`;
+
+            const container = document.getElementById('event-list');
+            container.innerHTML = filtered.length === 0 
+                ? `<div class="text-center py-20 text-slate-400">没有找到匹配的事件</div>`
+                : '';
+
+            renderEvents(filtered);
+        }
+
+        function renderEvents(events) {
+            const container = document.getElementById('event-list');
+            events.forEach(event => {
+                const mainCat = Array.isArray(event.category) ? event.category[0] : (event.category || '其他');
+                const desc = (event.description || '').length > 230 
+                    ? event.description.substring(0, 227) + '...' 
+                    : event.description || '暂无描述';
+
+                const importanceHTML = event.importance ? 
+                    (event.importance.toLowerCase().includes('high') || event.importance.includes('重要') 
+                        ? `<span class="px-4 py-1 text-xs font-medium rounded-2xl bg-red-100 text-red-700">重要</span>` 
+                        : `<span class="px-4 py-1 text-xs font-medium rounded-2xl bg-amber-100 text-amber-700">一般</span>`) : '';
+
+                const userClaimed = isClaimed(event.title);
+                const projClaimed = isProjectClaimed(event.title);
+
+                const cardHTML = `
+                    <div class="bg-white rounded-3xl shadow-sm hover:shadow-2xl p-8 border border-slate-100 transition-all">
+                        <div class="flex justify-between mb-6">
+                            <div class="flex gap-3">
+                                <span class="px-5 py-1.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-3xl">${mainCat}</span>
+                                ${importanceHTML}
+                            </div>
+                            <span class="text-slate-500 text-sm">${formatDate(event.start_time)}</span>
+                        </div>
+
+                        <h2 class="text-2xl font-semibold mb-5">
+                            <a href="${event.source_url || '#'}" target="_blank" class="hover:text-blue-600">${event.title}</a>
+                        </h2>
+
+                        <p class="text-slate-600 mb-7">${desc}</p>
+
+                        <div class="flex flex-wrap gap-2 mb-8">
+                            ${(event.tags || []).map(tag => `<span class="px-4 py-1 bg-slate-100 text-slate-600 text-xs rounded-3xl">#${tag}</span>`).join('')}
+                        </div>
+
+                        <div class="flex justify-between items-center pt-6 border-t">
+                            <span class="text-slate-500">来源：${event.source || 'Solana'}</span>
+                            <div class="flex gap-2">
+                                <a href="${event.source_url || '#'}" target="_blank" class="px-5 py-2 text-sm text-blue-600 hover:underline">查看详情</a>
+                                
+                                <button onclick="toggleClaim('${event.title.replace(/'/g, "\\'")}', 'user')" 
+                                        class="px-5 py-2 text-sm rounded-2xl transition-all ${userClaimed ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}">
+                                    ${userClaimed ? '已关注' : '我要关注'}
+                                </button>
+                                
+                                <button onclick="toggleClaim('${event.title.replace(/'/g, "\\'")}', 'project')" 
+                                        class="px-5 py-2 text-sm rounded-2xl transition-all ${projClaimed ? 'bg-purple-100 text-purple-700' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}">
+                                    ${projClaimed ? '项目方已认领' : '项目方认领'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        async function loadEvents() {
+            try {
+                const res = await fetch('/extraction_result.json');
+                allEvents = await res.json();
+                refreshCurrentView();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        window.onload = () => {
+            createNavBar();
+            setupSearch();
+            loadEvents();
+        };
+    </script>
+</body>
+</html>
