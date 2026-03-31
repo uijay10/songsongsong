@@ -267,34 +267,34 @@ export default function Profile() {
         <div className="space-y-4">
 
           {/* 1. Welcome Card */}
-          <div className="rounded-2xl p-6 text-white"
+          <div className="rounded-2xl p-8 text-white"
             style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #6d28d9 100%)" }}>
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-14 h-14 rounded-xl border-2 border-white/30 shrink-0 bg-transparent"
-                style={me?.avatar
+            <div className="flex items-center gap-5 mb-7">
+              <div className="w-18 h-18 rounded-2xl border-2 border-white/30 shrink-0 bg-transparent"
+                style={{ width: 72, height: 72, ...(me?.avatar
                   ? { backgroundImage: `url(${me.avatar})`, backgroundSize: "cover", backgroundPosition: "center" }
-                  : { background: generateGradient(address) }} />
+                  : { background: generateGradient(address) }) }} />
               <div>
-                <p className="text-white/70 text-sm mb-0.5">{lang === "zh-CN" ? "欢迎回来" : "Welcome back"}</p>
-                <h1 className="text-xl font-bold">{displayUsername}</h1>
-                <div className="mt-1">
+                <p className="text-white/60 text-sm mb-1">{lang === "zh-CN" ? "欢迎回来 👋" : "Welcome back 👋"}</p>
+                <h1 className="text-2xl font-extrabold leading-tight">{displayUsername}</h1>
+                <div className="mt-1.5">
                   <RoleBadge spaceType={isSpaceOwner ? spaceType : null} size="sm" />
                 </div>
               </div>
             </div>
             {isProjectOwner ? (
               <div className="flex flex-wrap gap-3">
-                <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-semibold text-sm transition-all border border-white/20 backdrop-blur-sm">
+                <Link href="/" className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm transition-all border border-white/25 backdrop-blur-sm">
                   <Megaphone className="w-4 h-4" />
                   {lang === "zh-CN" ? "一键认领新公告" : "Claim Announcement"}
                 </Link>
-                <Link href="/post/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-green-500 hover:bg-green-400 text-white font-semibold text-sm transition-all shadow-lg shadow-green-900/30">
+                <Link href="/post/new" className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-green-500 hover:bg-green-400 text-white font-bold text-sm transition-all shadow-lg shadow-green-900/40">
                   <PenSquare className="w-4 h-4" />
                   {lang === "zh-CN" ? "发布新需求" : "Post New Demand"}
                 </Link>
               </div>
             ) : (
-              <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-semibold text-sm transition-all border border-white/20">
+              <Link href="/" className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm transition-all border border-white/25">
                 <Globe className="w-4 h-4" />
                 {lang === "zh-CN" ? "浏览最新公告" : "Browse Announcements"}
               </Link>
@@ -315,10 +315,13 @@ export default function Profile() {
             </div>
             {posts.length === 0 ? (
               <div className="py-8 text-center">
-                <FileText className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">{lang === "zh-CN" ? "暂无认领记录" : "No claims yet"}</p>
-                <Link href="/" className="mt-2 inline-block text-xs text-primary hover:underline">
-                  {lang === "zh-CN" ? "去认领公告 →" : "Browse announcements →"}
+                <FileText className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground font-medium">
+                  {lang === "zh-CN" ? "暂无认领记录，赶快去认领第一条公告吧！" : "No claims yet — go claim your first announcement!"}
+                </p>
+                <Link href="/" className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors">
+                  <Megaphone className="w-3.5 h-3.5" />
+                  {lang === "zh-CN" ? "浏览公告" : "Browse Announcements"}
                 </Link>
               </div>
             ) : (
@@ -345,11 +348,11 @@ export default function Profile() {
           {/* 3. Quick Stats */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { icon: <FileText className="w-5 h-5 text-blue-500" />, label: lang === "zh-CN" ? "已认领公告" : "Claims", value: posts.length, bg: "bg-blue-50 dark:bg-blue-950/20" },
-              { icon: <Users className="w-5 h-5 text-violet-500" />, label: lang === "zh-CN" ? "收到申请" : "Applications", value: me?.inviteCount ?? 0, bg: "bg-violet-50 dark:bg-violet-950/20" },
-              { icon: <BarChart3 className="w-5 h-5 text-green-500" />, label: lang === "zh-CN" ? "本月曝光" : "Monthly Views", value: "—", bg: "bg-green-50 dark:bg-green-950/20" },
+              { icon: <FileText className="w-5 h-5 text-slate-500" />, label: lang === "zh-CN" ? "已认领公告" : "Claims", value: posts.length },
+              { icon: <Users className="w-5 h-5 text-slate-500" />, label: lang === "zh-CN" ? "收到申请" : "Applications", value: me?.inviteCount ?? 0 },
+              { icon: <BarChart3 className="w-5 h-5 text-slate-500" />, label: lang === "zh-CN" ? "本月曝光" : "Monthly Views", value: "—" },
             ].map((stat, i) => (
-              <div key={i} className={`${stat.bg} rounded-2xl p-4 text-center`}>
+              <div key={i} className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-700/40 rounded-2xl p-4 text-center">
                 <div className="flex justify-center mb-2">{stat.icon}</div>
                 <p className="text-2xl font-bold">{stat.value}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
@@ -365,20 +368,23 @@ export default function Profile() {
                 {lang === "zh-CN" ? "我的订阅" : "My Subscriptions"}
               </h2>
               <button onClick={() => setActiveTab("subscriptions")}
-                className="text-xs text-primary hover:underline flex items-center gap-1">
-                {lang === "zh-CN" ? "管理订阅" : "Manage"} <ChevronRight className="w-3 h-3" />
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+                <Settings className="w-3 h-3" />
+                {lang === "zh-CN" ? "管理订阅" : "Manage"}
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {SUBSCRIBED_SECTIONS.map(s => (
+              {SUBSCRIBED_SECTIONS.slice(0, 6).map(s => (
                 <span key={s} className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/20">
                   {s}
                 </span>
               ))}
-              <button onClick={() => setActiveTab("subscriptions")}
-                className="px-3 py-1.5 rounded-full border border-dashed border-border text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors">
-                + {lang === "zh-CN" ? "添加" : "Add"}
-              </button>
+              {SUBSCRIBED_SECTIONS.length > 6 && (
+                <button onClick={() => setActiveTab("subscriptions")}
+                  className="px-3 py-1.5 rounded-full bg-muted text-muted-foreground text-xs font-medium hover:text-foreground transition-colors">
+                  +{SUBSCRIBED_SECTIONS.length - 6}
+                </button>
+              )}
             </div>
           </div>
 
