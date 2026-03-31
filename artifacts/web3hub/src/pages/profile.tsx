@@ -7,9 +7,9 @@ import {
   Check, Edit2, Trash2, Save, ShieldCheck, PenSquare,
   Globe, ExternalLink, LayoutDashboard, FileText, Bell, Bookmark,
   Handshake, Settings, Phone, ChevronRight, Gift, Twitter,
-  MessageCircle, Send, BookOpen, CalendarDays, Eye, EyeOff,
+  MessageCircle, Send, BookOpen, Eye, EyeOff,
   Copy, Users, Megaphone, BarChart3, X, LogOut, Sparkles,
-  CheckCircle2, Clock, AlertCircle,
+  Clock, AlertCircle,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLang } from "@/lib/i18n";
@@ -359,36 +359,51 @@ export default function Profile() {
         <div className="space-y-4">
 
           {/* 1 ── Welcome Card */}
-          <div className="rounded-2xl p-8 text-white"
+          <div className="rounded-2xl px-7 py-6 text-white"
             style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #6d28d9 100%)" }}>
-            <div className="flex items-center gap-5 mb-7">
-              <div className="rounded-2xl border-2 border-white/30 shrink-0"
-                style={{ width: 72, height: 72, ...(me?.avatar
-                  ? { backgroundImage: `url(${me.avatar})`, backgroundSize: "cover", backgroundPosition: "center" }
-                  : { background: generateGradient(address) }) }} />
-              <div>
-                <p className="text-white/60 text-sm mb-1">{zh ? "欢迎回来 👋" : "Welcome back 👋"}</p>
-                <h1 className="text-2xl font-extrabold leading-tight">{displayUsername}</h1>
-                <div className="mt-1.5"><RoleBadge spaceType={isSpaceOwner ? spaceType : null} size="sm" /></div>
+            <div className="mb-5">
+              <div className="flex items-center gap-2.5 mb-1">
+                <p className="text-white/70 text-sm">{zh ? "欢迎回来 👋" : "Welcome back 👋"}</p>
+                <RoleBadge spaceType={isSpaceOwner ? spaceType : null} size="xs" />
+                {admin && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-200 border border-amber-400/30">Admin</span>}
+              </div>
+              <h1 className="text-2xl font-extrabold leading-tight tracking-tight">{displayUsername}</h1>
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <span className="font-mono text-xs text-white/50">{truncateAddress(address ?? "")}</span>
+                {address && (
+                  <button onClick={() => navigator.clipboard.writeText(address)}
+                    className="p-1 rounded hover:bg-white/10 transition-colors text-white/40 hover:text-white/70">
+                    <Copy className="w-3 h-3" />
+                  </button>
+                )}
               </div>
             </div>
-            {isProjectOwner ? (
-              <div className="flex flex-wrap gap-3">
-                <Link href="/" className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm transition-all border border-white/25 backdrop-blur-sm">
-                  <Megaphone className="w-4 h-4" />
-                  {zh ? "一键认领新公告" : "Claim Announcement"}
+            <div className="flex flex-wrap gap-2.5">
+              {isProjectOwner && (
+                <>
+                  <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-sm transition-all border border-white/20">
+                    <Megaphone className="w-3.5 h-3.5" />
+                    {zh ? "认领新公告" : "Claim Announcement"}
+                  </Link>
+                  <Link href="/post/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-green-500 hover:bg-green-400 text-white font-semibold text-sm transition-all">
+                    <PenSquare className="w-3.5 h-3.5" />
+                    {zh ? "发布需求" : "Post Demand"}
+                  </Link>
+                </>
+              )}
+              {!isProjectOwner && (
+                <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-sm transition-all border border-white/20">
+                  <Globe className="w-3.5 h-3.5" />
+                  {zh ? "浏览最新公告" : "Browse Announcements"}
                 </Link>
-                <Link href="/post/new" className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-green-500 hover:bg-green-400 text-white font-bold text-sm transition-all shadow-lg shadow-green-900/40">
-                  <PenSquare className="w-4 h-4" />
-                  {zh ? "发布新需求" : "Post New Demand"}
+              )}
+              {admin && (
+                <Link href="/admin" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 font-semibold text-sm transition-all border border-amber-400/30">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  {zh ? "管理后台" : "Admin Panel"}
                 </Link>
-              </div>
-            ) : (
-              <Link href="/" className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm transition-all border border-white/25">
-                <Globe className="w-4 h-4" />
-                {zh ? "浏览最新公告" : "Browse Announcements"}
-              </Link>
-            )}
+              )}
+            </div>
           </div>
 
           {/* 2 ── My Claims */}
@@ -802,42 +817,6 @@ export default function Profile() {
   ══════════════════════════════════════════════════════ */
   return (
     <>
-      {/* ── Profile Header ── */}
-      <div className="mb-5 flex items-center justify-between bg-card border border-border rounded-2xl px-5 py-4">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl border border-border shrink-0"
-            style={me?.avatar
-              ? { backgroundImage: `url(${me.avatar})`, backgroundSize: "cover", backgroundPosition: "center" }
-              : { background: generateGradient(address) }} />
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-base">{displayUsername}</span>
-              <RoleBadge spaceType={isSpaceOwner ? spaceType : null} size="xs" />
-              {admin && (
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Admin</span>
-              )}
-            </div>
-            <div className="flex items-center gap-1 mt-0.5">
-              <span className="font-mono text-xs text-muted-foreground">{truncateAddress(address ?? "")}</span>
-              {address && <CopyBtn text={address} />}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {admin && (
-            <Link href="/admin" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-xs font-semibold hover:bg-amber-100 transition-colors">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              {zh ? "管理后台" : "Admin Panel"}
-            </Link>
-          )}
-          <button onClick={() => disconnect?.()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted hover:bg-red-50 hover:text-red-600 text-muted-foreground text-xs font-medium transition-colors">
-            <LogOut className="w-3.5 h-3.5" />
-            {zh ? "退出" : "Disconnect"}
-          </button>
-        </div>
-      </div>
-
       {/* ── Three-column Layout ── */}
       <div className="flex gap-5 items-start">
 
@@ -867,25 +846,17 @@ export default function Profile() {
           {/* Project Info Card */}
           <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">{zh ? "项目基本信息" : "Project Info"}</h3>
+              <h3 className="text-sm font-semibold flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+                {zh ? "项目链接" : "Project Links"}
+              </h3>
               <button onClick={openEditModal}
                 className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl border border-border shrink-0"
-                style={me?.avatar
-                  ? { backgroundImage: `url(${me.avatar})`, backgroundSize: "cover", backgroundPosition: "center" }
-                  : { background: generateGradient(address) }} />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold truncate">{displayUsername}</p>
-                <div className="mt-0.5"><RoleBadge spaceType={isSpaceOwner ? spaceType : null} size="xs" /></div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {[
                 { icon: <Twitter className="w-3.5 h-3.5 text-sky-500" />, val: twitter, ph: "X / Twitter" },
                 { icon: <Globe className="w-3.5 h-3.5 text-green-500" />, val: website, ph: zh ? "官网" : "Website" },
@@ -893,37 +864,19 @@ export default function Profile() {
                 { icon: <Send className="w-3.5 h-3.5 text-blue-400" />, val: telegram, ph: "Telegram" },
                 { icon: <BookOpen className="w-3.5 h-3.5 text-amber-500" />, val: whitepaper, ph: zh ? "白皮书" : "Whitepaper" },
               ].map(({ icon, val, ph }, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  {icon}
+                <div key={i} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors group">
+                  <span className="shrink-0">{icon}</span>
                   {val ? (
                     <a href={val} target="_blank" rel="noreferrer"
-                      className="text-xs text-primary hover:underline truncate flex-1 flex items-center gap-1">
-                      <span className="truncate">{val.replace(/^https?:\/\//, "")}</span>
-                      <ExternalLink className="w-3 h-3 shrink-0" />
+                      className="text-xs text-foreground/80 hover:text-primary truncate flex-1 flex items-center gap-1 font-medium">
+                      <span className="truncate">{val.replace(/^https?:\/\/(www\.)?/, "")}</span>
+                      <ExternalLink className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </a>
                   ) : (
-                    <span className="text-xs text-muted-foreground/50 italic">{ph}</span>
+                    <span className="text-xs text-muted-foreground/40 italic flex-1">{ph}</span>
                   )}
                 </div>
               ))}
-            </div>
-
-            <div className="border-t border-border/60 pt-3">
-              <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
-                <CalendarDays className="w-3.5 h-3.5" />
-                {zh ? "重要时间节点" : "Key Milestones"}
-              </p>
-              <div className="space-y-1.5">
-                {[
-                  { label: zh ? "测试网" : "Testnet", val: "—" },
-                  { label: "TGE", val: "—" },
-                ].map(({ label, val }) => (
-                  <div key={label} className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground">{label}</span>
-                    <span className="font-medium">{val}</span>
-                  </div>
-                ))}
-              </div>
             </div>
 
             <button onClick={openEditModal}
@@ -967,14 +920,12 @@ export default function Profile() {
             </button>
           </div>
 
-          {/* Wallet */}
-          <div className="bg-muted/40 border border-border/60 rounded-2xl p-3">
-            <p className="text-[10px] text-muted-foreground mb-1">{zh ? "钱包地址" : "Wallet"}</p>
-            <div className="flex items-center gap-1">
-              <span className="font-mono text-xs text-muted-foreground flex-1 truncate">{truncateAddress(address ?? "")}</span>
-              {address && <CopyBtn text={address} />}
-            </div>
-          </div>
+          {/* Disconnect */}
+          <button onClick={() => disconnect?.()}
+            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-border text-xs font-medium text-muted-foreground hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-900 transition-all">
+            <LogOut className="w-3 h-3" />
+            {zh ? "断开钱包" : "Disconnect"}
+          </button>
         </aside>
       </div>
 
