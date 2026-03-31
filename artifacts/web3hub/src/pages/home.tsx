@@ -8,10 +8,10 @@ import { useLang } from "@/lib/i18n";
 import { generateGradient } from "@/lib/utils";
 import { TagBadge } from "@/components/post-card";
 import { formatDistanceToNow } from "date-fns";
-import { enUS, zhCN, de, ru, fr, ja, ko, vi } from "date-fns/locale";
+import { enUS, zhCN } from "date-fns/locale";
 
 const DATE_LOCALES: Record<string, Locale> = {
-  "en": enUS, "zh-CN": zhCN, "de": de, "ru": ru, "fr": fr, "ja": ja, "ko": ko, "vi": vi,
+  "en": enUS, "zh-CN": zhCN,
 };
 
 const PAGE_SIZE = 20;

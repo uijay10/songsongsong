@@ -9,7 +9,7 @@ import { LogOut, ChevronDown, LayoutDashboard, ShieldCheck, PenSquare, FileText,
 import { cn, truncateAddress, generateGradient } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { enUS, zhCN, de, ru, fr, ja, ko, vi } from "date-fns/locale";
+import { enUS, zhCN } from "date-fns/locale";
 
 function getApiBase() {
   const base = import.meta.env.BASE_URL ?? "/";
@@ -19,7 +19,7 @@ function getApiBase() {
 }
 
 const DATE_LOCALES_LAYOUT: Record<string, Locale> = {
-  "en": enUS, "zh-CN": zhCN, "de": de, "ru": ru, "fr": fr, "ja": ja, "ko": ko, "vi": vi,
+  "en": enUS, "zh-CN": zhCN,
 };
 
 const NAV_KEYS = [
@@ -40,12 +40,6 @@ const NAV_KEYS = [
 const LANGUAGES: { value: LangCode; label: string }[] = [
   { value: "en",    label: "English" },
   { value: "zh-CN", label: "中文简体" },
-  { value: "de",    label: "Deutsch" },
-  { value: "ru",    label: "Русский" },
-  { value: "fr",    label: "Français" },
-  { value: "ja",    label: "日本語" },
-  { value: "ko",    label: "한국어" },
-  { value: "vi",    label: "Tiếng Việt" },
 ];
 
 const DONATE_ADDR = "0xbe4548c1458be01838f1faafd69d335f0567399a";

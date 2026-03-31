@@ -94,7 +94,7 @@ export default function PostNew() {
   const [aiCopied, setAiCopied] = useState(false);
 
   const generateContent = (userInput: string) => {
-    const isCN = lang === "zh-CN" || lang === "zh" || ["ja", "ko", "vi"].includes(lang);
+    const isCN = lang === "zh-CN";
     const input = userInput.trim();
 
     // ── Keyword detectors ──
@@ -446,7 +446,7 @@ ${typeInfo.tag} #${projectName} #Web3Release #Web3
                 onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
                 onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
               >
-                ✨ {lang === "zh-CN" || lang === "zh" || lang === "ja" || lang === "ko" || lang === "vi" ? "生成内容" : "Generate"}
+                ✨ {lang === "zh-CN" ? "生成内容" : "Generate"}
               </button>
               {aiResult && (
                 <div className="relative rounded-xl p-3 text-xs leading-relaxed font-mono max-h-48 overflow-y-auto"

@@ -8,7 +8,7 @@ import { useWeb3Auth } from "@/lib/web3";
 import { generateGradient, truncateAddress } from "@/lib/utils";
 import { RoleBadge } from "@/components/role-badge";
 import { formatDistanceToNow, format } from "date-fns";
-import { zhCN, enUS, de, ru, fr, ja, ko, vi } from "date-fns/locale";
+import { zhCN, enUS } from "date-fns/locale";
 import { useLang } from "@/lib/i18n";
 import { isAdmin } from "@/lib/admin";
 import { AdminPinModal, TagBadge } from "@/components/post-card";
@@ -30,17 +30,11 @@ const SECTION_KEY_MAP: Record<string, string> = {
 };
 
 const DATE_LOCALES: Record<string, Locale> = {
-  "zh-CN": zhCN, "en": enUS, "de": de, "ru": ru, "fr": fr, "ja": ja, "ko": ko, "vi": vi,
+  "zh-CN": zhCN, "en": enUS,
 };
 
 const DATE_FORMATS: Record<string, string> = {
   "zh-CN": "yyyy年M月d日 HH:mm",
-  "ja": "yyyy年M月d日 HH:mm",
-  "ko": "yyyy년 M월 d일 HH:mm",
-  "de": "d. MMMM yyyy, HH:mm 'Uhr'",
-  "ru": "d MMMM yyyy, HH:mm",
-  "fr": "d MMMM yyyy 'à' HH:mm",
-  "vi": "HH:mm, d MMMM yyyy",
   "en": "h:mm a · MMM d, yyyy",
 };
 
