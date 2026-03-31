@@ -26,6 +26,10 @@ function extractWalletFromBody(body: unknown): string {
   return "";
 }
 
+/**
+ * Checks Authorization: Bearer <token> first (issued by POST /api/admin/token).
+ * Falls back to wallet-in-query/body for backward compatibility with existing admin routes.
+ */
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization ?? "";
   if (authHeader.startsWith("Bearer ")) {
@@ -38,9 +42,28 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
     res.status(403).json({ error: "Forbidden: invalid or expired admin token" });
     return;
   }
-  const wallet = String(req.query.adminWallet ?? extractWalletFromBody(req.body) ?? "");
-  if (!wallet || !ADMIN_WALLETS.has(wallet.toLowerCase())) {
+  const wallet = String(req.query.adminWallet ?? extractWalletFromBody(req.body) ?? "").toLowerCase();
+  if (!wallet || !ADMIN_WALLETS.has(wallet)) {
     res.status(403).json({ error: "Forbidden: admin only" });
+    return;
+  }
+  next();
+}
+
+/**
+ * Strict Bearer-token-only middleware for sensitive AI endpoints.
+ * Does NOT accept wallet from query/body — requires server-issued token.
+ */
+export function requireAdminStrict(req: Request, res: Response, next: NextFunction): void {
+  const authHeader = req.headers.authorization ?? "";
+  if (!authHeader.startsWith("Bearer ")) {
+    res.status(403).json({ error: "Forbidden: admin token required" });
+    return;
+  }
+  const token = authHeader.slice(7);
+  const wallet = verifyAdminToken(token);
+  if (!wallet || !ADMIN_WALLETS.has(wallet)) {
+    res.status(403).json({ error: "Forbidden: invalid or expired admin token" });
     return;
   }
   next();

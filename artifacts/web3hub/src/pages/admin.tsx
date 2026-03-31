@@ -40,6 +40,33 @@ async function adminGet(path: string, wallet: string) {
   return fetch(`${apiBase}/admin${path}${sep}adminWallet=${encodeURIComponent(wallet)}`).then(r => r.json());
 }
 
+let _cachedToken: string | null = null;
+let _cachedTokenWallet: string | null = null;
+
+async function getAdminToken(wallet: string): Promise<string> {
+  if (_cachedToken && _cachedTokenWallet === wallet.toLowerCase()) return _cachedToken;
+  const res = await fetch(`${apiBase}/admin/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ wallet }),
+  });
+  if (!res.ok) throw new Error("获取管理员 Token 失败，请确认钱包权限");
+  const { token } = await res.json() as { token: string };
+  _cachedToken = token;
+  _cachedTokenWallet = wallet.toLowerCase();
+  setTimeout(() => { _cachedToken = null; _cachedTokenWallet = null; }, 55 * 60 * 1000);
+  return token;
+}
+
+async function aiPost(path: string, wallet: string, body: object) {
+  const token = await getAdminToken(wallet);
+  return fetch(`${apiBase}/ai${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+    body: JSON.stringify(body),
+  });
+}
+
 type Tab = "applications" | "users" | "send" | "system" | "ai";
 
 interface DialogState {
@@ -121,7 +148,7 @@ export default function AdminPage() {
     setCleanupLoading(true);
     setCleanupResult("");
     try {
-      const body: any = { adminWallet: address, mode: cleanupMode };
+      const body: Record<string, unknown> = { adminWallet: address, mode: cleanupMode };
       if (cleanupMode === "percent") body.percent = cleanupPct;
       else { body.from = cleanupFrom; body.to = cleanupTo; }
       const res = await fetch(`${apiBase}/admin/posts/cleanup`, {
@@ -232,7 +259,7 @@ export default function AdminPage() {
     return s;
   };
 
-  const appTypeLabel = (app: any) => {
+  const appTypeLabel = (app: { type?: string }) => {
     if (app.type === "project") return t("applyProject");
     if (app.type === "kol") return t("adminKol");
     if (app.type === "developer") return t("applyDeveloper");
@@ -698,16 +725,12 @@ export default function AdminPage() {
                     if (!aiUrl.startsWith("http") || !address) return;
                     setAiLoading(true); setAiMsg(""); setAiEvents([]); setAiSelected(new Set());
                     try {
-                      const res = await fetch(`${apiBase}/ai/extract`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ adminWallet: address, url: aiUrl }),
-                      });
+                      const res = await aiPost("/extract", address, { url: aiUrl });
                       const d = await res.json();
                       if (!res.ok) { setAiMsg(`❌ 错误: ${d.error}`); return; }
                       setAiEvents(d.events ?? []);
                       if ((d.events ?? []).length === 0) setAiMsg("⚠ 未从该页面提取到有效事件");
-                      else { setAiSelected(new Set((d.events ?? []).map((_: any, i: number) => i))); }
+                      else { setAiSelected(new Set((d.events ?? []).map((_: unknown, i: number) => i))); }
                     } catch (e) { setAiMsg(`❌ 请求失败: ${String(e)}`); }
                     finally { setAiLoading(false); }
                   }
@@ -718,16 +741,12 @@ export default function AdminPage() {
                   if (!aiUrl.startsWith("http") || !address || aiLoading) return;
                   setAiLoading(true); setAiMsg(""); setAiEvents([]); setAiSelected(new Set());
                   try {
-                    const res = await fetch(`${apiBase}/ai/extract`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ adminWallet: address, url: aiUrl }),
-                    });
+                    const res = await aiPost("/extract", address, { url: aiUrl });
                     const d = await res.json();
                     if (!res.ok) { setAiMsg(`❌ 错误: ${d.error}`); return; }
                     setAiEvents(d.events ?? []);
                     if ((d.events ?? []).length === 0) setAiMsg("⚠ 未从该页面提取到有效事件");
-                    else { setAiSelected(new Set((d.events ?? []).map((_: any, i: number) => i))); }
+                    else { setAiSelected(new Set((d.events ?? []).map((_: unknown, i: number) => i))); }
                   } catch (e) { setAiMsg(`❌ 请求失败: ${String(e)}`); }
                   finally { setAiLoading(false); }
                 }}
@@ -764,11 +783,7 @@ export default function AdminPage() {
                     setAiPublishing(true);
                     const toPublish = [...aiSelected].map(i => aiEvents[i]).filter(Boolean);
                     try {
-                      const res = await fetch(`${apiBase}/ai/publish`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ adminWallet: address, events: toPublish }),
-                      });
+                      const res = await aiPost("/publish", address, { events: toPublish });
                       const d = await res.json();
                       if (!res.ok) { flash(`❌ 发布失败: ${d.error}`); return; }
                       flash(`✓ 成功发布 ${d.inserted} 条事件！`);
