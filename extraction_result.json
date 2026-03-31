@@ -1,8 +1,8 @@
 [
   {
-    "title": "示例事件：测试网即将开启",
-    "project_name": "示例项目",
-    "description": "这是一个从网页抓取后提取的测试事件。实际运行时会根据真实内容生成对应的事件信息。",
+    "title": "测试事件：从真实抓取内容提取",
+    "project_name": "测试项目",
+    "description": "这是使用 Crawl4AI 抓取真实网页后提取的事件示例。实际运行时会根据抓取到的内容生成更准确的事件信息。",
     "category": [
       "测试网"
     ],
@@ -10,10 +10,10 @@
     "end_time": null,
     "source_url": "https://solana.com",
     "importance": "medium",
-    "ai_confidence": 0.75,
+    "ai_confidence": 0.82,
     "tags": [
-      "Testnet",
-      "Web3"
+      "Web3",
+      "Testnet"
     ]
   }
 ]

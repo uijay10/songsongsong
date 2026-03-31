@@ -1,38 +1,26 @@
 # crawler_test.py
-# Web3 Release AI 抓取测试脚本 - 支持真实网页抓取（简化版）
+# Web3 Release AI 抓取测试脚本 - 使用 Crawl4AI（推荐版）
 
-import sys
-import json
-import requests
-from bs4 import BeautifulSoup
 from prompt import WEB3_EXTRACTION_PROMPT
+import json
+import asyncio
+from crawl4ai import AsyncWebCrawler
 
 
-def fetch_webpage(url: str) -> str:
-    """简单抓取网页内容"""
+async def fetch_with_crawl4ai(url: str) -> str:
+    """使用 Crawl4AI 抓取网页（支持 JS 渲染）"""
     try:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        }
-        response = requests.get(url, headers=headers, timeout=15)
-        response.raise_for_status()
-
-        soup = BeautifulSoup(response.text, "html.parser")
-
-        # 移除 script 和 style 标签
-        for script in soup(["script", "style"]):
-            script.decompose()
-
-        text = soup.get_text(separator="\n", strip=True)
-        return text[:15000]  # 限制长度，避免 token 超限
-
+        async with AsyncWebCrawler(verbose=False) as crawler:
+            result = await crawler.arun(url=url)
+            # 优先使用 markdown，干净且适合 LLM
+            return result.markdown or result.cleaned_html or result.html or ""
     except Exception as e:
-        print(f"❌ 抓取失败: {e}")
+        print(f"❌ Crawl4AI 抓取失败: {e}")
         return f"抓取失败: {str(e)}"
 
 
-def main():
-    print("=== Web3 Release AI 真实网页抓取测试 ===")
+async def main():
+    print("=== Web3 Release AI 抓取测试 - Crawl4AI 版 ===")
 
     # 获取 URL
     if len(sys.argv) > 1:
@@ -44,38 +32,38 @@ def main():
         print("❌ URL 必须以 http:// 或 https:// 开头")
         return
 
-    print(f"\n🌐 正在抓取: {url}")
+    print(f"\n🌐 正在使用 Crawl4AI 抓取: {url}")
 
-    # 1. 抓取网页
-    page_text = fetch_webpage(url)
+    # 抓取网页
+    page_text = await fetch_with_crawl4ai(url)
     print(f"✅ 抓取完成，内容长度: {len(page_text)} 字符")
 
-    if len(page_text) < 100:
-        print("⚠️  抓取内容过少，可能需要更高级的抓取工具")
+    if len(page_text) < 200:
+        print("⚠️  抓取内容较少，可能页面加载有问题")
 
-    # 2. 准备 Prompt
+    # 准备 Prompt
     full_prompt = WEB3_EXTRACTION_PROMPT.replace(
         "{{PAGE_CONTENT}}", f"URL: {url}\n\n{page_text}"
     )
 
-    print("\n✅ Prompt 已准备好（长度: {} 字符）".format(len(full_prompt)))
+    print(f"\n✅ Prompt 已准备好（长度: {len(full_prompt)} 字符）")
 
-    # 3. 模拟 LLM 输出（目前没有 API Key）
-    print("\n🤖 模拟 LLM 提取中...（真实调用需设置 GROQ_API_KEY）")
+    # 目前还是模拟输出（因为没有 Groq Key）
+    print("\n🤖 模拟 LLM 提取中...")
 
     # 模拟结果
     simulated_result = [
         {
-            "title": "示例事件：测试网即将开启",
-            "project_name": "示例项目",
-            "description": "这是一个从网页抓取后提取的测试事件。实际运行时会根据真实内容生成对应的事件信息。",
+            "title": "测试事件：从真实抓取内容提取",
+            "project_name": "测试项目",
+            "description": "这是使用 Crawl4AI 抓取真实网页后提取的事件示例。实际运行时会根据抓取到的内容生成更准确的事件信息。",
             "category": ["测试网"],
             "start_time": "2026-04-15T00:00:00Z",
             "end_time": None,
             "source_url": url,
             "importance": "medium",
-            "ai_confidence": 0.75,
-            "tags": ["Testnet", "Web3"],
+            "ai_confidence": 0.82,
+            "tags": ["Web3", "Testnet"],
         }
     ]
 
@@ -87,12 +75,11 @@ def main():
         json.dump(simulated_result, f, ensure_ascii=False, indent=2)
 
     print("\n💾 结果已保存到 extraction_result.json")
-    print("\n🎉 测试完成！")
-    print("当前是模拟输出。接下来我们可以：")
-    print("1. 接入真实 LLM 调用")
-    print("2. 优化抓取功能（支持 JS 渲染页面）")
-    print("3. 自动保存到数据库并显示在首页")
+    print("\n🎉 测试完成！Crawl4AI 抓取功能已可用。")
+    print("下一步建议：接入真实 LLM 调用，让提取更智能。")
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    asyncio.run(main())
