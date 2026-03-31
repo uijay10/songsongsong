@@ -11,8 +11,6 @@
         .status-rejected { background-color: #fee2e2; color: #ef4444; }
         .claim-card { transition: all 0.3s ease; }
         .claim-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
-        .toast { animation: slideUp 0.3s ease forwards; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -26,31 +24,30 @@
                 <div class="flex flex-wrap gap-3">
                     <button onclick="batchApprove()" class="px-6 py-2.5 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-colors">批量通过</button>
                     <button onclick="batchReject()"  class="px-6 py-2.5 bg-red-600 text-white rounded-2xl hover:bg-red-700 transition-colors">批量拒绝</button>
-                    <button onclick="clearRealData()" class="px-6 py-2.5 bg-slate-600 text-white rounded-2xl hover:bg-slate-700 transition-colors">清空真实申请</button>
+                    <button onclick="clearRealData()" class="px-6 py-2.5 bg-slate-600 text-white rounded-2xl hover:bg-slate-700 transition-colors">清空所有申请</button>
                 </div>
             </div>
         </header>
 
-        <!-- 统计卡片（可点击快速筛选） -->
         <div class="max-w-7xl mx-auto px-8 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div onclick="filterByStatus('pending')" class="bg-white rounded-3xl p-6 shadow-sm border cursor-pointer hover:shadow-md transition-shadow">
                 <div class="text-amber-600 text-sm font-medium">待审核</div>
-                <div id="pending-count" class="text-5xl font-bold text-slate-800 mt-3">0</div>
+                <div id="pending-count" class="text-5xl font-bold mt-2">0</div>
             </div>
             <div onclick="filterByStatus('approved')" class="bg-white rounded-3xl p-6 shadow-sm border cursor-pointer hover:shadow-md transition-shadow">
                 <div class="text-emerald-600 text-sm font-medium">已通过</div>
-                <div id="approved-count" class="text-5xl font-bold text-slate-800 mt-3">0</div>
+                <div id="approved-count" class="text-5xl font-bold mt-2">0</div>
             </div>
             <div onclick="filterByStatus('rejected')" class="bg-white rounded-3xl p-6 shadow-sm border cursor-pointer hover:shadow-md transition-shadow">
                 <div class="text-red-600 text-sm font-medium">已拒绝</div>
-                <div id="rejected-count" class="text-5xl font-bold text-slate-800 mt-3">0</div>
+                <div id="rejected-count" class="text-5xl font-bold mt-2">0</div>
             </div>
         </div>
 
         <div class="max-w-7xl mx-auto px-8 pb-12">
             <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
                 <h2 class="text-xl font-semibold">认领申请列表</h2>
-                <input id="search-input" type="text" placeholder="搜索项目名称或事件标题..."
+                <input id="search-input" type="text" placeholder="搜索项目或事件..."
                        class="w-full md:w-96 px-5 py-3 border border-slate-300 rounded-3xl focus:outline-none focus:border-blue-500">
             </div>
             <div id="claims-list" class="space-y-6"></div>
@@ -61,8 +58,8 @@
         let claims = [];
 
         function loadData() {
-            const realData = JSON.parse(localStorage.getItem('projectApplications') || '[]');
-            claims = realData.map(item => ({ ...item, isReal: true }));
+            const data = JSON.parse(localStorage.getItem('projectApplications') || '[]');
+            claims = data.filter(item => item.id && String(item.id).startsWith('claim_'));
             renderClaims(claims);
         }
 
@@ -76,38 +73,33 @@
             return `<span class="status-rejected px-5 py-1.5 rounded-2xl text-sm font-medium">已拒绝</span>`;
         }
 
-        function updateStats() {
+        function renderClaims(filtered) {
+            const container = document.getElementById('claims-list');
+            container.innerHTML = '';
+
             document.getElementById('total-count').textContent   = claims.length;
             document.getElementById('pending-count').textContent  = claims.filter(c => c.status === 'pending').length;
             document.getElementById('approved-count').textContent = claims.filter(c => c.status === 'approved').length;
             document.getElementById('rejected-count').textContent = claims.filter(c => c.status === 'rejected').length;
-        }
 
-        function renderClaims(filteredClaims) {
-            updateStats();
-            const container = document.getElementById('claims-list');
-            container.innerHTML = '';
-
-            if (filteredClaims.length === 0) {
+            if (filtered.length === 0) {
                 container.innerHTML = `<div class="text-center py-20 text-slate-400">暂无申请记录</div>`;
                 return;
             }
 
-            filteredClaims.forEach(claim => {
-                // 用 data-attribute 存 id，避免字符串 ID 在 innerHTML 中的解析问题
-                const safeId = String(claim.id).replace(/"/g, '');
+            filtered.forEach(claim => {
                 const html = `
                     <div class="claim-card bg-white rounded-3xl p-7 shadow-sm border border-slate-100">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <div class="flex flex-wrap items-center gap-3">
-                                    <h3 class="font-semibold text-lg">${claim.eventTitle}</h3>
-                                    ${getStatusHTML(claim.status)}
-                                </div>
-                                <p class="mt-2 text-slate-700"><strong>申请方：</strong>${claim.projectName}</p>
-                                <p class="text-slate-600"><strong>联系方式：</strong>${claim.contact}</p>
-                                <p class="text-xs text-slate-500 mt-1">提交时间：${claim.submitTime}</p>
-                                ${claim.reviewTime ? `<p class="text-xs text-slate-500">审核时间：${claim.reviewTime}</p>` : ''}
+                        <div class="flex flex-wrap justify-between gap-4">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-semibold text-lg">${claim.eventTitle}</h3>
+                                <p class="mt-1 text-slate-700">申请方：${claim.projectName}</p>
+                                <p class="text-slate-600">联系方式：${claim.contact}</p>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                ${getStatusHTML(claim.status)}
+                                <p class="text-xs text-slate-400 mt-2">${claim.submitTime}</p>
+                                ${claim.reviewTime ? `<p class="text-xs text-slate-400">审核：${claim.reviewTime}</p>` : ''}
                             </div>
                         </div>
 
@@ -116,20 +108,20 @@
                         </div>
 
                         <div class="mt-5">
-                            <label class="block text-xs font-medium text-slate-500 mb-2">审核备注</label>
-                            <textarea id="note-${safeId}" rows="2"
-                                      class="w-full px-4 py-3 border border-slate-300 rounded-2xl text-sm focus:outline-none focus:border-blue-500 resize-none"
+                            <label class="block text-xs font-medium text-slate-500 mb-1">审核备注</label>
+                            <textarea id="note-${claim.id}" rows="2"
+                                      class="w-full px-4 py-3 border border-slate-300 rounded-2xl text-sm focus:outline-none focus:border-blue-400 resize-none"
                                       placeholder="填写审核意见...">${claim.reviewNote || ''}</textarea>
                         </div>
 
                         <div class="mt-5 flex flex-wrap gap-3">
                             ${claim.status === 'pending' ? `
-                                <button data-id="${safeId}" onclick="approveClaim(this.dataset.id)"
+                                <button onclick="approveClaim('${claim.id}')"
                                         class="px-6 py-2.5 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-colors text-sm">✓ 通过</button>
-                                <button data-id="${safeId}" onclick="rejectClaim(this.dataset.id)"
+                                <button onclick="rejectClaim('${claim.id}')"
                                         class="px-6 py-2.5 bg-red-600 text-white rounded-2xl hover:bg-red-700 transition-colors text-sm">✕ 拒绝</button>
                             ` : ''}
-                            <button data-id="${safeId}" onclick="saveNote(this.dataset.id)"
+                            <button onclick="saveNote('${claim.id}')"
                                     class="px-6 py-2.5 border border-slate-300 rounded-2xl hover:bg-slate-50 transition-colors text-sm">保存备注</button>
                         </div>
                     </div>
@@ -139,7 +131,7 @@
         }
 
         function approveClaim(id) {
-            const claim = claims.find(c => String(c.id) === String(id));
+            const claim = claims.find(c => c.id === id);
             if (!claim) return;
             claim.status = 'approved';
             claim.reviewTime = new Date().toLocaleString('zh-CN');
@@ -149,7 +141,7 @@
         }
 
         function rejectClaim(id) {
-            const claim = claims.find(c => String(c.id) === String(id));
+            const claim = claims.find(c => c.id === id);
             if (!claim) return;
             claim.status = 'rejected';
             claim.reviewTime = new Date().toLocaleString('zh-CN');
@@ -161,10 +153,9 @@
         function saveNote(id) {
             const noteEl = document.getElementById(`note-${id}`);
             if (!noteEl) return;
-            const note  = noteEl.value.trim();
-            const claim = claims.find(c => String(c.id) === String(id));
+            const claim = claims.find(c => c.id === id);
             if (claim) {
-                claim.reviewNote = note;
+                claim.reviewNote = noteEl.value.trim();
                 saveToStorage();
                 showToast('✅ 审核备注已保存');
             }
@@ -173,24 +164,20 @@
         function batchApprove() {
             const pending = claims.filter(c => c.status === 'pending');
             if (pending.length === 0) { showToast('没有待审核的申请'); return; }
-            pending.forEach(c => {
-                c.status = 'approved';
-                c.reviewTime = new Date().toLocaleString('zh-CN');
-            });
+            if (!confirm(`确定批量通过所有 ${pending.length} 条待审核申请吗？`)) return;
+            pending.forEach(c => { c.status = 'approved'; c.reviewTime = new Date().toLocaleString('zh-CN'); });
             saveToStorage();
-            showToast(`✅ 已批量通过 ${pending.length} 条申请`);
+            showToast(`✅ 批量通过 ${pending.length} 条申请`);
             renderClaims(claims);
         }
 
         function batchReject() {
             const pending = claims.filter(c => c.status === 'pending');
             if (pending.length === 0) { showToast('没有待审核的申请'); return; }
-            pending.forEach(c => {
-                c.status = 'rejected';
-                c.reviewTime = new Date().toLocaleString('zh-CN');
-            });
+            if (!confirm(`确定批量拒绝所有 ${pending.length} 条待审核申请吗？`)) return;
+            pending.forEach(c => { c.status = 'rejected'; c.reviewTime = new Date().toLocaleString('zh-CN'); });
             saveToStorage();
-            showToast(`❌ 已批量拒绝 ${pending.length} 条申请`);
+            showToast(`❌ 批量拒绝 ${pending.length} 条申请`);
             renderClaims(claims);
         }
 
@@ -198,7 +185,7 @@
             if (!confirm('确定清空所有真实申请记录吗？此操作不可恢复！')) return;
             localStorage.removeItem('projectApplications');
             loadData();
-            showToast('已清空所有真实申请');
+            showToast('已清空所有申请');
         }
 
         function filterByStatus(status) {
@@ -208,7 +195,8 @@
 
         function showToast(message) {
             const toast = document.createElement('div');
-            toast.className = 'toast fixed bottom-6 right-6 bg-slate-800 text-white px-6 py-4 rounded-2xl shadow-2xl text-sm z-[200]';
+            toast.className = 'fixed bottom-6 right-6 bg-slate-800 text-white px-6 py-4 rounded-2xl shadow-2xl text-sm z-[200]';
+            toast.style.cssText += 'animation: slideUp .3s ease forwards;';
             toast.textContent = message;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 4000);
