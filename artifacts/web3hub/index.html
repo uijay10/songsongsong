@@ -30,6 +30,7 @@
 
     <script>
         let allEvents = [];
+        let claimedEvents = JSON.parse(localStorage.getItem('claimedEvents') || '[]');
 
         const categories = [
             "全部", "测试网", "IDO/Launchpad", "预售", "融资公告",
@@ -50,6 +51,21 @@
             }
         }
 
+        function isClaimed(eventTitle) {
+            return claimedEvents.includes(eventTitle);
+        }
+
+        function toggleClaim(eventTitle) {
+            if (claimedEvents.includes(eventTitle)) {
+                claimedEvents = claimedEvents.filter(title => title !== eventTitle);
+            } else {
+                claimedEvents.push(eventTitle);
+            }
+            localStorage.setItem('claimedEvents', JSON.stringify(claimedEvents));
+            const currentCategory = document.querySelector('#nav-bar button.bg-blue-600')?.dataset.category || '全部';
+            filterEvents(currentCategory);
+        }
+
         function createNavBar() {
             const nav = document.getElementById('nav-bar');
             nav.innerHTML = '';
@@ -59,9 +75,7 @@
                 btn.textContent = cat;
                 btn.dataset.category = cat;
                 btn.className = `px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
-                    index === 0
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-white hover:bg-slate-100 border border-slate-200'
+                    index === 0 ? 'bg-blue-600 text-white shadow-md' : 'bg-white hover:bg-slate-100 border border-slate-200'
                 }`;
 
                 btn.addEventListener('click', () => {
@@ -109,7 +123,6 @@
             events.forEach(event => {
                 const cats = Array.isArray(event.category) ? event.category : [event.category || '其他'];
                 const mainCat = cats[0] || '其他';
-
                 const desc = event.description || event.content || '暂无描述';
                 const shortDesc = desc.length > 230 ? desc.substring(0, 227) + '...' : desc;
 
@@ -123,9 +136,11 @@
                     }
                 }
 
-                const tagsHTML = Array.isArray(event.tags) ? event.tags.map(tag =>
-                    `<span class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs rounded-3xl transition-colors">#${tag}</span>`
-                ).join('') : '';
+                const claimed = isClaimed(event.title);
+                const claimBtnText = claimed ? '已认领' : '我要认领';
+                const claimBtnClass = claimed
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200';
 
                 const cardHTML = `
                     <div class="bg-white rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-300 p-8 border border-slate-100">
@@ -147,13 +162,24 @@
                         <p class="text-slate-600 leading-relaxed mb-7 text-[15.2px]">${shortDesc}</p>
 
                         <div class="flex flex-wrap gap-2 mb-8">
-                            ${tagsHTML}
+                            ${Array.isArray(event.tags) ? event.tags.map(tag =>
+                                `<span class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs rounded-3xl transition-colors">#${tag}</span>`
+                            ).join('') : ''}
                         </div>
 
-                        <div class="flex justify-between items-center pt-4 border-t border-slate-100 text-sm">
-                            <span class="text-slate-400">来源：${event.project_name || event.source || '未知'}</span>
-                            <a href="${event.source_url || '#'}" target="_blank"
-                               class="text-blue-600 hover:underline font-medium">查看详情 →</a>
+                        <div class="flex justify-between items-center pt-6 border-t border-slate-100">
+                            <span class="text-slate-500">来源：${event.project_name || event.source || '未知'}</span>
+
+                            <div class="flex gap-3">
+                                <a href="${event.source_url || '#'}" target="_blank"
+                                   class="px-5 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                                    查看详情 →
+                                </a>
+                                <button onclick="toggleClaim('${event.title.replace(/'/g, "\\'")}')"
+                                        class="px-5 py-2 text-sm font-medium rounded-2xl transition-all ${claimBtnClass}">
+                                    ${claimBtnText}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -173,7 +199,7 @@
                 renderEvents(allEvents);
             } catch (err) {
                 console.error(err);
-                document.getElementById('event-list').innerHTML = `<div class="text-red-500 text-center py-20">数据加载失败，请检查 JSON 文件</div>`;
+                document.getElementById('event-list').innerHTML = `<div class="text-red-500 text-center py-20">数据加载失败</div>`;
             }
         }
 
