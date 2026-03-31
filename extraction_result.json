@@ -1,16 +1,16 @@
 [
   {
-    "title": "测试事件：从真实抓取内容提取",
+    "title": "从抓取内容提取的示例事件",
     "project_name": "测试项目",
-    "description": "这是使用 Crawl4AI 抓取真实网页后提取的事件示例。实际运行时会根据抓取到的内容生成更准确的事件信息。",
+    "description": "这是从 https://solana.com 抓取的内容中提取的事件示例。实际运行时会根据真实网页内容生成更准确的结果。",
     "category": [
       "测试网"
     ],
     "start_time": "2026-04-15T00:00:00Z",
     "end_time": null,
     "source_url": "https://solana.com",
-    "importance": "medium",
-    "ai_confidence": 0.82,
+    "importance": "high",
+    "ai_confidence": 0.85,
     "tags": [
       "Web3",
       "Testnet"
