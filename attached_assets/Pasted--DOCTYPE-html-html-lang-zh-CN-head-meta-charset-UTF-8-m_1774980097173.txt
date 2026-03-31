@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 项目事件认领审核</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .status-pending { background-color: #fef3c7; color: #d97706; }
+        .status-approved { background-color: #d1fae5; color: #10b981; }
+        .status-rejected { background-color: #fee2e2; color: #ef4444; }
+        .claim-card { transition: all 0.3s ease; }
+        .claim-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div class="min-h-screen">
+        <!-- 顶部栏 -->
+        <header class="bg-white border-b sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-8 py-5 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">项目事件认领管理后台</h1>
+                    <p class="text-slate-500 text-sm">共 <span id="total-count" class="font-medium">0</span> 条真实申请</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="exportData()" class="px-6 py-2.5 bg-slate-700 text-white rounded-2xl hover:bg-slate-800">导出 CSV</button>
+                    <button onclick="batchApprove()" class="px-6 py-2.5 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700">批量通过</button>
+                    <button onclick="batchReject()" class="px-6 py-2.5 bg-red-600 text-white rounded-2xl hover:bg-red-700">批量拒绝</button>
+                    <button onclick="clearAllData()" class="px-6 py-2.5 bg-red-700 text-white rounded-2xl hover:bg-red-800">清空所有申请</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 统计卡片 -->
+        <div class="max-w-7xl mx-auto px-8 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div onclick="filterByStatus('pending')" class="bg-white rounded-3xl p-6 shadow-sm border cursor-pointer hover:shadow-md transition-all">
+                <div class="text-amber-600 text-sm font-medium">待审核</div>
+                <div id="pending-count" class="text-5xl font-bold text-slate-800 mt-3">0</div>
+            </div>
+            <div onclick="filterByStatus('approved')" class="bg-white rounded-3xl p-6 shadow-sm border cursor-pointer hover:shadow-md transition-all">
+                <div class="text-emerald-600 text-sm font-medium">已通过</div>
+                <div id="approved-count" class="text-5xl font-bold text-slate-800 mt-3">0</div>
+            </div>
+            <div onclick="filterByStatus('rejected')" class="bg-white rounded-3xl p-6 shadow-sm border cursor-pointer hover:shadow-md transition-all">
+                <div class="text-red-600 text-sm font-medium">已拒绝</div>
+                <div id="rejected-count" class="text-5xl font-bold text-slate-800 mt-3">0</div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-8 pb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">认领申请列表</h2>
+                <input id="search-input" type="text" placeholder="搜索项目名称或事件标题..." 
+                       class="w-96 px-5 py-3 border border-slate-300 rounded-3xl focus:outline-none focus:border-blue-500">
+            </div>
+
+            <div id="claims-list" class="space-y-6"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-6 right-6 bg-slate-800 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 z-[200]"></div>
+
+    <script>
+        let claims = [];
+
+        function loadData() {
+            const data = JSON.parse(localStorage.getItem('projectApplications') || '[]');
+            claims = data.filter(item => item.id && item.id.startsWith('claim_'));
+            renderClaims(claims);
+        }
+
+        function getStatusHTML(status) {
+            if (status === 'pending') return `<span class="status-pending px-5 py-1.5 rounded-2xl text-sm font-medium">待审核</span>`;
+            if (status === 'approved') return `<span class="status-approved px-5 py-1.5 rounded-2xl text-sm font-medium">已通过</span>`;
+            return `<span class="status-rejected px-5 py-1.5 rounded-2xl text-sm font-medium">已拒绝</span>`;
+        }
+
+        function renderClaims(filtered) {
+            const container = document.getElementById('claims-list');
+            container.innerHTML = filtered.length === 0 
+                ? `<div class="text-center py-20 text-slate-400">暂无申请记录</div>` 
+                : '';
+
+            document.getElementById('total-count').textContent = claims.length;
+
+            const pending = claims.filter(c => c.status === 'pending').length;
+            const approved = claims.filter(c => c.status === 'approved').length;
+            const rejected = claims.filter(c => c.status === 'rejected').length;
+
+            document.getElementById('pending-count').textContent = pending;
+            document.getElementById('approved-count').textContent = approved;
+            document.getElementById('rejected-count').textContent = rejected;
+
+            filtered.forEach(claim => {
+                const html = `
+                    <div class="claim-card bg-white rounded-3xl p-7 shadow-sm border border-slate-100">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-500">${claim.id}</span>
+                                    <h3 class="font-semibold text-lg">${claim.eventTitle}</h3>
+                                    ${getStatusHTML(claim.status)}
+                                </div>
+                                <p class="mt-3"><strong>申请方：</strong>${claim.projectName}</p>
+                                <p class="text-slate-600"><strong>联系方式：</strong>${claim.contact}</p>
+                                <p class="text-xs text-slate-500 mt-1">提交时间：${claim.submitTime}</p>
+                                ${claim.reviewTime ? `<p class="text-xs text-slate-500">审核时间：${claim.reviewTime}</p>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="mt-5 bg-slate-50 p-5 rounded-2xl text-slate-700">
+                            <strong>认领理由：</strong><br>${claim.reason}
+                        </div>
+
+                        <div class="mt-6">
+                            <label class="block text-xs font-medium text-slate-500 mb-2">审核备注</label>
+                            <textarea id="note-${claim.id}" rows="2" class="w-full px-4 py-3 border border-slate-300 rounded-2xl text-sm focus:outline-none focus:border-blue-500" placeholder="填写审核意见...">${claim.reviewNote || ''}</textarea>
+                        </div>
+
+                        <div class="mt-6 flex gap-3">
+                            ${claim.status === 'pending' ? `
+                                <button onclick="approveClaim('${claim.id}')" class="px-6 py-2 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700">通过</button>
+                                <button onclick="rejectClaim('${claim.id}')" class="px-6 py-2 bg-red-600 text-white rounded-2xl hover:bg-red-700">拒绝</button>
+                            ` : ''}
+                            <button onclick="saveNote('${claim.id}')" class="px-6 py-2 border border-slate-300 rounded-2xl hover:bg-slate-50">保存备注</button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function approveClaim(id) {
+            const claim = claims.find(c => c.id === id);
+            if (claim) {
+                claim.status = 'approved';
+                claim.reviewTime = new Date().toLocaleString('zh-CN');
+                saveToStorage();
+                showToast(`✅ 已通过 ${claim.projectName} 的申请`);
+                renderClaims(claims);
+            }
+        }
+
+        function rejectClaim(id) {
+            const claim = claims.find(c => c.id === id);
+            if (claim) {
+                claim.status = 'rejected';
+                claim.reviewTime = new Date().toLocaleString('zh-CN');
+                saveToStorage();
+                showToast(`❌ 已拒绝 ${claim.projectName} 的申请`);
+                renderClaims(claims);
+            }
+        }
+
+        function saveNote(id) {
+            const note = document.getElementById(`note-${id}`).value.trim();
+            const claim = claims.find(c => c.id === id);
+            if (claim) {
+                claim.reviewNote = note;
+                saveToStorage();
+                showToast("✅ 审核备注已保存");
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('projectApplications', JSON.stringify(claims));
+        }
+
+        function batchApprove() {
+            if (!confirm(`确定批量通过所有待审核申请吗？（共 ${claims.filter(c => c.status === 'pending').length} 条）`)) return;
+            claims.forEach(c => {
+                if (c.status === 'pending') {
+                    c.status = 'approved';
+                    c.reviewTime = new Date().toLocaleString('zh-CN');
+                }
+            });
+            saveToStorage();
+            showToast("✅ 批量通过完成");
+            renderClaims(claims);
+        }
+
+        function batchReject() {
+            if (!confirm(`确定批量拒绝所有待审核申请吗？（共 ${claims.filter(c => c.status === 'pending').length} 条）`)) return;
+            claims.forEach(c => {
+                if (c.status === 'pending') {
+                    c.status = 'rejected';
+                    c.reviewTime = new Date().toLocaleString('zh-CN');
+                }
+            });
+            saveToStorage();
+            showToast("❌ 批量拒绝完成");
+            renderClaims(claims);
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 right-6 bg-slate-800 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3';
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function clearAllData() {
+            if (confirm("确定清空所有真实申请记录吗？此操作不可恢复！")) {
+                localStorage.removeItem('projectApplications');
+                loadData();
+                showToast("已清空所有申请记录");
+            }
+        }
+
+        function filterByStatus(status) {
+            let filtered = claims;
+            if (status !== 'all') {
+                filtered = claims.filter(c => c.status === status);
+            }
+            renderClaims(filtered);
+        }
+
+        // 搜索
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = claims.filter(c => 
+                (c.projectName || '').toLowerCase().includes(term) || 
+                (c.eventTitle || '').toLowerCase().includes(term)
+            );
+            renderClaims(filtered);
+        });
+
+        function exportData() {
+            if (claims.length === 0) {
+                showToast("没有可导出的申请");
+                return;
+            }
+            let csv = "申请ID,事件标题,项目名称,联系方式,状态,提交时间,审核时间,审核备注\n";
+            claims.forEach(c => {
+                csv += `"${c.id}","${c.eventTitle}","${c.projectName}","${c.contact}","${c.status}","${c.submitTime}","${c.reviewTime || ''}","${(c.reviewNote || '').replace(/"/g, '""')}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `认领申请_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+            showToast("✅ 申请列表已导出");
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
