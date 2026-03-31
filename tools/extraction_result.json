@@ -1,18 +1,55 @@
 [
   {
-    "title": "示例事件（模拟）",
-    "project_name": "示例项目",
-    "description": "已成功从 https://solana.com 抓取 4700 字符。设置 AI_INTEGRATIONS_OPENAI_API_KEY 后将使用 DeepSeek 真实 AI 分析。",
+    "title": "Colosseum Frontier 黑客松",
+    "project_name": "Solana",
+    "description": "由 Colosseum 和 Solana 联合主办的线上黑客松活动，旨在鼓励开发者在 Solana 生态中进行创新和构建。活动时间为 2026年4月6日至5月11日，开发者可以在此期间提交项目，争夺奖项和资助。这是一个重要的开发者活动，为构建下一代加密应用提供了平台和机会。",
     "category": [
-      "测试网"
+      "开发者专区"
     ],
-    "start_time": null,
+    "start_time": "2026-04-06T00:00:00Z",
+    "end_time": "2026-05-11T23:59:59Z",
+    "source_url": "https://solana.com",
+    "importance": "high",
+    "ai_confidence": 0.95,
+    "tags": [
+      "Solana",
+      "Hackathon"
+    ]
+  },
+  {
+    "title": "Solana Accelerate USA 线下活动",
+    "project_name": "Solana",
+    "description": "Solana 在美国迈阿密海滩举办的线下加速活动，旨在连接开发者、创业者和投资者。活动定于 2026年5月5日举行，参与者可以面对面交流，了解 Solana 生态的最新发展和合作机会。这是建立行业人脉和探索项目合作的绝佳场合。",
+    "category": [
+      "开发者专区"
+    ],
+    "start_time": "2026-05-05T00:00:00Z",
     "end_time": null,
     "source_url": "https://solana.com",
     "importance": "medium",
-    "ai_confidence": 0.0,
+    "ai_confidence": 0.92,
     "tags": [
-      "Web3"
+      "Solana",
+      "Event",
+      "USA"
+    ]
+  },
+  {
+    "title": "Solana Breakpoint 2026 年度大会",
+    "project_name": "Solana",
+    "description": "Solana 生态的年度旗舰大会 Breakpoint 将于 2026年11月15日在英国伦敦举行。大会将汇聚全球开发者、项目方、投资者和爱好者，共同探讨区块链技术、DeFi、支付等前沿话题，并公布生态最新进展和合作。这是了解 Solana 未来方向和建立联系的重要活动。",
+    "category": [
+      "开发者专区"
+    ],
+    "start_time": "2026-11-15T00:00:00Z",
+    "end_time": null,
+    "source_url": "https://solana.com",
+    "importance": "medium",
+    "ai_confidence": 0.92,
+    "tags": [
+      "Solana",
+      "Conference",
+      "London"
     ]
   }
 ]
