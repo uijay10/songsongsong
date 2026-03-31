@@ -1,101 +1,95 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web3 Release - 最新机会</title>
-    <style>
-      body {
-        font-family: "Segoe UI", sans-serif;
-        background-color: #0f0f0f;
-        color: #e0e0e0;
-        margin: 0;
-        padding: 20px;
-      }
-      .header {
-        text-align: center;
-        margin-bottom: 30px;
-      }
-      .event-card {
-        background-color: #1a1a1a;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 15px;
-        border-left: 5px solid #00ff9d;
-      }
-      .title {
-        font-size: 1.3em;
-        margin: 0 0 10px 0;
-        color: #ffffff;
-      }
-      .project {
-        color: #00ff9d;
-        font-weight: bold;
-      }
-      .description {
-        line-height: 1.6;
-        margin: 12px 0;
-      }
-      .meta {
-        display: flex;
-        gap: 15px;
-        font-size: 0.9em;
-        color: #888;
-      }
-      .category {
-        background-color: #333;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.85em;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="header">
-      <h1>Web3 Release - 最新机会</h1>
-      <p>AI 自动抓取 · 实时更新</p>
-    </div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web3 Release - 最新机会</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background-color: #0a0a0a;
+      color: #e0e0e0;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .header h1 {
+      font-size: 2.2em;
+      margin: 0 0 8px 0;
+      color: #ffffff;
+    }
+    .header p {
+      color: #888;
+      font-size: 1.1em;
+    }
+    .event-card {
+      background-color: #1a1a1a;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border-left: 6px solid #00ff9d;
+    }
+    .title {
+      font-size: 1.35em;
+      margin: 0 0 12px 0;
+      color: #ffffff;
+    }
+    .project {
+      color: #00ff9d;
+      font-weight: 600;
+    }
+    .description {
+      margin: 16px 0;
+      color: #cccccc;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.95em;
+      color: #888;
+    }
+    .category {
+      background-color: #333;
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Web3 Release</h1>
+    <p>AI 自动抓取 · 最新 Web3 机会</p>
+  </div>
 
-    <div id="events-container">
-      <!-- 事件会在这里动态显示 -->
-    </div>
+  <div id="events-container">
+    <p style="text-align:center; color:#666;">加载中...</p>
+  </div>
 
-    <script>
-      async function loadEvents() {
-        try {
-          const response = await fetch("extraction_result.json");
-          const events = await response.json();
+  <script>
+    async function loadEvents() {
+      const container = document.getElementById('events-container');
+      container.innerHTML = '<p style="text-align:center; color:#666;">正在加载事件数据...</p>';
 
-          const container = document.getElementById("events-container");
-          container.innerHTML = "";
+      try {
+        // 尝试多个可能路径加载 json 文件
+        let events = [];
+        const paths = [
+          'extraction_result.json',
+          './extraction_result.json',
+          '/extraction_result.json'
+        ];
 
-          if (events.length === 0) {
-            container.innerHTML =
-              '<p style="text-align:center; color:#888;">暂无事件数据，请先运行 crawler_test.py</p>';
-            return;
-          }
-
-          events.forEach((event) => {
-            const card = document.createElement("div");
-            card.className = "event-card";
-            card.innerHTML = `
-            <h3 class="title">${event.title || "无标题"}</h3>
-            <p class="project">${event.project_name || ""}</p>
-            <p class="description">${event.description || ""}</p>
-            <div class="meta">
-              <span class="category">${Array.isArray(event.category) ? event.category.join("、") : event.category || "其他"}</span>
-              <span>开始: ${event.start_time ? event.start_time.substring(0, 10) : "待定"}</span>
-            </div>
-          `;
-            container.appendChild(card);
-          });
-        } catch (err) {
-          document.getElementById("events-container").innerHTML =
-            `<p style="color:red;">无法加载数据，请确保已运行 crawler_test.py 生成 extraction_result.json 文件</p>`;
-        }
-      }
-
-      window.onload = loadEvents;
-    </script>
-  </body>
-</html>
+        for (let path of paths) {
+          try {
+            const response = await fetch(path);
+            if (response.ok) {
+              events = await response.json();
+              console.log(`成功从 ${path} 加载数据
