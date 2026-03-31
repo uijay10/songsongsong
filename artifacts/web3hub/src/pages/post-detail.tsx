@@ -23,10 +23,12 @@ function getApiBase() {
 const SECTION_KEY_MAP: Record<string, string> = {
   testnet: "sTestnetLabel", ido: "sIdoLabel", security: "sSecurityLabel",
   integration: "sIntegrationLabel", airdrop: "sAirdropLabel", events: "sEventsLabel",
-  funding: "sFundingLabel", jobs: "sJobsLabel", nodes: "sNodesLabel",
+  funding: "sFundingLabel", jobs: "sJobsLabel", recruiting: "sRecruitingLabel", nodes: "sNodesLabel",
   showcase: "sShowcaseLabel", ecosystem: "sEcosystemLabel", partners: "sPartnersLabel",
   hackathon: "sHackathonLabel", ama: "sAmaLabel", bugbounty: "sBugbountyLabel",
   community: "nav_community", developer: "nav_developer",
+  presale: "sPresaleLabel", mainnet: "sMainnetLabel", unlock: "sUnlockLabel",
+  exchange: "sExchangeLabel", quest: "sQuestLabel",
 };
 
 const DATE_LOCALES: Record<string, Locale> = {
