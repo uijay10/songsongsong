@@ -1,21 +1,19 @@
 [
   {
-    "title": "Solana 项目 XYZ 测试网即将上线",
-    "project_name": "XYZ",
-    "description": "Solana 上的 XYZ 项目宣布将于 2026年4月15日 开启测试网，持续至4月30日。参与测试网的用户有机会获得空投资格，本次测试重点在于 Layer2 性能优化。",
+    "title": "示例事件：测试网即将开启",
+    "project_name": "示例项目",
+    "description": "这是一个从网页抓取后提取的测试事件。实际运行时会根据真实内容生成对应的事件信息。",
     "category": [
       "测试网"
     ],
     "start_time": "2026-04-15T00:00:00Z",
-    "end_time": "2026-04-30T23:59:59Z",
-    "source_url": "https://xyz.solana.com/testnet",
-    "importance": "high",
-    "ai_confidence": 0.89,
+    "end_time": null,
+    "source_url": "https://solana.com",
+    "importance": "medium",
+    "ai_confidence": 0.75,
     "tags": [
-      "Solana",
-      "Layer2",
       "Testnet",
-      "Airdrop"
+      "Web3"
     ]
   }
 ]

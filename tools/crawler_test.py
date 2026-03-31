@@ -1,59 +1,97 @@
 # crawler_test.py
-# Web3 Release AI Event Extraction Test - Real LLM Version (English)
+# Web3 Release AI 抓取测试脚本 - 支持真实网页抓取（简化版）
 
-from prompt import WEB3_EXTRACTION_PROMPT
+import sys
 import json
-import os
+import requests
+from bs4 import BeautifulSoup
+from prompt import WEB3_EXTRACTION_PROMPT
+
+
+def fetch_webpage(url: str) -> str:
+    """简单抓取网页内容"""
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        }
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # 移除 script 和 style 标签
+        for script in soup(["script", "style"]):
+            script.decompose()
+
+        text = soup.get_text(separator="\n", strip=True)
+        return text[:15000]  # 限制长度，避免 token 超限
+
+    except Exception as e:
+        print(f"❌ 抓取失败: {e}")
+        return f"抓取失败: {str(e)}"
 
 
 def main():
-    print("=== Web3 Release AI Extraction Test - Real LLM ===")
-    print("Testing with real LLM call...\n")
+    print("=== Web3 Release AI 真实网页抓取测试 ===")
 
-    # 测试用的网页内容（你可以后面改成真实抓取的内容）
-    test_content = """
-    XYZ project on Solana has announced its testnet launch!
-    The testnet will start on April 15, 2026 and run until April 30, 2026.
-    Participants in the testnet will have a chance to receive airdrop rewards.
-    Official website: https://xyz.solana.com/testnet
-    The team said this testnet focuses on Layer2 performance testing.
-    """
+    # 获取 URL
+    if len(sys.argv) > 1:
+        url = sys.argv[1]
+    else:
+        url = input("\n请输入要抓取的网页 URL: ").strip()
 
-    # 拼接 Prompt
-    full_prompt = WEB3_EXTRACTION_PROMPT.replace("{{PAGE_CONTENT}}", test_content)
+    if not url.startswith("http"):
+        print("❌ URL 必须以 http:// 或 https:// 开头")
+        return
 
-    print("✅ Prompt prepared successfully!")
+    print(f"\n🌐 正在抓取: {url}")
 
-    # 这里我们先用模拟输出（因为没有 API Key）
-    # 后面如果你能提供 Groq Key 或其他模型，我们再替换成真实调用
-    print("\n🤖 Simulating LLM call (real call will be added once API key is ready)...")
+    # 1. 抓取网页
+    page_text = fetch_webpage(url)
+    print(f"✅ 抓取完成，内容长度: {len(page_text)} 字符")
 
-    # 模拟真实输出（符合我们 Prompt 要求的格式）
-    result = [
+    if len(page_text) < 100:
+        print("⚠️  抓取内容过少，可能需要更高级的抓取工具")
+
+    # 2. 准备 Prompt
+    full_prompt = WEB3_EXTRACTION_PROMPT.replace(
+        "{{PAGE_CONTENT}}", f"URL: {url}\n\n{page_text}"
+    )
+
+    print("\n✅ Prompt 已准备好（长度: {} 字符）".format(len(full_prompt)))
+
+    # 3. 模拟 LLM 输出（目前没有 API Key）
+    print("\n🤖 模拟 LLM 提取中...（真实调用需设置 GROQ_API_KEY）")
+
+    # 模拟结果
+    simulated_result = [
         {
-            "title": "Solana 项目 XYZ 测试网即将上线",
-            "project_name": "XYZ",
-            "description": "Solana 上的 XYZ 项目宣布将于 2026年4月15日 开启测试网，持续至4月30日。参与测试网的用户有机会获得空投资格，本次测试重点在于 Layer2 性能优化。",
+            "title": "示例事件：测试网即将开启",
+            "project_name": "示例项目",
+            "description": "这是一个从网页抓取后提取的测试事件。实际运行时会根据真实内容生成对应的事件信息。",
             "category": ["测试网"],
             "start_time": "2026-04-15T00:00:00Z",
-            "end_time": "2026-04-30T23:59:59Z",
-            "source_url": "https://xyz.solana.com/testnet",
-            "importance": "high",
-            "ai_confidence": 0.89,
-            "tags": ["Solana", "Layer2", "Testnet", "Airdrop"],
+            "end_time": None,
+            "source_url": url,
+            "importance": "medium",
+            "ai_confidence": 0.75,
+            "tags": ["Testnet", "Web3"],
         }
     ]
 
     print("\n📋 提取结果：")
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    print(json.dumps(simulated_result, ensure_ascii=False, indent=2))
 
     # 保存结果
     with open("extraction_result.json", "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False, indent=2)
+        json.dump(simulated_result, f, ensure_ascii=False, indent=2)
 
-    print("\n💾 结果已保存到 extraction_result.json 文件")
-    print("\n🎉 测试完成！Prompt 工作正常。")
-    print("下一步：我们可以加上真实网页抓取功能。")
+    print("\n💾 结果已保存到 extraction_result.json")
+    print("\n🎉 测试完成！")
+    print("当前是模拟输出。接下来我们可以：")
+    print("1. 接入真实 LLM 调用")
+    print("2. 优化抓取功能（支持 JS 渲染页面）")
+    print("3. 自动保存到数据库并显示在首页")
 
 
 if __name__ == "__main__":
