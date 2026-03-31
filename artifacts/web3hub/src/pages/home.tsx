@@ -3,6 +3,7 @@ import { useGetPosts, useGetMe } from "@workspace/api-client-react";
 import { useQuery } from "@tanstack/react-query";
 import { useWeb3Auth } from "@/lib/web3";
 import { Search, PenSquare, ChevronLeft, ChevronRight, CheckCircle2, Eye } from "lucide-react";
+import { EventList } from "@/components/events/EventList";
 import { Link, useLocation } from "wouter";
 import { useLang } from "@/lib/i18n";
 import { generateGradient } from "@/lib/utils";
@@ -338,6 +339,9 @@ export default function Home() {
         </div>
       </div>
 
+
+      {/* AI Event Aggregation */}
+      <EventList />
 
       {/* Wallet required modal */}
       {showWalletModal && (

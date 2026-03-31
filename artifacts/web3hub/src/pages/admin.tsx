@@ -8,8 +8,9 @@ import {
   Users, ClipboardList, Zap, Star, Ban, Download,
   CheckCircle, XCircle, RefreshCw, Pin, Send,
   ChevronDown, AlertCircle, ShieldOff, Cpu, Trash2, Calendar,
-  Globe, Sparkles, ExternalLink
+  Globe, Sparkles, ExternalLink, Handshake
 } from "lucide-react";
+import { ClaimsPanel } from "@/components/admin/ClaimsPanel";
 
 function getApiBase() {
   const base = import.meta.env.BASE_URL ?? "/";
@@ -79,7 +80,7 @@ async function aiPost(path: string, wallet: string, signFn: (message: string) =>
   });
 }
 
-type Tab = "applications" | "users" | "send" | "system" | "ai";
+type Tab = "applications" | "users" | "send" | "system" | "ai" | "claims";
 
 interface DialogState {
   type: "approve" | "reject";
@@ -309,6 +310,9 @@ export default function AdminPage() {
         </button>
         <button className={tabCls(tab === "ai")} onClick={() => setTab("ai")}>
           <Sparkles className="w-4 h-4 inline mr-1" />AI 抓取
+        </button>
+        <button className={tabCls(tab === "claims")} onClick={() => setTab("claims")}>
+          <Handshake className="w-4 h-4 inline mr-1" />认领审核
         </button>
       </div>
 
@@ -934,6 +938,11 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ─── Claims Tab ─── */}
+      {tab === "claims" && (
+        <ClaimsPanel />
       )}
 
       {/* ─── Revoke Confirmation Dialog ─── */}
