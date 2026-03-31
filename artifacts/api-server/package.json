@@ -16,7 +16,8 @@
     "drizzle-orm": "catalog:",
     "express": "^5",
     "node-cron": "^4.2.1",
-    "openai": "^6.33.0"
+    "openai": "^6.33.0",
+    "viem": "^2.47.4"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",

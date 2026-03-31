@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSignMessage } from "wagmi";
 import { useWeb3Auth } from "@/lib/web3";
 import { isAdmin } from "@/lib/admin";
 import { useLang } from "@/lib/i18n";
@@ -42,24 +43,35 @@ async function adminGet(path: string, wallet: string) {
 
 let _cachedToken: string | null = null;
 let _cachedTokenWallet: string | null = null;
+let _cachedTokenExpiry: number = 0;
 
-async function getAdminToken(wallet: string): Promise<string> {
-  if (_cachedToken && _cachedTokenWallet === wallet.toLowerCase()) return _cachedToken;
-  const res = await fetch(`${apiBase}/admin/token`, {
+async function getAdminToken(
+  wallet: string,
+  signFn: (message: string) => Promise<string>,
+): Promise<string> {
+  const now = Date.now();
+  if (_cachedToken && _cachedTokenWallet === wallet.toLowerCase() && now < _cachedTokenExpiry) {
+    return _cachedToken;
+  }
+  const challengeRes = await fetch(`${apiBase}/admin/token/challenge?wallet=${encodeURIComponent(wallet.toLowerCase())}`);
+  if (!challengeRes.ok) throw new Error("获取签名挑战失败，请确认钱包权限");
+  const { challenge } = await challengeRes.json() as { challenge: string };
+  const signature = await signFn(challenge);
+  const tokenRes = await fetch(`${apiBase}/admin/token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ wallet }),
+    body: JSON.stringify({ wallet: wallet.toLowerCase(), message: challenge, signature }),
   });
-  if (!res.ok) throw new Error("获取管理员 Token 失败，请确认钱包权限");
-  const { token } = await res.json() as { token: string };
+  if (!tokenRes.ok) throw new Error("签名验证失败，请重试");
+  const { token } = await tokenRes.json() as { token: string };
   _cachedToken = token;
   _cachedTokenWallet = wallet.toLowerCase();
-  setTimeout(() => { _cachedToken = null; _cachedTokenWallet = null; }, 55 * 60 * 1000);
+  _cachedTokenExpiry = now + 55 * 60 * 1000;
   return token;
 }
 
-async function aiPost(path: string, wallet: string, body: object) {
-  const token = await getAdminToken(wallet);
+async function aiPost(path: string, wallet: string, signFn: (message: string) => Promise<string>, body: object) {
+  const token = await getAdminToken(wallet, signFn);
   return fetch(`${apiBase}/ai${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
@@ -84,6 +96,10 @@ export default function AdminPage() {
   const { address, isConnected } = useWeb3Auth();
   const { t } = useLang();
   const [, setLocation] = useLocation();
+  const { signMessageAsync } = useSignMessage();
+  const signFn = useCallback(async (message: string) => {
+    return signMessageAsync({ message });
+  }, [signMessageAsync]);
   const [tab, setTab] = useState<Tab>("applications");
   const [applications, setApplications] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -725,7 +741,7 @@ export default function AdminPage() {
                     if (!aiUrl.startsWith("http") || !address) return;
                     setAiLoading(true); setAiMsg(""); setAiEvents([]); setAiSelected(new Set());
                     try {
-                      const res = await aiPost("/extract", address, { url: aiUrl });
+                      const res = await aiPost("/extract", address, signFn, { url: aiUrl });
                       const d = await res.json();
                       if (!res.ok) { setAiMsg(`❌ 错误: ${d.error}`); return; }
                       setAiEvents(d.events ?? []);
@@ -741,7 +757,7 @@ export default function AdminPage() {
                   if (!aiUrl.startsWith("http") || !address || aiLoading) return;
                   setAiLoading(true); setAiMsg(""); setAiEvents([]); setAiSelected(new Set());
                   try {
-                    const res = await aiPost("/extract", address, { url: aiUrl });
+                    const res = await aiPost("/extract", address, signFn, { url: aiUrl });
                     const d = await res.json();
                     if (!res.ok) { setAiMsg(`❌ 错误: ${d.error}`); return; }
                     setAiEvents(d.events ?? []);
@@ -783,7 +799,7 @@ export default function AdminPage() {
                     setAiPublishing(true);
                     const toPublish = [...aiSelected].map(i => aiEvents[i]).filter(Boolean);
                     try {
-                      const res = await aiPost("/publish", address, { events: toPublish });
+                      const res = await aiPost("/publish", address, signFn, { events: toPublish });
                       const d = await res.json();
                       if (!res.ok) { flash(`❌ 发布失败: ${d.error}`); return; }
                       flash(`✓ 成功发布 ${d.inserted} 条事件！`);

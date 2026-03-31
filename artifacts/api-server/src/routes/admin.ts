@@ -2,15 +2,32 @@ import { Router, type IRouter } from "express";
 import { db, usersTable, spaceApplicationsTable, postsTable } from "@workspace/db";
 import { eq, desc, asc, sql, and, gte, lte } from "drizzle-orm";
 import { ADMIN_WALLETS, requireAdmin } from "../lib/admin-check";
-import { issueAdminToken } from "../lib/admin-token";
+import { createChallenge, issueAdminToken, verifyChallenge } from "../lib/admin-token";
 
 const router: IRouter = Router();
 
-router.post("/token", (req, res) => {
-  const body = req.body as Record<string, unknown>;
-  const wallet = String(body?.wallet ?? "").toLowerCase();
+router.get("/token/challenge", (req, res) => {
+  const wallet = String(req.query.wallet ?? "").toLowerCase();
   if (!wallet || !ADMIN_WALLETS.has(wallet)) {
     res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  const challenge = createChallenge(wallet);
+  res.json({ challenge });
+});
+
+router.post("/token", async (req, res) => {
+  const body = req.body as Record<string, unknown>;
+  const wallet = String(body?.wallet ?? "").toLowerCase();
+  const message = String(body?.message ?? "");
+  const signature = String(body?.signature ?? "");
+  if (!wallet || !message || !signature || !ADMIN_WALLETS.has(wallet)) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  const valid = await verifyChallenge(wallet, message, signature);
+  if (!valid) {
+    res.status(403).json({ error: "Invalid or expired signature" });
     return;
   }
   const token = issueAdminToken(wallet);
