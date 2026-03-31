@@ -1,143 +1,138 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web3 Release - 最新机会</title>
-    <style>
-      body {
-        font-family: "Segoe UI", system-ui, sans-serif;
-        background-color: #0a0a0a;
-        color: #e0e0e0;
-        margin: 0;
-        padding: 20px;
-        line-height: 1.6;
-      }
-      .header {
-        text-align: center;
-        margin-bottom: 40px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #333;
-      }
-      .header h1 {
-        font-size: 2.4em;
-        margin: 0 0 10px 0;
-        color: #ffffff;
-      }
-      .header p {
-        color: #888;
-        font-size: 1.1em;
-      }
-      .event-card {
-        background-color: #1a1a1a;
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 20px;
-        border-left: 6px solid #00ff9d;
-        transition: all 0.3s ease;
-      }
-      .event-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 25px rgba(0, 255, 157, 0.15);
-      }
-      .title {
-        font-size: 1.4em;
-        margin: 0 0 12px 0;
-        color: #ffffff;
-      }
-      .project {
-        color: #00ff9d;
-        font-weight: 600;
-        margin-bottom: 8px;
-      }
-      .description {
-        margin: 16px 0;
-        color: #cccccc;
-        font-size: 1.02em;
-      }
-      .meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        font-size: 0.95em;
-        color: #aaa;
-      }
-      .category {
-        background-color: #333;
-        padding: 6px 14px;
-        border-radius: 30px;
-        font-size: 0.85em;
-      }
-      .high {
-        border-left-color: #ff4d4d;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="header">
-      <h1>Web3 Release</h1>
-      <p>AI 自动抓取 · 最新 Web3 机会</p>
-    </div>
-
-    <div id="events-container">
-      <p style="text-align: center; color: #666">正在加载最新机会...</p>
-    </div>
-
-    <script>
-      async function loadEvents() {
-        const container = document.getElementById("events-container");
-
-        try {
-          // 尝试多种路径加载
-          const paths = [
-            "extraction_result.json",
-            "./extraction_result.json",
-            "/extraction_result.json",
-          ];
-          let events = [];
-
-          for (let path of paths) {
-            try {
-              const response = await fetch(path, { cache: "no-store" });
-              if (response.ok) {
-                events = await response.json();
-                break;
-              }
-            } catch (e) {}
-          }
-
-          container.innerHTML = "";
-
-          if (events.length === 0) {
-            container.innerHTML = `<p style="color:#ff6666; text-align:center; padding: 40px;">
-            暂无数据<br>请先运行 crawler_test.py 生成 extraction_result.json 文件
-          </p>`;
-            return;
-          }
-
-          events.forEach((event) => {
-            const card = document.createElement("div");
-            card.className = `event-card ${event.importance === "high" ? "high" : ""}`;
-
-            card.innerHTML = `
-            <h3 class="title">${event.title || "无标题"}</h3>
-            <p class="project">${event.project_name || ""}</p>
-            <p class="description">${event.description || "暂无描述"}</p>
-            <div class="meta">
-              <span class="category">${Array.isArray(event.category) ? event.category.join("、") : event.category || "其他"}</span>
-              ${event.start_time ? `<span>开始: ${event.start_time.substring(0, 10)}</span>` : ""}
-              ${event.importance ? `<span>重要性: ${event.importance}</span>` : ""}
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>AI 项目事件聚合</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = { content: [], theme: { extend: {} } };
+        </script>
+    </head>
+    <body class="bg-slate-50 font-sans">
+        <header
+            class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-8 shadow"
+        >
+            <div class="max-w-5xl mx-auto px-6 text-center">
+                <h1 class="text-3xl font-bold">AI 项目事件聚合</h1>
+                <p class="mt-2 text-blue-100">自动抓取 · 轻量认领 · 需求匹配</p>
             </div>
-          `;
-            container.appendChild(card);
-          });
-        } catch (err) {
-          container.innerHTML = `<p style="color:#ff6666; text-align:center;">加载失败，请检查是否已运行 crawler_test.py</p>`;
-        }
-      }
+        </header>
 
-      // 页面加载时自动执行
-      window.onload = loadEvents;
-    </script>
-  </body>
+        <nav class="bg-white shadow sticky top-0 z-50">
+            <div
+                class="max-w-5xl mx-auto px-6 py-4 flex flex-wrap gap-3 justify-center"
+                id="nav-bar"
+            ></div>
+        </nav>
+
+        <div class="max-w-3xl mx-auto px-6 py-10">
+            <div id="event-list" class="space-y-6"></div>
+        </div>
+
+        <script>
+            const categories = [
+                "全部",
+                "测试网",
+                "IDO/Launchpad",
+                "预售",
+                "融资公告",
+                "空投",
+                "招聘",
+                "节点招募",
+                "主网上线",
+                "代币解锁",
+                "交易所上线",
+                "链上任务",
+                "开发者专区",
+            ];
+
+            function createNavBar() {
+                const nav = document.getElementById("nav-bar");
+                nav.innerHTML = "";
+                categories.forEach((cat) => {
+                    const btn = document.createElement("button");
+                    btn.className = `px-5 py-2 rounded-full text-sm font-medium transition-all ${cat === "全部" ? "bg-blue-600 text-white shadow" : "bg-white hover:bg-slate-100 border border-slate-200"}`;
+                    btn.textContent = cat;
+                    nav.appendChild(btn);
+                });
+            }
+
+            async function loadEvents() {
+                const container = document.getElementById("event-list");
+                container.innerHTML = `<div class="text-center py-12 text-slate-500">正在加载 /extraction_result.json ...</div>`;
+
+                try {
+                    console.log("🔍 开始请求: /extraction_result.json");
+                    const response = await fetch("/extraction_result.json");
+
+                    console.log(
+                        "📡 响应状态:",
+                        response.status,
+                        response.statusText,
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(
+                            `HTTP ${response.status} - 文件未找到。请确认文件已在 public/ 文件夹`,
+                        );
+                    }
+
+                    const events = await response.json();
+                    console.log(`✅ 成功加载 ${events.length} 条事件`, events);
+
+                    renderEvents(events);
+                } catch (err) {
+                    console.error("❌ 加载失败:", err);
+                    container.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+                        <p class="text-red-600 font-medium mb-4">❌ 加载 extraction_result.json 失败</p>
+                        <p class="text-slate-600 mb-4">错误：${err.message}</p>
+                        <div class="bg-white p-5 rounded-xl text-left text-sm">
+                            <p class="font-medium mb-3">正确操作：</p>
+                            <ol class="list-decimal pl-5 space-y-2">
+                                <li>创建 <strong>public</strong> 文件夹（如果没有）</li>
+                                <li>把 extraction_result.json 放到 <strong>public/</strong> 里面</li>
+                                <li>重启 Vite（Ctrl+C 然后重新运行 npx vite）</li>
+                                <li>刷新页面</li>
+                            </ol>
+                        </div>
+                    </div>`;
+                }
+            }
+
+            function renderEvents(events) {
+                const container = document.getElementById("event-list");
+                container.innerHTML = "";
+
+                if (events.length === 0) {
+                    container.innerHTML = `<div class="text-center py-12 text-slate-500">暂无事件</div>`;
+                    return;
+                }
+
+                events.forEach((event) => {
+                    const html = `
+                    <div class="bg-white rounded-2xl shadow-sm hover:shadow p-6 border border-slate-100">
+                        <div class="flex justify-between mb-4">
+                            <span class="px-4 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">${event.category || "其他"}</span>
+                            <span class="text-slate-500 text-sm">${event.date || event.time || "未知日期"}</span>
+                        </div>
+                        <h2 class="text-xl font-semibold mb-3">${event.title || "无标题事件"}</h2>
+                        <p class="text-slate-600 text-[15px] mb-5 line-clamp-3">${(event.description || "暂无描述").substring(0, 180)}...</p>
+                        <div class="flex justify-between text-sm text-slate-500">
+                            <span>来源：${event.source || "未知"}</span>
+                            <a href="${event.link || "#"}" target="_blank" class="text-blue-600 hover:underline">查看详情 →</a>
+                        </div>
+                    </div>`;
+                    container.innerHTML += html;
+                });
+            }
+
+            // 初始化
+            window.onload = () => {
+                createNavBar();
+                loadEvents();
+            };
+        </script>
+    </body>
 </html>
