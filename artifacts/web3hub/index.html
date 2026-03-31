@@ -1,55 +1,101 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1"
-    />
-    <title>Web3 Release — Decentralized Collaboration Hub</title>
-    <meta
-      name="description"
-      content="Web3 Release — the all-in-one demand publishing and matching platform for crypto teams, KOLs and developers."
-    />
-
-    <!-- Open Graph / Social sharing -->
-    <meta property="og:type" content="website" />
-    <meta
-      property="og:title"
-      content="Web3 Release — Decentralized Collaboration Hub"
-    />
-    <meta
-      property="og:description"
-      content="Publish your Web3 needs and let blockchain users find you instantly. Testnet, IDO, Airdrop, Jobs, Hackathon and more."
-    />
-    <meta property="og:image" content="/hero-banner.png" />
-    <meta property="og:image:width" content="1920" />
-    <meta property="og:image:height" content="1080" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta
-      name="twitter:title"
-      content="Web3 Release — Decentralized Collaboration Hub"
-    />
-    <meta
-      name="twitter:description"
-      content="Publish your Web3 needs and let blockchain users find you instantly."
-    />
-    <meta name="twitter:image" content="/hero-banner.png" />
-
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png" />
-    <link rel="apple-touch-icon" href="/logo.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web3 Release - 最新机会</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background-color: #0f0f0f;
+        color: #e0e0e0;
+        margin: 0;
+        padding: 20px;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .event-card {
+        background-color: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-left: 5px solid #00ff9d;
+      }
+      .title {
+        font-size: 1.3em;
+        margin: 0 0 10px 0;
+        color: #ffffff;
+      }
+      .project {
+        color: #00ff9d;
+        font-weight: bold;
+      }
+      .description {
+        line-height: 1.6;
+        margin: 12px 0;
+      }
+      .meta {
+        display: flex;
+        gap: 15px;
+        font-size: 0.9em;
+        color: #888;
+      }
+      .category {
+        background-color: #333;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85em;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div class="header">
+      <h1>Web3 Release - 最新机会</h1>
+      <p>AI 自动抓取 · 实时更新</p>
+    </div>
+
+    <div id="events-container">
+      <!-- 事件会在这里动态显示 -->
+    </div>
+
+    <script>
+      async function loadEvents() {
+        try {
+          const response = await fetch("extraction_result.json");
+          const events = await response.json();
+
+          const container = document.getElementById("events-container");
+          container.innerHTML = "";
+
+          if (events.length === 0) {
+            container.innerHTML =
+              '<p style="text-align:center; color:#888;">暂无事件数据，请先运行 crawler_test.py</p>';
+            return;
+          }
+
+          events.forEach((event) => {
+            const card = document.createElement("div");
+            card.className = "event-card";
+            card.innerHTML = `
+            <h3 class="title">${event.title || "无标题"}</h3>
+            <p class="project">${event.project_name || ""}</p>
+            <p class="description">${event.description || ""}</p>
+            <div class="meta">
+              <span class="category">${Array.isArray(event.category) ? event.category.join("、") : event.category || "其他"}</span>
+              <span>开始: ${event.start_time ? event.start_time.substring(0, 10) : "待定"}</span>
+            </div>
+          `;
+            container.appendChild(card);
+          });
+        } catch (err) {
+          document.getElementById("events-container").innerHTML =
+            `<p style="color:red;">无法加载数据，请确保已运行 crawler_test.py 生成 extraction_result.json 文件</p>`;
+        }
+      }
+
+      window.onload = loadEvents;
+    </script>
   </body>
 </html>
