@@ -10,7 +10,7 @@
     </script>
 </head>
 <body class="bg-slate-50 font-sans">
-    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-10 shadow-lg">
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 shadow-lg">
         <div class="max-w-5xl mx-auto px-6 text-center">
             <h1 class="text-4xl font-bold">AI 项目事件聚合</h1>
             <p class="mt-3 text-blue-100 text-lg">自动抓取 · 轻量认领 · 需求匹配</p>
@@ -22,10 +22,10 @@
     </nav>
 
     <div class="max-w-4xl mx-auto px-6 py-8">
-        <div class="flex justify-between items-center mb-6">
-            <span id="result-count" class="text-slate-500 text-sm">共 0 条事件</span>
+        <div class="flex justify-between items-center mb-6 px-1">
+            <span id="result-count" class="text-slate-500 text-sm font-medium">共 0 条事件</span>
         </div>
-        <div id="event-list" class="space-y-6"></div>
+        <div id="event-list" class="space-y-8"></div>
     </div>
 
     <script>
@@ -36,6 +36,19 @@
             "空投", "招聘", "节点招募", "主网上线",
             "代币解锁", "交易所上线", "链上任务", "开发者专区"
         ];
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '日期待定';
+            try {
+                const date = new Date(dateStr);
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                return `${year}年${month}月${day}日`;
+            } catch (e) {
+                return dateStr;
+            }
+        }
 
         function createNavBar() {
             const nav = document.getElementById('nav-bar');
@@ -82,7 +95,7 @@
             document.getElementById('result-count').textContent = `共 ${filtered.length} 条事件`;
 
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-16 text-slate-500">暂无「${selectedCategory}」相关事件</div>`;
+                container.innerHTML = `<div class="text-center py-20 text-slate-500">暂无「${selectedCategory}」相关事件</div>`;
                 return;
             }
 
@@ -98,33 +111,49 @@
                 const mainCat = cats[0] || '其他';
 
                 const desc = event.description || event.content || '暂无描述';
-                const shortDesc = desc.length > 220 ? desc.substring(0, 217) + '...' : desc;
+                const shortDesc = desc.length > 230 ? desc.substring(0, 227) + '...' : desc;
+
+                let importanceHTML = '';
+                if (event.importance) {
+                    const imp = event.importance.toLowerCase();
+                    if (imp.includes('high') || imp.includes('重要')) {
+                        importanceHTML = `<span class="px-4 py-1 text-xs font-medium rounded-2xl bg-red-100 text-red-700">重要</span>`;
+                    } else {
+                        importanceHTML = `<span class="px-4 py-1 text-xs font-medium rounded-2xl bg-amber-100 text-amber-700">一般</span>`;
+                    }
+                }
+
+                const tagsHTML = Array.isArray(event.tags) ? event.tags.map(tag =>
+                    `<span class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs rounded-3xl transition-colors">#${tag}</span>`
+                ).join('') : '';
 
                 const cardHTML = `
-                    <div class="bg-white rounded-3xl shadow-sm hover:shadow-xl transition-all p-7 border border-slate-100">
-                        <div class="flex justify-between items-start mb-5">
-                            <div class="flex gap-2 flex-wrap">
-                                <span class="px-5 py-1.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-2xl">${mainCat}</span>
-                                ${event.importance ? `<span class="px-4 py-1 text-xs font-medium rounded-2xl ${event.importance.includes('重要') ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}">${event.importance}</span>` : ''}
+                    <div class="bg-white rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-300 p-8 border border-slate-100">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="flex gap-3 flex-wrap">
+                                <span class="px-5 py-1.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-3xl">${mainCat}</span>
+                                ${importanceHTML}
                             </div>
-                            <span class="text-slate-500 text-sm whitespace-nowrap">${event.start_time || '日期待定'}</span>
+                            <span class="text-slate-500 text-sm font-medium">${formatDate(event.start_time)}</span>
                         </div>
 
-                        <h2 class="text-2xl font-semibold leading-tight mb-4">
-                            <a href="${event.source_url || '#'}" target="_blank" class="hover:text-blue-600">${event.title}</a>
+                        <h2 class="text-2xl font-semibold leading-tight mb-5 text-slate-900">
+                            <a href="${event.source_url || '#'}" target="_blank"
+                               class="hover:text-blue-600 transition-colors duration-200">
+                                ${event.title}
+                            </a>
                         </h2>
 
-                        <p class="text-slate-600 leading-relaxed mb-6">${shortDesc}</p>
+                        <p class="text-slate-600 leading-relaxed mb-7 text-[15.2px]">${shortDesc}</p>
 
-                        <div class="flex flex-wrap gap-2 mb-6">
-                            ${Array.isArray(event.tags) ? event.tags.map(tag =>
-                                `<span class="px-3 py-1 bg-slate-100 text-slate-600 text-xs rounded-xl">#${tag}</span>`
-                            ).join('') : ''}
+                        <div class="flex flex-wrap gap-2 mb-8">
+                            ${tagsHTML}
                         </div>
 
-                        <div class="flex justify-between items-center pt-4 border-t text-sm">
-                            <span class="text-slate-500">来源：${event.project_name || event.source || '未知'}</span>
-                            <a href="${event.source_url || '#'}" target="_blank" class="text-blue-600 hover:underline font-medium">查看详情 →</a>
+                        <div class="flex justify-between items-center pt-4 border-t border-slate-100 text-sm">
+                            <span class="text-slate-400">来源：${event.project_name || event.source || '未知'}</span>
+                            <a href="${event.source_url || '#'}" target="_blank"
+                               class="text-blue-600 hover:underline font-medium">查看详情 →</a>
                         </div>
                     </div>
                 `;
