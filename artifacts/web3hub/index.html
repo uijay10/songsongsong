@@ -11,14 +11,22 @@
         color: #e0e0e0;
         margin: 0;
         padding: 20px;
+        line-height: 1.6;
       }
       .header {
         text-align: center;
         margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #333;
       }
       .header h1 {
         font-size: 2.4em;
         margin: 0 0 10px 0;
+        color: #ffffff;
+      }
+      .header p {
+        color: #888;
+        font-size: 1.1em;
       }
       .event-card {
         background-color: #1a1a1a;
@@ -26,22 +34,30 @@
         padding: 24px;
         margin-bottom: 20px;
         border-left: 6px solid #00ff9d;
+        transition: all 0.3s ease;
+      }
+      .event-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 255, 157, 0.15);
       }
       .title {
         font-size: 1.4em;
         margin: 0 0 12px 0;
-        color: #fff;
+        color: #ffffff;
       }
       .project {
         color: #00ff9d;
         font-weight: 600;
+        margin-bottom: 8px;
       }
       .description {
         margin: 16px 0;
-        color: #ccc;
+        color: #cccccc;
+        font-size: 1.02em;
       }
       .meta {
         display: flex;
+        flex-wrap: wrap;
         gap: 15px;
         font-size: 0.95em;
         color: #aaa;
@@ -50,6 +66,10 @@
         background-color: #333;
         padding: 6px 14px;
         border-radius: 30px;
+        font-size: 0.85em;
+      }
+      .high {
+        border-left-color: #ff4d4d;
       }
     </style>
   </head>
@@ -60,7 +80,7 @@
     </div>
 
     <div id="events-container">
-      <p style="text-align: center; color: #666">正在加载事件数据...</p>
+      <p style="text-align: center; color: #666">正在加载最新机会...</p>
     </div>
 
     <script>
@@ -68,21 +88,19 @@
         const container = document.getElementById("events-container");
 
         try {
-          // 尝试多种路径加载 json 文件
-          const possiblePaths = [
+          // 尝试多种路径加载
+          const paths = [
             "extraction_result.json",
             "./extraction_result.json",
-            "../extraction_result.json",
             "/extraction_result.json",
           ];
-
           let events = [];
-          for (let path of possiblePaths) {
+
+          for (let path of paths) {
             try {
-              const response = await fetch(path, { cache: "no-cache" });
+              const response = await fetch(path, { cache: "no-store" });
               if (response.ok) {
                 events = await response.json();
-                console.log(`成功从路径 ${path} 加载数据`);
                 break;
               }
             } catch (e) {}
@@ -91,23 +109,24 @@
           container.innerHTML = "";
 
           if (events.length === 0) {
-            container.innerHTML = `<p style="color:#ff6666; text-align:center;">
-            无法加载数据<br>
-            请确保已运行 crawler_test.py 并生成了 extraction_result.json 文件
+            container.innerHTML = `<p style="color:#ff6666; text-align:center; padding: 40px;">
+            暂无数据<br>请先运行 crawler_test.py 生成 extraction_result.json 文件
           </p>`;
             return;
           }
 
           events.forEach((event) => {
             const card = document.createElement("div");
-            card.className = "event-card";
+            card.className = `event-card ${event.importance === "high" ? "high" : ""}`;
+
             card.innerHTML = `
             <h3 class="title">${event.title || "无标题"}</h3>
             <p class="project">${event.project_name || ""}</p>
             <p class="description">${event.description || "暂无描述"}</p>
             <div class="meta">
               <span class="category">${Array.isArray(event.category) ? event.category.join("、") : event.category || "其他"}</span>
-              <span>开始时间: ${event.start_time ? event.start_time.substring(0, 10) : "待定"}</span>
+              ${event.start_time ? `<span>开始: ${event.start_time.substring(0, 10)}</span>` : ""}
+              ${event.importance ? `<span>重要性: ${event.importance}</span>` : ""}
             </div>
           `;
             container.appendChild(card);
@@ -117,7 +136,7 @@
         }
       }
 
-      // 自动加载
+      // 页面加载时自动执行
       window.onload = loadEvents;
     </script>
   </body>
