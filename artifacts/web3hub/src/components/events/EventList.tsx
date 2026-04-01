@@ -9,10 +9,27 @@ import {
 import { useEventFilter } from "@/lib/event-filter-context";
 import { useLang } from "@/lib/i18n";
 
-function getEventBase() {
+function getApiBase() {
   const base = import.meta.env.BASE_URL ?? "/";
-  return base.endsWith("/") ? base : base + "/";
+  const parts = base.replace(/\/$/, "").split("/");
+  parts.pop();
+  return parts.join("/") + "/api";
 }
+
+const SECTION_TO_ZH: Record<string, string> = {
+  testnet:   "测试网",
+  ido:       "IDO/Launchpad",
+  presale:   "预售",
+  funding:   "融资公告",
+  airdrop:   "空投",
+  recruiting:"招聘",
+  nodes:     "节点招募",
+  mainnet:   "主网上线",
+  unlock:    "代币解锁",
+  exchange:  "交易所上线",
+  quest:     "链上任务",
+  developer: "开发者专区",
+};
 
 /* Map from stored Chinese category key → i18n key */
 const CAT_I18N: Record<string, string> = {
@@ -133,10 +150,26 @@ export function EventList() {
   const [sortBy, setSortBy] = useState<"time" | "importance">("time");
 
   useEffect(() => {
-    const base = getEventBase();
-    fetch(`${base}extraction_result.json`)
+    fetch(`${getApiBase()}/posts?authorType=ai&limit=200`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then((data: Web3Event[]) => { setAllEvents(data); setLoading(false); })
+      .then((data: { posts?: Array<Record<string, unknown>> }) => {
+        const posts = Array.isArray(data.posts) ? data.posts : [];
+        const events: Web3Event[] = posts.map((p) => ({
+          id: p.id as number,
+          title: p.title as string,
+          description: p.content as string,
+          project_name: p.authorName as string,
+          category: p.section ? [SECTION_TO_ZH[p.section as string] ?? (p.section as string)] : [],
+          source_url: (p.sourceUrl as string) ?? undefined,
+          importance: (p.importance as string) ?? "medium",
+          start_time: (p.eventStartTime as string) ?? undefined,
+          end_time: (p.eventEndTime as string) ?? undefined,
+          crawl_time: p.createdAt as string,
+          ai_confidence: p.aiConfidence as number,
+        }));
+        setAllEvents(events);
+        setLoading(false);
+      })
       .catch(() => { setError(zh ? "数据加载失败，请刷新重试" : "Failed to load data, please refresh"); setLoading(false); });
   }, []);
 
