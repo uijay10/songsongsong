@@ -5,7 +5,6 @@ import {
   isEventExpired,
   formatRelativeTime,
   formatSourceLabel,
-  CATEGORIES,
 } from "@/lib/events";
 import { useEventFilter } from "@/lib/event-filter-context";
 import { useLang } from "@/lib/i18n";
@@ -123,7 +122,7 @@ function EventRow({ event, lang, tFn }: { event: Web3Event; lang: string; tFn: (
 }
 
 export function EventList() {
-  const { activeCategory, setActiveCategory } = useEventFilter();
+  const { activeCategory } = useEventFilter();
   const { t, lang } = useLang();
   const zh = lang === "zh-CN";
 
@@ -170,42 +169,8 @@ export function EventList() {
     });
 
   return (
-    <div className="flex gap-0">
-
-      {/* ── LEFT SIDEBAR: Vertical Category Nav ── */}
-      <aside className="w-[130px] shrink-0 border-r border-slate-200 dark:border-slate-700 pr-0 mr-4">
-        <nav className="sticky top-24">
-          <ul className="space-y-0.5">
-            {CATEGORIES.map(cat => {
-              const isAll = cat === "全部";
-              const label = isAll
-                ? (zh ? "全部" : "All")
-                : (t(CAT_I18N[cat] as any) || cat);
-              const isActive = activeCategory === cat;
-              return (
-                <li key={cat}>
-                  <button
-                    onClick={() => setActiveCategory(cat)}
-                    className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-all flex items-center gap-2 ${
-                      isActive
-                        ? "text-blue-600 dark:text-blue-400 font-semibold bg-blue-50 dark:bg-blue-900/20"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                    }`}
-                  >
-                    {isActive && (
-                      <span className="w-1 h-4 rounded-full bg-blue-500 shrink-0" />
-                    )}
-                    <span className="truncate leading-snug">{label}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      </aside>
-
-      {/* ── RIGHT: Event Feed ── */}
-      <div className="flex-1 min-w-0">
+    <div>
+      <div>
 
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
