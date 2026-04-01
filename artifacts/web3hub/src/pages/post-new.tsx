@@ -14,46 +14,38 @@ function getApiBase() {
   return parts.join("/") + "/api";
 }
 
-const ALL_SECTIONS = [
-  "recruiting",
-  "testnet", "ido", "security", "integration", "airdrop",
-  "events", "funding", "jobs", "nodes",
-  "ecosystem", "partners", "hackathon", "ama", "bugbounty",
-  "community", "developer",
+const NAV_SECTIONS = [
+  "testnet", "ido", "presale", "funding", "airdrop",
+  "recruiting", "nodes", "mainnet", "unlock", "exchange",
+  "quest", "developer",
 ] as const;
 
-const PROJECT_SECTIONS: typeof ALL_SECTIONS[number][] = [
-  "recruiting",
-  "testnet", "ido", "security", "integration", "airdrop",
-  "events", "funding", "nodes",
-  "ecosystem", "partners", "hackathon", "ama", "bugbounty",
-  "community", "developer",
+type NavSection = typeof NAV_SECTIONS[number];
+
+const PROJECT_SECTIONS: NavSection[] = [...NAV_SECTIONS];
+
+const KOL_SECTIONS: NavSection[] = [
+  "testnet", "ido", "airdrop", "nodes", "quest", "developer", "recruiting",
 ];
 
-const KOL_SECTIONS: typeof ALL_SECTIONS[number][] = [
-  "testnet", "events", "ecosystem", "partners", "hackathon", "ama", "bugbounty", "community", "jobs",
+const DEV_SECTIONS: NavSection[] = [
+  "developer", "testnet", "quest", "recruiting",
 ];
 
-const DEV_SECTIONS: typeof ALL_SECTIONS[number][] = [
-  "developer", "hackathon", "bugbounty", "security", "integration", "jobs", "community",
-];
-
-const NORMAL_SECTIONS: typeof ALL_SECTIONS[number][] = ["jobs", "community"];
+const NORMAL_SECTIONS: NavSection[] = ["recruiting"];
 
 const SECTION_LABEL_KEYS: Record<string, string> = {
-  testnet: "sTestnetLabel", ido: "sIdoLabel", security: "sSecurityLabel",
-  integration: "sIntegrationLabel", airdrop: "sAirdropLabel", events: "sEventsLabel",
-  funding: "sFundingLabel", jobs: "sJobsLabel", recruiting: "sRecruitingLabel", nodes: "sNodesLabel",
-  ecosystem: "sEcosystemLabel", partners: "sPartnersLabel",
-  hackathon: "sHackathonLabel", ama: "sAmaLabel", bugbounty: "sBugbountyLabel",
-  community: "nav_community", developer: "nav_developer",
+  testnet: "nav_testnet", ido: "nav_ido", presale: "nav_presale",
+  funding: "nav_funding", airdrop: "nav_airdrop", recruiting: "nav_recruiting",
+  nodes: "nav_nodes", mainnet: "nav_mainnet", unlock: "nav_unlock",
+  exchange: "nav_exchange", quest: "nav_quest", developer: "nav_developer",
 };
 
 function getSections(spaceType: string): string[] {
-  if (spaceType === "kol") return KOL_SECTIONS as unknown as string[];
-  if (spaceType === "developer") return DEV_SECTIONS as unknown as string[];
-  if (!spaceType) return NORMAL_SECTIONS as unknown as string[];
-  return PROJECT_SECTIONS as unknown as string[];
+  if (spaceType === "kol") return KOL_SECTIONS;
+  if (spaceType === "developer") return DEV_SECTIONS;
+  if (!spaceType) return NORMAL_SECTIONS;
+  return PROJECT_SECTIONS;
 }
 
 type Step = "form" | "confirm" | "done";
