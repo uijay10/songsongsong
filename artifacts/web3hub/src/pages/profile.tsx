@@ -657,9 +657,9 @@ export default function Profile() {
 
       {/* Edit Links Modal */}
       {showEditLinks && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowEditLinks(false)}>
-          <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
-            <h3 className="font-bold text-base">{zh ? "编辑项目链接" : "Edit Project Links"}</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={() => setShowEditLinks(false)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+            <h3 className="font-bold text-base text-gray-900">{zh ? "编辑项目链接" : "Edit Project Links"}</h3>
             {[
               { label: "X / Twitter", val: editTwitter, set: setEditTwitter, ph: "https://x.com/yourhandle" },
               { label: zh ? "官网" : "Website",  val: editWebsite, set: setEditWebsite, ph: "https://yourproject.xyz" },
@@ -668,18 +668,18 @@ export default function Profile() {
               { label: zh ? "白皮书" : "Whitepaper", val: editWhitepaper, set: setEditWhitepaper, ph: "https://docs.yourproject.xyz" },
             ].map(({ label, val, set, ph }) => (
               <div key={label}>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}</label>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">{label}</label>
                 <input type="url" value={val} onChange={e => set(e.target.value)} placeholder={ph}
-                  className="w-full text-sm bg-white dark:bg-slate-800 border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  className="w-full text-sm text-gray-900 bg-white border border-gray-200 rounded-xl px-3 py-2 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400" />
               </div>
             ))}
             <div className="flex gap-3 pt-2">
               <button onClick={() => setShowEditLinks(false)}
-                className="flex-1 py-2.5 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors">
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                 {zh ? "取消" : "Cancel"}
               </button>
               <button onClick={saveEditLinks} disabled={editSaving}
-                className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60">
+                className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-60">
                 {editSaving ? (zh ? "保存中..." : "Saving...") : (zh ? "保存" : "Save")}
               </button>
             </div>
