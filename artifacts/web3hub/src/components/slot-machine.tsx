@@ -94,6 +94,11 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
   const { t } = useLang();
   const { playTick, playWin } = useAudio();
 
+  // Local token state so display updates immediately after winning,
+  // without waiting for the parent query to refetch
+  const [localTokens, setLocalTokens] = useState(tokens);
+  useEffect(() => { setLocalTokens(tokens); }, [tokens]);
+
   const [spinning, setSpinning] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [result, setResult] = useState<{ earned: number } | null>(null);
@@ -173,6 +178,7 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
         setSpinning(false);
         setResult({ earned });
         playWin(earned);
+        setLocalTokens(data.tokens);   // update immediately, don't wait for parent refetch
         onSuccess(data.tokens, earned);
       }, SPIN_DURATION);
 
@@ -201,7 +207,7 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
         </div>
         <div style={{ textAlign: "right" }}>
           <div style={{ fontSize: 11, color: "var(--muted-foreground)" }}>{t("tokenLabel")}</div>
-          <div style={{ fontWeight: 700, fontSize: 20, color: "#f59e0b", lineHeight: 1.2 }}>{tokens.toLocaleString()}</div>
+          <div style={{ fontWeight: 700, fontSize: 20, color: "#f59e0b", lineHeight: 1.2 }}>{localTokens.toLocaleString()}</div>
           <div style={{ fontSize: 10, color: "rgba(245,158,11,0.6)" }}>$WBR</div>
         </div>
       </div>

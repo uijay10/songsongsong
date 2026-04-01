@@ -532,7 +532,7 @@ export default function Profile() {
               {zh ? "管理员面板 · 仅管理员可见" : "Admin Panel · Admins only"}
             </p>
           </div>
-          <ClaimsPanel />
+          <ClaimsPanel adminWallet={address ?? ""} />
         </div>
       ) : null;
 
