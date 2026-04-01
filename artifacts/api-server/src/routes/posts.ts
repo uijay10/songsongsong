@@ -167,7 +167,11 @@ router.get("/", async (req, res) => {
   const userMap = Object.fromEntries(users.map(u => [u.wallet, { ...u, parsedTags: (u as any).tags ? JSON.parse((u as any).tags) : [] }]));
 
   res.json({
-    posts: posts.map(p => formatPost({ ...p, authorNameLive: userMap[p.authorWallet]?.username ?? null, authorAvatarLive: userMap[p.authorWallet]?.avatar ?? null, authorTagsLive: userMap[p.authorWallet]?.parsedTags ?? [], authorTypeLive: userMap[p.authorWallet]?.spaceType ?? null })),
+    posts: posts.map(p => {
+      const u = userMap[p.authorWallet];
+      const authorNameLive = u?.spaceType || u?.username || null;
+      return formatPost({ ...p, authorNameLive, authorAvatarLive: u?.avatar ?? null, authorTagsLive: u?.parsedTags ?? [], authorTypeLive: u?.spaceType ?? null });
+    }),
     total: Number(all[0]?.count ?? 0),
     page,
     totalPages: Math.ceil(Number(all[0]?.count ?? 0) / limit),
@@ -302,7 +306,7 @@ router.post("/", async (req, res) => {
     content,
     section,
     authorWallet: lw,
-    authorName: user?.username ?? null,
+    authorName: user?.spaceType || user?.username || null,
     authorAvatar: user?.avatar ?? null,
     authorType: user?.spaceType ?? null,
     likes: 0,
@@ -316,7 +320,7 @@ router.post("/", async (req, res) => {
 
   res.status(201).json(formatPost({
     ...inserted[0],
-    authorNameLive: user?.username ?? null,
+    authorNameLive: user?.spaceType || user?.username || null,
     authorAvatarLive: user?.avatar ?? null,
   }));
 });
@@ -463,7 +467,7 @@ router.get("/:id", async (req, res) => {
   const u = users[0];
   const parsedTags = (u as any)?.tags ? JSON.parse((u as any).tags) : [];
 
-  res.json(formatPost({ ...p, authorNameLive: u?.username ?? null, authorAvatarLive: u?.avatar ?? null, authorTagsLive: parsedTags, authorTypeLive: u?.spaceType ?? null }));
+  res.json(formatPost({ ...p, authorNameLive: u?.spaceType || u?.username || null, authorAvatarLive: u?.avatar ?? null, authorTagsLive: parsedTags, authorTypeLive: u?.spaceType ?? null }));
 });
 
 router.post("/:id/like", async (req, res) => {

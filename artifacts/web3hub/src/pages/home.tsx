@@ -8,6 +8,7 @@ import { Link, useLocation } from "wouter";
 import { useLang } from "@/lib/i18n";
 import { generateGradient } from "@/lib/utils";
 import { TagBadge } from "@/components/post-card";
+import { RoleBadge } from "@/components/role-badge";
 import { formatDistanceToNow } from "date-fns";
 import { enUS, zhCN } from "date-fns/locale";
 
@@ -151,10 +152,13 @@ function PostPinnedCard({ post, idx = 0 }: { post: any; idx?: number }) {
         <span className="text-xs text-muted-foreground shrink-0">{timeAgo}</span>
       </div>
 
-      {/* Row 2: LOGO | 名字 (left) | 分区 (right) */}
+      {/* Row 2: LOGO | 名字 + 身份 (left) | 分区 (right) */}
       <div className="flex items-center mb-2 pl-3 gap-1.5">
         <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="lg" />
-        <p className="ml-1 text-sm font-bold text-foreground leading-snug truncate flex-1">{displayName}</p>
+        <div className="ml-1 flex items-center gap-1 flex-1 min-w-0">
+          <p className="text-sm font-bold text-foreground leading-snug truncate">{displayName}</p>
+          <RoleBadge spaceType={post.authorType ?? null} size="xs" />
+        </div>
         <span className="text-xs text-primary font-semibold px-2 py-0.5 rounded-full bg-primary/10 shrink-0 mr-2">{sectionLabel}</span>
       </div>
 
@@ -194,7 +198,10 @@ function PostRegularCard({ post, num }: { post: any; num: number }) {
         <div className="shrink-0">
           <AuthorAvatar wallet={post.authorWallet} name={post.authorName} avatar={post.authorAvatar} size="lg" />
         </div>
-        <p className="w-28 shrink-0 text-base font-semibold text-foreground truncate">{displayName}</p>
+        <div className="w-36 shrink-0 flex items-center gap-1">
+          <p className="text-base font-semibold text-foreground truncate">{displayName}</p>
+          <RoleBadge spaceType={post.authorType ?? null} size="xs" />
+        </div>
         <div className="flex-1" />
         {post.authorTags?.length > 0 && (
           <div className="shrink-0 flex items-center gap-1">

@@ -84,7 +84,9 @@ export default function Profile() {
   const defaultName = zh
     ? (isSpaceOwner ? "团队" : "用户")
     : (isSpaceOwner ? "Team" : "User");
-  const displayUsername = me?.username || defaultName;
+  const displayUsername = isSpaceOwner
+    ? (me?.spaceType || defaultName)
+    : (me?.username || defaultName);
 
   const [activeTab, setActiveTab] = useState<NavTab>("notifications");
   const [subscriptions, setSubscriptions] = useState<string[]>([]);
@@ -458,22 +460,30 @@ export default function Profile() {
           {/* Username */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">{zh ? "显示名称" : "Display Name"}</label>
-            <div className="flex gap-2">
-              <input
-                value={username}
-                onChange={e => { setUsername(e.target.value); setUsernameDirty(true); }}
-                placeholder={truncateAddress(address)}
-                maxLength={32}
-                className="flex-1 text-sm bg-muted/40 border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-              {usernameDirty && (
-                <button onClick={handleSaveUsername} disabled={saveStatus === "saving"}
-                  className="flex items-center gap-1 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60">
-                  <Save className="w-3 h-3" />
-                  {saveStatus === "saving" ? "..." : saveStatus === "saved" ? "✓" : (zh ? "保存" : "Save")}
-                </button>
-              )}
-            </div>
+            {isSpaceOwner ? (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/30 border border-border">
+                <span className="text-sm text-foreground font-medium">{displayUsername}</span>
+                <RoleBadge spaceType={spaceType ?? null} size="xs" />
+                <span className="ml-auto text-xs text-muted-foreground/60">{zh ? "团队账号不可修改" : "Locked for team accounts"}</span>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  value={username}
+                  onChange={e => { setUsername(e.target.value); setUsernameDirty(true); }}
+                  placeholder={truncateAddress(address)}
+                  maxLength={32}
+                  className="flex-1 text-sm bg-muted/40 border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                {usernameDirty && (
+                  <button onClick={handleSaveUsername} disabled={saveStatus === "saving"}
+                    className="flex items-center gap-1 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60">
+                    <Save className="w-3 h-3" />
+                    {saveStatus === "saving" ? "..." : saveStatus === "saved" ? "✓" : (zh ? "保存" : "Save")}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Avatar */}

@@ -188,20 +188,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex justify-between items-center h-16">
             {/* Logo — 1.5× bigger */}
             <div className="flex items-center gap-3 shrink-0">
-              <Link href="/" className="flex items-center gap-2.5 group">
+              <a href="/" onClick={e => { e.preventDefault(); setActiveCategory("全部"); navigate("/"); }}
+                className="flex items-center gap-2.5 group cursor-pointer">
                 <img src="/logo.png" alt="Web3 Release" className="w-10 h-10 rounded-xl object-cover" />
                 <span className="font-display font-bold text-2xl tracking-tight text-blue-600">Web3 Release</span>
-              </Link>
-              <Link href="/"
+              </a>
+              <a href="/" onClick={e => { e.preventDefault(); setActiveCategory("全部"); navigate("/"); }}
                 className={cn(
-                  "px-3.5 py-1.5 rounded-full text-sm font-semibold border transition-all",
+                  "px-3.5 py-1.5 rounded-full text-sm font-semibold border transition-all cursor-pointer",
                   location === "/"
                     ? "bg-blue-600 text-white border-blue-600 shadow"
                     : "bg-white dark:bg-slate-800 text-blue-600 border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40"
                 )}
               >
                 {t("navHome")}
-              </Link>
+              </a>
             </div>
 
             <div className="flex items-center gap-2 ml-auto">
