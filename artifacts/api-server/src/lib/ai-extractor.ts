@@ -9,15 +9,36 @@ const WEB3_EXTRACTION_PROMPT = `You are a precise Web3 event extraction expert f
 
 LANGUAGE RULE — CRITICAL: ALL output text (title, project_name, description, tags) MUST be written in natural, fluent, professional English — regardless of the source language. If content is in Chinese or any other language, translate it into native-sounding English suitable for a global Web3 audience. Keep proper nouns (project names, token symbols, platform names like Galxe, Solana, USDT, etc.) unchanged.
 
-The platform has exactly 15 fixed sections. You MUST choose 1–2 strictly from this list:
-测试网, IDO/Launchpad, 预售, 融资公告, 空投, 招聘, 节点招募, 主网上线, 代币解锁, 交易所上线, 链上任务, 开发者专区, 项目捐赠/赞助, 漏洞赏金
+The platform has exactly 15 fixed sections. You MUST choose 1–2 strictly from this list. Read each definition carefully:
 
-Section routing guide:
-- Grant, sponsorship, accelerator, incubator, ecosystem fund, Gitcoin → 项目捐赠/赞助
-- Bug bounty, security audit, vulnerability reward, Immunefi, Code4rena, HackenProof → 漏洞赏金
-- Web3/blockchain job openings → 招聘
-- Partnership / strategic collaboration → 融资公告
-- Requires active on-chain user action to earn rewards → 链上任务
+- 测试网: Project launches/upgrades a testnet. ONLY testnet — not mainnet, not presale, not quest.
+- IDO/Launchpad: Token IDO or launchpad listing (Binance Launchpad, Bybit, Gate Startup, Polkastarter). NOT general news.
+- 预售: Token/NFT presale (private sale, public sale, whitelist) on CoinList, Seedify, DAO Maker, PinkSale, Legion. NOT airdrop.
+- 融资公告: ONLY confirmed VC funding events — must explicitly state a dollar amount raised AND name of investors OR round type (seed, Series A/B, angel). STRICT EXCLUSIONS — never use for: regulatory news, government policy, laws, bills, court rulings, partnership announcements, protocol integrations, market expansions, testnet launches, presales, IDO, or any content without a confirmed investment round and amount.
+- 空投: Airdrop campaign (free tokens to users). NOT staking rewards or liquidity mining.
+- 招聘: Web3 job openings or hiring announcements.
+- 节点招募: Validator/miner node recruitment programs.
+- 主网上线: ONLY when a blockchain/protocol officially launches its mainnet for the first time, or a bridge/protocol goes live on mainnet. Must use language like "mainnet launch", "launches mainnet", "mainnet goes live", "mainnet activation". STRICT EXCLUSIONS: never use for testnets, funding, partnerships, integrations, feature updates, or upgrades that are not a mainnet launch.
+- 代币解锁: Scheduled token unlock or vesting cliff. Must have specific date or amount.
+- 交易所上线: ONLY confirmed token listings on a named exchange — "listed on Binance", "will list on OKX", "Coinbase listing", "Upbit listing". STRICT EXCLUSIONS: never use for testnet, funding, presale, IDO, node recruitment, or general project news without an explicit exchange listing.
+- 链上任务: ONLY campaigns requiring users to complete specific on-chain actions to earn rewards (Galxe, Layer3, QuestN, Zealy, TaskOn). NOT partnerships or feature announcements.
+- 开发者专区: Developer tools, SDKs, APIs, hackathons, smart contract news, technical upgrades, developer tutorials.
+- 漏洞赏金: Bug bounty programs, security audit competitions (Immunefi, Code4rena, HackenProof, Sherlock).
+- 项目捐赠/赞助: Grant programs, ecosystem funds, accelerators, incubators (Gitcoin, Web3/Ethereum/Solana Foundation, Arbitrum Grants, Optimism RPGF, Binance Labs, a16z).
+
+Strict routing — apply in this priority order:
+1. Testnet content → 测试网 (never 融资公告 or 主网上线)
+2. Presale / whitelist sale → 预售 (never 融资公告)
+3. Regulatory news / government policy / laws → SKIP entirely (do not classify)
+4. Explicitly states "raised $X" + named investor/round → 融资公告
+5. Explicitly states "mainnet launch" / "mainnet goes live" → 主网上线
+6. Partnership / integration / protocol update → 开发者专区 (NOT 融资公告 or 交易所上线)
+7. Named exchange listing announcement → 交易所上线
+8. On-chain user quest → 链上任务
+9. Bug bounty / security reward → 漏洞赏金
+10. Grant / ecosystem fund → 项目捐赠/赞助
+11. Job posting → 招聘
+12. Ambiguous / does not clearly fit any section → SKIP (return nothing)
 
 Task: Extract valid, upcoming or ongoing Web3 events from the content below. Ignore events that ended more than 7 days ago.
 

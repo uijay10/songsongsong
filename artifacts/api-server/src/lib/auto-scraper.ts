@@ -374,29 +374,49 @@ const WEB3_BATCH_PROMPT = `You are a Web3 event extraction expert working exclus
 
 LANGUAGE RULE — CRITICAL: ALL output text (title, project_name, description) MUST be written in natural, fluent, professional English. This applies regardless of the source language. If the original content is in Chinese or any other language, translate it into native-sounding English that Web3 users worldwide can easily understand. Keep proper nouns (project names, token symbols, platform names like Galxe, Layer3, Solana, USDT, etc.) unchanged.
 
-Platform sections (choose 1–2 strictly from this list):
-- 测试网: Project launches or upgrades a testnet, inviting users to participate
-- IDO/Launchpad: Token IDO, initial public offering, or Launchpad listing
-- 预售: Token or NFT presale event (CoinList, Seedify, DAO Maker, PinkSale, Legion, etc.)
-- 融资公告: Funding rounds, strategic investment, regulatory news, policy announcements
-- 空投: Airdrop campaign open to users
-- 招聘: Web3/blockchain job openings, including remote roles
-- 节点招募: Validator node or miner node recruitment
-- 主网上线: Mainnet launch, bridge launch, protocol mainnet deployment, token expansion to new chain
-- 代币解锁: Token unlock or vesting release events
-- 交易所上线: Token CEX/DEX listing or delisting
-- 链上任务: ONLY for campaigns requiring active on-chain user actions to earn rewards — quests on Galxe/Layer3/QuestN/Zealy/TaskOn. Partnership announcements and feature launches do NOT qualify.
-- 开发者专区: Developer tools, SDKs, APIs, hackathons, technical upgrades, smart contract news
-- 漏洞赏金: Bug bounty programs, security audits, vulnerability rewards (Immunefi, Code4rena, HackenProof, etc.)
-- 项目捐赠/赞助: Grant programs, sponsorships, accelerators, incubators, ecosystem funds (Gitcoin, Web3 Foundation, Ethereum Foundation, Solana Foundation, Arbitrum, Optimism RPGF, Binance Labs, a16z, etc.)
+Platform sections (choose 1–2 strictly from this list). Read each definition carefully before classifying:
 
-Routing rules:
-- Partnership / strategic collaboration → 融资公告
-- New feature launch / protocol expansion → 主网上线 or 开发者专区
-- Requires manual user on-chain action to earn → 链上任务
-- Bug bounty / security vulnerability reward → 漏洞赏金
-- Foundation grant / ecosystem fund / Gitcoin round → 项目捐赠/赞助
-- Job posting → 招聘
+- 测试网: Project launches or upgrades a testnet network, inviting users to test. ONLY if it is a testnet — not mainnet, not a presale, not a quest.
+
+- IDO/Launchpad: Token IDO or Launchpad listing event on a launchpad platform (e.g. Binance Launchpad, Bybit, Gate Startup, Polkastarter). NOT general news or funding.
+
+- 预售: Token or NFT presale (private sale, public sale, whitelist sale) on platforms like CoinList, Seedify, DAO Maker, PinkSale, Legion, DxSale. NOT airdrop, not IDO.
+
+- 融资公告: ONLY confirmed funding events — VC investment, seed round, Series A/B, strategic investment round, angel round. Must mention a specific dollar amount raised or investor names. STRICT EXCLUSIONS: do NOT use for regulatory news, government policy, laws, bills, proposals, partnership announcements, protocol integrations, market expansions, testnet launches, presales, airdrops, or anything without a confirmed investment round.
+
+- 空投: Airdrop campaign open to users (free token distribution). NOT staking rewards or liquidity mining.
+
+- 招聘: Web3/blockchain job openings, hiring announcements, remote roles. NOT ecosystem grants.
+
+- 节点招募: Validator node or miner node recruitment programs.
+
+- 主网上线: ONLY confirmed mainnet launch / mainnet goes live events — when a blockchain network officially launches its mainnet, or a protocol deploys to mainnet for the first time, or a major bridge/cross-chain goes live on mainnet. STRICT EXCLUSIONS: do NOT use for testnets, funding rounds, partnerships, integrations, feature updates, upgrades that are not mainnet launches, or any content without the words "mainnet launch", "mainnet goes live", "launches mainnet", "mainnet activation", or equivalent.
+
+- 代币解锁: Scheduled token unlock or vesting cliff events. Must have a specific unlock date or amount.
+
+- 交易所上线: ONLY confirmed or officially announced token listings on a named CEX or major DEX (e.g. "listed on Binance", "will list on Coinbase", "Upbit listing", "OKX listing"). STRICT EXCLUSIONS: do NOT use for testnet news, funding, presales, IDO, node recruitment, regulatory news, or general project updates without a specific exchange listing announcement.
+
+- 链上任务: ONLY for campaigns where users must complete specific on-chain actions to earn rewards — quests on Galxe, Layer3, QuestN, Zealy, TaskOn, Intract. Partnership announcements, feature launches, and protocol upgrades do NOT qualify.
+
+- 开发者专区: Developer tools, SDKs, APIs, hackathons, technical upgrades, smart contract audits/releases, developer tutorials.
+
+- 漏洞赏金: Bug bounty programs, security audit competitions, vulnerability reward programs (Immunefi, Code4rena, HackenProof, Sherlock, etc.).
+
+- 项目捐赠/赞助: Grant programs, ecosystem funds, sponsorships, accelerators, incubators (Gitcoin, Web3 Foundation, Ethereum Foundation, Solana Foundation, Arbitrum Grants, Optimism RPGF, Binance Labs, a16z, etc.).
+
+Strict routing rules — apply in this order:
+1. Contains testnet/testnet quest content → 测试网 or 链上任务 (NOT 融资公告 or 主网上线)
+2. Contains presale/IDO/whitelist sale → 预售 or IDO/Launchpad (NOT 融资公告)
+3. Contains regulatory news, government bills, policy, laws, court rulings → SKIP entirely (no section fits)
+4. Contains "raised $X", "seed round", "Series A/B", named VC investor → 融资公告
+5. Contains "mainnet launch", "launches mainnet", "mainnet goes live", "mainnet activation" → 主网上线
+6. Protocol upgrade, new feature, integration, partnership, expansion → 开发者专区 or 主网上线 (NOT 融资公告, NOT 交易所上线)
+7. Contains "listed on [exchange]", "will list on", "[exchange] listing" → 交易所上线
+8. Requires active user on-chain action → 链上任务
+9. Bug bounty / security vulnerability reward → 漏洞赏金
+10. Grant / ecosystem fund / Gitcoin round → 项目捐赠/赞助
+11. Job posting → 招聘
+12. If content does not clearly match any section above → SKIP IT (return nothing for this article)
 
 Task: For each article below, decide:
 1. Is it a valid Web3 / crypto event?
