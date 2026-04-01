@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useGetPosts } from "@workspace/api-client-react";
-import { PostTimeline } from "@/components/post-timeline";
+import { EventList } from "@/components/events/EventList";
 import { useParams } from "wouter";
 import { useLang } from "@/lib/i18n";
 import { Link } from "wouter";
@@ -237,11 +236,6 @@ export default function SectionPage() {
 
   const isShowcase = slug === "showcase";
 
-  const { data, isLoading, refetch } = useGetPosts(
-    { section: slug, limit: 50 },
-    { query: { enabled: !isShowcase } }
-  );
-
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div className={`rounded-2xl p-8 border bg-gradient-to-br ${color}`}>
@@ -254,18 +248,8 @@ export default function SectionPage() {
 
       {isShowcase ? (
         <ShowcaseDirectory />
-      ) : isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 rounded-2xl bg-muted animate-pulse" />
-          ))}
-        </div>
       ) : (
-        <PostTimeline
-          posts={data?.posts ?? []}
-          emptyMessage={`${sectionLabel} — ${t("noLatest")}`}
-          onRefresh={refetch}
-        />
+        <EventList sectionSlug={slug} />
       )}
     </div>
   );

@@ -210,7 +210,7 @@ function spreadBySource(posts: Web3Event[], seed?: number): Web3Event[] {
 
 /* ── EventList component ─────────────────────────────────── */
 
-export function EventList() {
+export function EventList({ sectionSlug }: { sectionSlug?: string } = {}) {
   const { activeCategory } = useEventFilter();
   const { t, lang } = useLang();
   const zh = lang === "zh-CN";
@@ -239,9 +239,14 @@ export function EventList() {
   useEffect(() => {
     setLoading(true);
     setError("");
+    const aiUrl = sectionSlug
+      ? `${getApiBase()}/posts?authorType=ai&section=${encodeURIComponent(sectionSlug)}&limit=200`
+      : `${getApiBase()}/posts?authorType=ai&limit=200`;
     Promise.all([
-      fetch(`${getApiBase()}/posts?authorType=ai&limit=200`).then(r => r.ok ? r.json() : { posts: [] }),
-      fetch(`${getApiBase()}/posts?pinned=1&limit=16`).then(r => r.ok ? r.json() : { posts: [] }),
+      fetch(aiUrl).then(r => r.ok ? r.json() : { posts: [] }),
+      sectionSlug
+        ? Promise.resolve({ posts: [] })
+        : fetch(`${getApiBase()}/posts?pinned=1&limit=16`).then(r => r.ok ? r.json() : { posts: [] }),
     ]).then(([aiData, pinnedData]) => {
       const aiPosts: Array<Record<string, unknown>> = Array.isArray(aiData.posts) ? aiData.posts : [];
       const pinned: any[] = Array.isArray(pinnedData.posts) ? pinnedData.posts : [];
@@ -281,7 +286,7 @@ export function EventList() {
 
   const base = allEvents
     .filter(e => !isEventExpired(e))
-    .filter(e => activeCategory === "全部" || (e.category ?? []).includes(activeCategory))
+    .filter(e => sectionSlug ? true : activeCategory === "全部" || (e.category ?? []).includes(activeCategory))
     .filter(e => {
       if (!searchTerm) return true;
       const q = searchTerm.toLowerCase();
