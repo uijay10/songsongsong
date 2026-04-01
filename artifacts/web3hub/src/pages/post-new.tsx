@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLang } from "@/lib/i18n";
 import { useLocation } from "wouter";
 import { AlertCircle, CheckCircle2, PenSquare, X, Pin, Sparkles, Copy, Check } from "lucide-react";
+import { isAdmin } from "@/lib/admin";
 
 function getApiBase() {
   const base = import.meta.env.BASE_URL ?? "/";
@@ -275,8 +276,8 @@ ${typeInfo.tag} #${projectName} #Web3Release #Web3
           } else if (errCode === "NORMAL_DAILY_LIMIT") {
             setStep("form");
             setError(`今日发布已达上限（${body?.limit ?? 10}次），请明天再试。`);
-          } else if (errCode === "NORMAL_USER_SECTION_RESTRICTED") {
-            setStep("form"); setError("普通用户只能发布到求职/招聘分区");
+          } else if (errCode === "TEAM_ONLY" || errCode === "NORMAL_USER_SECTION_RESTRICTED") {
+            setStep("form"); setError("当前仅开放团队账号发帖，敬请期待。");
           } else if (errCode === "CONTENT_FILTER") {
             setStep("form"); setError(body?.message || t("postErrContentFilter"));
           } else {
@@ -293,6 +294,22 @@ ${typeInfo.tag} #${projectName} #Web3Release #Web3
         <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
         <h2 className="text-2xl font-bold mb-2">{t("connect")}</h2>
         <p className="text-muted-foreground text-sm">{t("postConnectWalletHint")}</p>
+      </div>
+    );
+  }
+
+  if (me !== undefined && spaceType !== "project" && !isAdmin(address)) {
+    return (
+      <div className="py-32 text-center max-w-sm mx-auto space-y-4">
+        <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center mx-auto">
+          <AlertCircle className="w-9 h-9 text-amber-500" />
+        </div>
+        <h2 className="text-2xl font-bold">{lang === "zh-CN" ? "暂不开放" : "Not Available"}</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {lang === "zh-CN"
+            ? "当前仅开放团队账号发帖，KOL / 开发者 / 普通用户发帖功能即将上线，敬请期待。"
+            : "Posting is currently available to team accounts only. KOL, developer, and regular user posting is coming soon."}
+        </p>
       </div>
     );
   }

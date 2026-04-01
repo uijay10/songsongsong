@@ -204,25 +204,13 @@ router.post("/", async (req, res) => {
   const isNormalPoster = !spaceType || (spaceType !== "project" && spaceType !== "kol" && spaceType !== "developer");
 
   if (!isAdmin) {
-    // Normal user restrictions: jobs & community sections only + 10 posts per 24h
-    const isNormalUser = !spaceType || (spaceType !== "project" && spaceType !== "kol" && spaceType !== "developer");
-    if (isNormalUser) {
-      if (!["jobs", "community"].includes(section)) {
-        return res.status(403).json({ error: "NORMAL_USER_SECTION_RESTRICTED", message: "普通用户只能发布到求职或社区聊天分区" });
-      }
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const storedDate = (user as any).normalDailyPostDate ?? null;
-      const usedToday = storedDate === todayStr ? ((user as any).normalDailyPostCount ?? 0) : 0;
-      const NORMAL_DAILY_MAX = 10;
-      if (usedToday >= NORMAL_DAILY_MAX) {
-        return res.status(429).json({ error: "NORMAL_DAILY_LIMIT", used: usedToday, limit: NORMAL_DAILY_MAX });
-      }
-      (req as any)._normalPostUsed = usedToday;
-      (req as any)._normalPostTodayStr = todayStr;
+    // Temporarily: only team (project) accounts may post
+    if (spaceType !== "project") {
+      return res.status(403).json({ error: "TEAM_ONLY", message: "当前仅开放团队账号发帖，敬请期待" });
     }
 
-    // Daily post limit — all approved types: 10 posts / 24 h
-    const dailyLimit = spaceType === "project" ? 10 : spaceType === "kol" ? 10 : spaceType === "developer" ? 10 : 0;
+    // Daily post limit — project: 10 posts / 24 h
+    const dailyLimit = 10;
     if (dailyLimit > 0) {
       const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
       const todayRows = await db.select({ count: sql<number>`count(*)` })
