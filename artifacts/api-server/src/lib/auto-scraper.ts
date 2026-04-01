@@ -370,55 +370,59 @@ interface ProcessedEvent {
   ai_confidence: number;
 }
 
-const WEB3_BATCH_PROMPT = `你是 Web3 事件提取专家，专为 web3release.com 平台工作。
+const WEB3_BATCH_PROMPT = `You are a Web3 event extraction expert working exclusively for web3release.com.
 
-平台栏目说明（严格按定义选择，1-2个）：
-- 测试网：项目发布/升级测试网络，邀请用户参与测试
-- IDO/Launchpad：代币首次公开发行、Launchpad 上架
-- 预售：代币/NFT 预售活动（含 CoinList、Seedify、DAO Maker、PinkSale、Legion 等平台）
-- 融资公告：项目完成融资轮次、战略投资、政府法规政策、行业监管新闻
-- 空投：面向用户的代币空投活动
-- 招聘：区块链项目招聘岗位，Web3/加密相关职位，含远程岗位
-- 节点招募：招募验证器节点/矿工节点参与
-- 主网上线：主网正式上线、跨链桥上线、协议在主网部署、代币扩展至新链
-- 代币解锁：代币定期解锁/释放事件
-- 交易所上线：代币在 CEX/DEX 上新、退市
-- 链上任务：【仅限】用户需主动完成链上操作才能获得激励的活动，如积分任务、测试网体验任务、空投前置任务、Galxe/Layer3/QuestN/Zealy/TaskOn 等平台任务（需用户操作）。合作公告、功能上线、协议扩展不属于此类
-- 开发者专区：面向开发者的工具、SDK、API、黑客松、技术升级、智能合约、开发者教程相关新闻
-- 漏洞赏金：Bug Bounty 项目、安全审计活动、漏洞奖励计划（含 Immunefi、Code4rena、HackenProof 等平台）
-- 项目捐赠/赞助：Grant 资助计划、Sponsorship、加速器/孵化器项目、生态基金（含 Gitcoin、Web3 Foundation、Ethereum Foundation、Solana Foundation、Arbitrum、Optimism RPGF、Binance Labs、a16z 等）
+LANGUAGE RULE — CRITICAL: ALL output text (title, project_name, description) MUST be written in natural, fluent, professional English. This applies regardless of the source language. If the original content is in Chinese or any other language, translate it into native-sounding English that Web3 users worldwide can easily understand. Keep proper nouns (project names, token symbols, platform names like Galxe, Layer3, Solana, USDT, etc.) unchanged.
 
-选择规则：
-- 合作公告/战略合作 → 融资公告
-- 新功能上线/协议扩展 → 主网上线 或 开发者专区
-- 只有需要用户手动操作才能获益时 → 链上任务
-- Bug Bounty / 安全漏洞奖励 → 漏洞赏金
-- 基金会资助/生态奖金/Grant/Gitcoin Rounds → 项目捐赠/赞助
-- Web3 招聘职位 → 招聘
+Platform sections (choose 1–2 strictly from this list):
+- 测试网: Project launches or upgrades a testnet, inviting users to participate
+- IDO/Launchpad: Token IDO, initial public offering, or Launchpad listing
+- 预售: Token or NFT presale event (CoinList, Seedify, DAO Maker, PinkSale, Legion, etc.)
+- 融资公告: Funding rounds, strategic investment, regulatory news, policy announcements
+- 空投: Airdrop campaign open to users
+- 招聘: Web3/blockchain job openings, including remote roles
+- 节点招募: Validator node or miner node recruitment
+- 主网上线: Mainnet launch, bridge launch, protocol mainnet deployment, token expansion to new chain
+- 代币解锁: Token unlock or vesting release events
+- 交易所上线: Token CEX/DEX listing or delisting
+- 链上任务: ONLY for campaigns requiring active on-chain user actions to earn rewards — quests on Galxe/Layer3/QuestN/Zealy/TaskOn. Partnership announcements and feature launches do NOT qualify.
+- 开发者专区: Developer tools, SDKs, APIs, hackathons, technical upgrades, smart contract news
+- 漏洞赏金: Bug bounty programs, security audits, vulnerability rewards (Immunefi, Code4rena, HackenProof, etc.)
+- 项目捐赠/赞助: Grant programs, sponsorships, accelerators, incubators, ecosystem funds (Gitcoin, Web3 Foundation, Ethereum Foundation, Solana Foundation, Arbitrum, Optimism RPGF, Binance Labs, a16z, etc.)
 
-任务：对下面每条 RSS 文章进行判断：
-1. 是否属于 Web3 / 加密货币领域的有效事件？
-2. 是否属于上面的某个平台栏目？
-3. 提取时间（如有）并生成中文摘要
+Routing rules:
+- Partnership / strategic collaboration → 融资公告
+- New feature launch / protocol expansion → 主网上线 or 开发者专区
+- Requires manual user on-chain action to earn → 链上任务
+- Bug bounty / security vulnerability reward → 漏洞赏金
+- Foundation grant / ecosystem fund / Gitcoin round → 项目捐赠/赞助
+- Job posting → 招聘
 
-输出要求：
-- 只返回纯 JSON 数组，不要 markdown 或代码块
-- 每条符合条件的事件格式如下（不符合的直接跳过，不输出）：
+Task: For each article below, decide:
+1. Is it a valid Web3 / crypto event?
+2. Does it belong to one of the sections above?
+3. Extract any dates and write a concise English description
+
+Output rules:
+- Return ONLY a raw JSON array — no markdown, no code blocks
+- Include only qualifying events; skip the rest silently
+- Return [] if nothing qualifies
+- Every string field MUST be in English (titles, descriptions, project names)
+
+Format for each qualifying event:
 {
-  "title": "优化后的中文标题（20字以内）",
-  "project_name": "项目名",
-  "description": "100-150字中文描述，说明机会要点和时间",
+  "title": "Concise English title, max 12 words, action-oriented",
+  "project_name": "Official project name in English",
+  "description": "60–100 word English description highlighting the opportunity, key dates, and what users should do. Natural and engaging tone.",
   "category": ["空投"],
-  "start_time": "ISO格式 或 null",
-  "end_time": "ISO格式 或 null",
-  "source_url": "原始URL",
+  "start_time": "ISO 8601 or null",
+  "end_time": "ISO 8601 or null",
+  "source_url": "original URL",
   "importance": "high/medium/low",
   "ai_confidence": 0.85
 }
 
-不符合条件的跳过（不输出到数组）。如果没有任何符合的，返回 []
-
-文章列表：
+Article list:
 {{ARTICLES}}`;
 
 async function processBatchWithDeepSeek(
@@ -426,7 +430,7 @@ async function processBatchWithDeepSeek(
   retries = MAX_RETRIES,
 ): Promise<ProcessedEvent[]> {
   const articlesText = articles.map((a, i) =>
-    `[${i + 1}] 标题: ${a.title}\n描述: ${a.description?.slice(0, 600) ?? ""}\n链接: ${a.link}\n发布时间: ${a.pubDate ?? "未知"}`
+    `[${i + 1}] Title: ${a.title}\nContent: ${a.description?.slice(0, 600) ?? ""}\nURL: ${a.link}\nPublished: ${a.pubDate ?? "unknown"}`
   ).join("\n\n---\n\n");
 
   const prompt = WEB3_BATCH_PROMPT.replace("{{ARTICLES}}", articlesText);

@@ -5,51 +5,49 @@ const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? "dummy",
 });
 
-const WEB3_EXTRACTION_PROMPT = `你是一个精准的 Web3 项目事件提取专家，只处理真实有效的 Web3 机会信息。
+const WEB3_EXTRACTION_PROMPT = `You are a precise Web3 event extraction expert for web3release.com.
 
-平台共有以下 15 个固定栏目，必须严格从里面选择（可以选 1 个或最多 2 个）：
-测试网、IDO/Launchpad、预售、融资公告、空投、招聘、节点招募、主网上线、代币解锁、交易所上线、链上任务、开发者专区、项目捐赠/赞助、漏洞赏金
+LANGUAGE RULE — CRITICAL: ALL output text (title, project_name, description, tags) MUST be written in natural, fluent, professional English — regardless of the source language. If content is in Chinese or any other language, translate it into native-sounding English suitable for a global Web3 audience. Keep proper nouns (project names, token symbols, platform names like Galxe, Solana, USDT, etc.) unchanged.
 
-栏目选择参考：
-- 内容涉及 Grant、捐赠、赞助、Sponsorship、Accelerator（加速器）、Incubator（孵化器）、资助计划、生态基金、奖励计划 → 选"项目捐赠/赞助"
-- 内容涉及 Bug Bounty、漏洞赏金、安全审计、漏洞奖励、Immunefi、Code4rena、HackenProof → 选"漏洞赏金"
-- 内容涉及 Web3/区块链招聘职位、岗位 → 选"招聘"
+The platform has exactly 15 fixed sections. You MUST choose 1–2 strictly from this list:
+测试网, IDO/Launchpad, 预售, 融资公告, 空投, 招聘, 节点招募, 主网上线, 代币解锁, 交易所上线, 链上任务, 开发者专区, 项目捐赠/赞助, 漏洞赏金
 
-任务：
-从下面提供的内容中，提取符合以上栏目的有效事件。只提取即将发生、正在进行，或结束不超过7天的事件。已经完全过时的事件一律忽略。
+Section routing guide:
+- Grant, sponsorship, accelerator, incubator, ecosystem fund, Gitcoin → 项目捐赠/赞助
+- Bug bounty, security audit, vulnerability reward, Immunefi, Code4rena, HackenProof → 漏洞赏金
+- Web3/blockchain job openings → 招聘
+- Partnership / strategic collaboration → 融资公告
+- Requires active on-chain user action to earn rewards → 链上任务
 
-输出要求：
-- 只返回纯 JSON 数组 []，不要任何解释、文字、代码块或 markdown。
-- 如果没有有效事件，返回空数组: []
-- 每条事件必须是以下完整格式：
+Task: Extract valid, upcoming or ongoing Web3 events from the content below. Ignore events that ended more than 7 days ago.
 
+Output rules:
+- Return ONLY a raw JSON array [] — no explanations, no markdown, no code blocks
+- Return [] if nothing qualifies
+- Every string field MUST be in English
+
+Format for each qualifying event:
 {
-  "title": "简洁有力的标题，优先用中文",
-  "project_name": "项目官方名称",
-  "description": "150-200字以内的自然流畅中文描述，清晰说明是什么机会和关键时间点",
-  "category": ["测试网"] 或 ["空投", "测试网"],
-  "start_time": "2026-04-15T00:00:00Z 或 null",
-  "end_time": "2026-04-20T23:59:59Z 或 null",
-  "source_url": "原始链接地址",
-  "importance": "high 或 medium 或 low",
+  "title": "Concise, action-oriented English title, max 12 words",
+  "project_name": "Official project name in English",
+  "description": "80–150 word English description — clearly explain the opportunity, who it is for, key dates, and what action to take. Natural, engaging tone.",
+  "category": ["测试网"] or ["空投", "测试网"],
+  "start_time": "2026-04-15T00:00:00Z or null",
+  "end_time": "2026-04-20T23:59:59Z or null",
+  "source_url": "original URL",
+  "importance": "high or medium or low",
   "ai_confidence": 0.92,
   "tags": ["Solana", "Layer2", "DeFi"]
 }
 
-首页展示规则（后端会按此规则排序展示，类似金色财经一条一条垂直列表）：
-- 优先展示 importance = "high" 的项目。
-- 默认按 start_time 从最近到最远排序（即将开始的事件排最前面）。
-- 同等 importance 时，按 ai_confidence 从高到低排序。
-- 每条在首页显示时包含标题、简短描述、时间、category、tags。
+Strict rules:
+1. category must be strictly chosen from the 15 sections above — never invent new ones.
+2. Skip stale events (ended >7 days ago, or announced >14 days ago with no future date).
+3. All text output must be in English.
+4. Times must be ISO 8601 (UTC). Use null if unknown.
+5. Backend automatically sets expires_at to scrape time + 60 days.
 
-严格规则：
-1. category 必须从上面15个栏目中严格选择，不能自己发明新栏目。
-2. 过时事件（结束超过7天或公告超过14天且没有未来时间）直接忽略。
-3. description 必须用自然流畅的中文。
-4. 时间必须用 ISO 8601 格式（UTC时区），不确定就填 null。
-5. 后端会自动把 expires_at 设置为抓取时间 + 60 天。
-
-现在开始处理以下网页内容：
+Now process the following web page content:
 {{PAGE_CONTENT}}`;
 
 export const CATEGORY_MAP: Record<string, string> = {
