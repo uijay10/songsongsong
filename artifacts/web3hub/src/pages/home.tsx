@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useGetPosts, useGetMe } from "@workspace/api-client-react";
 import { useQuery } from "@tanstack/react-query";
 import { useWeb3Auth } from "@/lib/web3";
-import { Search, PenSquare, ChevronLeft, ChevronRight, CheckCircle2, Eye } from "lucide-react";
+import { PenSquare, CheckCircle2, Eye } from "lucide-react";
 import { EventList } from "@/components/events/EventList";
 import { Link, useLocation } from "wouter";
 import { useLang } from "@/lib/i18n";
@@ -301,22 +301,14 @@ export default function Home() {
       </div>
 
 
-      {/* Encouragement + Search */}
-      <div className="rounded-2xl px-6 py-5 space-y-4 border border-blue-200/60" style={{background: "linear-gradient(135deg, #dbeafe 0%, #eff6ff 50%, #e0f2fe 100%)"}}>
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-lg sm:text-xl font-bold leading-snug flex-1" style={{ color: "#FF69B4" }}>
-            {t("encouragement")}
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 max-w-xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
-            <input type="search" value={search} onChange={e => setSearch(e.target.value)}
-              placeholder={t("searchPlaceholder")}
-              className="w-full pl-11 pr-4 py-2.5 rounded-full border border-blue-200 bg-white/80 text-sm text-gray-700 placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition-all shadow-sm" />
-          </div>
+      {/* Encouragement + CTA */}
+      <div className="rounded-2xl px-6 py-6 border border-blue-200/60" style={{background: "linear-gradient(135deg, #dbeafe 0%, #eff6ff 50%, #e0f2fe 100%)"}}>
+        <p className="text-lg sm:text-xl font-bold leading-snug mb-4" style={{ color: "#FF69B4" }}>
+          {t("encouragement")}
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
           {hasJoined ? (
-            <div className="shrink-0 flex items-center gap-2">
+            <>
               <span className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full font-bold text-sm bg-gradient-to-r from-emerald-500/10 to-green-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/60 cursor-default select-none pointer-events-none">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />{t("alreadyJoined")}
               </span>
@@ -324,13 +316,13 @@ export default function Home() {
                 className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-300 transition-all">
                 <PenSquare className="w-4 h-4" /> {t("postNow")}
               </Link>
-            </div>
+            </>
           ) : isPending ? (
-            <span className="shrink-0 inline-flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-full font-bold text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 cursor-default select-none pointer-events-none">
+            <span className="inline-flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-full font-bold text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 cursor-default select-none pointer-events-none">
               {t("spacePending")}
             </span>
           ) : (
-            <div className="shrink-0 flex items-center gap-2">
+            <>
               <Link href="/apply"
                 className="inline-flex items-center justify-center gap-1 px-6 py-2.5 rounded-full font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-300 transition-all">
                 🚀 {t("joinNow")}
@@ -341,7 +333,7 @@ export default function Home() {
                   <PenSquare className="w-4 h-4" /> {t("postJobBtn")}
                 </Link>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>
