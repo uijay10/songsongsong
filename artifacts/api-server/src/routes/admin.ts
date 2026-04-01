@@ -3,6 +3,7 @@ import { db, usersTable, spaceApplicationsTable, postsTable } from "@workspace/d
 import { eq, desc, asc, sql, and, gte, lte } from "drizzle-orm";
 import { ADMIN_WALLETS, requireAdmin } from "../lib/admin-check";
 import { createChallenge, issueAdminToken, verifyChallenge } from "../lib/admin-token";
+import * as cheerio from "cheerio";
 
 const router: IRouter = Router();
 
@@ -359,6 +360,88 @@ router.delete("/posts/cleanup", requireAdmin, async (req, res) => {
 
     res.json({ success: true, deletedCount });
   } catch (e) { res.status(500).json({ error: String(e) }); }
+});
+
+// ── URL Content Scraper ───────────────────────────────────────────────────────
+router.post("/scrape", requireAdmin, async (req, res) => {
+  const { url } = req.body as { url?: string };
+  if (!url || !/^https?:\/\//i.test(url)) {
+    return res.status(400).json({ error: "Valid http(s) URL required" });
+  }
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; Web3HubBot/1.0)",
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+      },
+    });
+    clearTimeout(timeout);
+    if (!response.ok) {
+      return res.status(502).json({ error: `Remote server returned ${response.status}` });
+    }
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Title: og:title → twitter:title → <title>
+    const title =
+      $('meta[property="og:title"]').attr("content") ||
+      $('meta[name="twitter:title"]').attr("content") ||
+      $("title").first().text() ||
+      "";
+
+    // Description: og:description → meta description → first <p>
+    const description =
+      $('meta[property="og:description"]').attr("content") ||
+      $('meta[name="description"]').attr("content") ||
+      $('meta[name="twitter:description"]').attr("content") ||
+      "";
+
+    // Cover image: og:image → twitter:image → first <img> with src
+    const coverImage =
+      $('meta[property="og:image"]').attr("content") ||
+      $('meta[name="twitter:image"]').attr("content") ||
+      "";
+
+    // Body text: remove scripts/styles/nav/footer, grab inner text
+    $("script, style, nav, footer, header, iframe, noscript").remove();
+    const mainEl = $("article").first().length
+      ? $("article").first()
+      : $("main").first().length
+      ? $("main").first()
+      : $(".content, .post-content, .article-body, .entry-content").first().length
+      ? $(".content, .post-content, .article-body, .entry-content").first()
+      : $("body");
+
+    const bodyText = mainEl
+      .text()
+      .replace(/\s{3,}/g, "\n\n")
+      .replace(/\t/g, " ")
+      .trim()
+      .slice(0, 4000);
+
+    const siteName =
+      $('meta[property="og:site_name"]').attr("content") ||
+      new URL(url).hostname.replace(/^www\./, "");
+
+    res.json({
+      title: title.trim().slice(0, 200),
+      description: description.trim().slice(0, 500),
+      content: bodyText,
+      coverImage: coverImage || null,
+      siteName,
+      sourceUrl: url,
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes("abort") || msg.includes("timeout")) {
+      return res.status(504).json({ error: "Request timed out (12s). The target URL may be too slow or blocked." });
+    }
+    res.status(502).json({ error: `Fetch failed: ${msg}` });
+  }
 });
 
 export default router;
