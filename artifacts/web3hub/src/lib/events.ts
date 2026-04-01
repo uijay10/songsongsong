@@ -4,27 +4,14 @@ export interface Web3Event {
   description?: string;
   project_name?: string;
   start_time?: string;
+  end_time?: string;
+  crawl_time?: string;
   source_url?: string;
   tags?: string[];
   importance?: string;
   category?: string[];
+  ai_confidence?: number;
 }
-
-export interface ClaimApplication {
-  id: string;
-  eventTitle: string;
-  projectName: string;
-  contact: string;
-  reason: string;
-  status: "pending" | "approved" | "rejected";
-  submitTime: string;
-  reviewTime?: string;
-  reviewNote?: string;
-}
-
-const STORAGE_KEY = "projectApplications";
-const WATCHED_KEY = "claimedEvents";
-const CLAIMED_KEY = "projectClaimed";
 
 export const CATEGORIES = [
   "全部", "测试网", "IDO/Launchpad", "预售", "融资公告",
@@ -34,9 +21,7 @@ export const CATEGORIES = [
 
 export function isEventExpired(event: Web3Event): boolean {
   if (!event.start_time) return false;
-  const eventDate = new Date(event.start_time);
-  const now = new Date();
-  const diffDays = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+  const diffDays = (new Date(event.start_time).getTime() - Date.now()) / 86400000;
   return diffDays < -60;
 }
 
@@ -51,75 +36,35 @@ export function formatEventDate(dateStr?: string): string {
   }
 }
 
-export function loadClaims(): ClaimApplication[] {
+export function formatRelativeTime(dateStr?: string): string {
+  if (!dateStr) return "";
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const all = JSON.parse(raw) as ClaimApplication[];
-    return all.filter(c => c.id && String(c.id).startsWith("claim_"));
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "刚刚";
+    if (mins < 60) return `${mins}分钟前`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}小时前`;
+    const days = Math.floor(hrs / 24);
+    if (days === 1) return "昨天";
+    if (days < 7) return `${days}天前`;
+    if (days < 30) return `${Math.floor(days / 7)}周前`;
+    return new Date(dateStr).toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
   } catch {
-    return [];
+    return "";
   }
 }
 
-export function saveClaims(claims: ClaimApplication[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(claims));
-}
-
-export function submitClaim(data: Omit<ClaimApplication, "id" | "status" | "submitTime">): ClaimApplication {
-  const newClaim: ClaimApplication = {
-    ...data,
-    id: `claim_${Date.now()}`,
-    status: "pending",
-    submitTime: new Date().toLocaleString("zh-CN"),
-    reviewNote: "",
-  };
-  const existing = loadClaims();
-  saveClaims([newClaim, ...existing]);
-  return newClaim;
-}
-
-export function isAlreadySubmitted(eventTitle: string): boolean {
-  return loadClaims().some(c => c.eventTitle === eventTitle);
-}
-
-export function loadWatched(): string[] {
+export function formatSourceLabel(url?: string): string {
+  if (!url) return "";
+  if (/twitter\.com|x\.com/i.test(url)) return "Twitter / X";
+  if (/discord\.com|discord\.gg/i.test(url)) return "Discord";
+  if (/t\.me|telegram/i.test(url)) return "Telegram";
+  if (/medium\.com/i.test(url)) return "Medium";
+  if (/github\.com/i.test(url)) return "GitHub";
   try {
-    return JSON.parse(localStorage.getItem(WATCHED_KEY) || "[]");
+    return new URL(url).hostname.replace(/^www\./, "");
   } catch {
-    return [];
-  }
-}
-
-export function toggleWatched(eventTitle: string): boolean {
-  const watched = loadWatched();
-  const idx = watched.indexOf(eventTitle);
-  if (idx >= 0) {
-    watched.splice(idx, 1);
-  } else {
-    watched.push(eventTitle);
-  }
-  localStorage.setItem(WATCHED_KEY, JSON.stringify(watched));
-  return idx < 0;
-}
-
-export function isProjectClaimed(eventTitle: string): boolean {
-  try {
-    const claimed: string[] = JSON.parse(localStorage.getItem(CLAIMED_KEY) || "[]");
-    return claimed.includes(eventTitle);
-  } catch {
-    return false;
-  }
-}
-
-export function setProjectClaimed(eventTitle: string): void {
-  try {
-    const claimed: string[] = JSON.parse(localStorage.getItem(CLAIMED_KEY) || "[]");
-    if (!claimed.includes(eventTitle)) {
-      claimed.push(eventTitle);
-      localStorage.setItem(CLAIMED_KEY, JSON.stringify(claimed));
-    }
-  } catch {
-    localStorage.setItem(CLAIMED_KEY, JSON.stringify([eventTitle]));
+    return "官网";
   }
 }

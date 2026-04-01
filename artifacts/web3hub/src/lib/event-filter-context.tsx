@@ -1,5 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-import { loadWatched } from "@/lib/events";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 export const NAV_KEY_TO_CATEGORY: Record<string, string> = {
   nav_testnet:   "测试网",
@@ -19,36 +18,17 @@ export const NAV_KEY_TO_CATEGORY: Record<string, string> = {
 interface EventFilterCtx {
   activeCategory: string;
   setActiveCategory: (c: string) => void;
-  showWatchedOnly: boolean;
-  setShowWatchedOnly: (v: boolean) => void;
-  watchedCount: number;
-  refreshWatched: () => void;
 }
 
 const EventFilterContext = createContext<EventFilterCtx>({
   activeCategory: "全部",
   setActiveCategory: () => {},
-  showWatchedOnly: false,
-  setShowWatchedOnly: () => {},
-  watchedCount: 0,
-  refreshWatched: () => {},
 });
 
 export function EventFilterProvider({ children }: { children: ReactNode }) {
   const [activeCategory, setActiveCategory] = useState("全部");
-  const [showWatchedOnly, setShowWatchedOnly] = useState(false);
-  const [watchedCount, setWatchedCount] = useState(0);
-
-  const refreshWatched = () => setWatchedCount(loadWatched().length);
-
-  useEffect(() => { refreshWatched(); }, []);
-
   return (
-    <EventFilterContext.Provider value={{
-      activeCategory, setActiveCategory,
-      showWatchedOnly, setShowWatchedOnly,
-      watchedCount, refreshWatched,
-    }}>
+    <EventFilterContext.Provider value={{ activeCategory, setActiveCategory }}>
       {children}
     </EventFilterContext.Provider>
   );

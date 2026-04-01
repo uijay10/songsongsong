@@ -5,7 +5,7 @@ import { useGetMe } from "@workspace/api-client-react";
 import { useLang, type LangCode } from "@/lib/i18n";
 import { isAdmin } from "@/lib/admin";
 import { DISCLAIMER_CONTENT } from "@/lib/disclaimer-content";
-import { LogOut, ChevronDown, LayoutDashboard, ShieldCheck, PenSquare, FileText, X, Bell, Star } from "lucide-react";
+import { LogOut, ChevronDown, LayoutDashboard, ShieldCheck, PenSquare, FileText, X, Bell } from "lucide-react";
 import { cn, truncateAddress, generateGradient } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 import { useEventFilter, NAV_KEY_TO_CATEGORY } from "@/lib/event-filter-context";
@@ -50,7 +50,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { data: meData } = useGetMe({ wallet: address ?? "" }, { query: { enabled: !!address } });
   const [location, navigate] = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { activeCategory, setActiveCategory, showWatchedOnly, setShowWatchedOnly, watchedCount } = useEventFilter();
+  const { activeCategory, setActiveCategory } = useEventFilter();
   const isHome = location === "/";
   const [addrCopied, setAddrCopied] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
@@ -160,10 +160,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navLinkClass = (href: string, navKey?: string) => {
     const cat = navKey ? NAV_KEY_TO_CATEGORY[navKey] : undefined;
     const isActive = isHome
-      ? (cat ? activeCategory === cat && !showWatchedOnly : false)
+      ? (cat ? activeCategory === cat : false)
       : location === href;
     return cn(
-      "relative px-2.5 py-1 rounded-full text-[11px] font-normal whitespace-nowrap transition-all duration-200 group cursor-pointer",
+      "relative px-3 py-1 rounded-full text-[13px] font-normal whitespace-nowrap transition-all duration-200 group cursor-pointer",
       isActive
         ? "text-white bg-white/20 ring-1 ring-white/40"
         : "text-white/80 hover:text-white hover:bg-white/10"
@@ -175,7 +175,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     if (isHome && cat) {
       e.preventDefault();
       setActiveCategory(cat);
-      setShowWatchedOnly(false);
     } else if (!isHome) {
       navigate(href);
     }
@@ -330,9 +329,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         <LayoutDashboard className="w-4 h-4 text-white/80 group-hover:text-white transition-colors" /> {t("dashboard")}
                       </Link>
                       {admin && (
-                        <Link href="/admin" onClick={() => setIsDropdownOpen(false)}
+                        <Link href="/profile" onClick={() => setIsDropdownOpen(false)}
                           className="group flex items-center gap-2.5 px-4 py-3 text-sm text-white hover:bg-blue-700 transition-colors cursor-pointer">
-                          <ShieldCheck className="w-4 h-4 text-white/80 group-hover:text-white transition-colors" /> Admin Panel
+                          <ShieldCheck className="w-4 h-4 text-white/80 group-hover:text-white transition-colors" /> 管理员面板
                         </Link>
                       )}
                       <div className="my-1" style={{ borderTop: "1px solid rgba(255,255,255,0.2)" }} />
@@ -351,14 +350,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* ── Nav rows ── */}
         <div className="border-t border-border/10" style={{background: "#0A0C14"}}>
           <div className="max-w-7xl mx-auto px-2 py-1.5">
-            <div className="flex flex-wrap items-center justify-center gap-x-0.5 gap-y-0.5">
-              {/* All events shortcut - only on home */}
+            <div className="flex flex-wrap items-center justify-center gap-x-0.5 gap-y-1">
+              {/* All events shortcut */}
               {isHome && (
                 <button
-                  onClick={() => { setActiveCategory("全部"); setShowWatchedOnly(false); }}
+                  onClick={() => setActiveCategory("全部")}
                   className={cn(
-                    "relative px-2.5 py-1 rounded-full text-[11px] font-normal whitespace-nowrap transition-all duration-200 cursor-pointer",
-                    activeCategory === "全部" && !showWatchedOnly
+                    "relative px-3 py-1 rounded-full text-[13px] font-normal whitespace-nowrap transition-all duration-200 cursor-pointer",
+                    activeCategory === "全部"
                       ? "text-white bg-white/20 ring-1 ring-white/40"
                       : "text-white/80 hover:text-white hover:bg-white/10"
                   )}
@@ -376,24 +375,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <span className="relative z-10">{t(key)}</span>
                 </a>
               ))}
-              {/* ⭐ Watched button */}
-              <button
-                onClick={() => { setShowWatchedOnly(true); setActiveCategory("全部"); if (!isHome) navigate("/"); }}
-                className={cn(
-                  "relative px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-1",
-                  showWatchedOnly && isHome
-                    ? "text-amber-300 bg-amber-500/20 ring-1 ring-amber-400/40"
-                    : "text-amber-300/80 hover:text-amber-300 hover:bg-amber-500/10"
-                )}
-              >
-                <Star className="w-3 h-3" />
-                我已关注
-                {watchedCount > 0 && (
-                  <span className="ml-0.5 min-w-[16px] h-4 flex items-center justify-center rounded-full text-[9px] font-bold bg-amber-400 text-amber-900 px-1">
-                    {watchedCount}
-                  </span>
-                )}
-              </button>
             </div>
           </div>
         </div>

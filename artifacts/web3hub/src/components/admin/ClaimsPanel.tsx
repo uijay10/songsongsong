@@ -1,7 +1,33 @@
 import { useState, useEffect, useCallback } from "react";
 import { CheckCircle, XCircle, Download, Search, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { loadClaims, saveClaims, type ClaimApplication } from "@/lib/events";
+
+export interface ClaimApplication {
+  id: string;
+  eventTitle: string;
+  projectName: string;
+  contact: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  submitTime: string;
+  reviewTime?: string;
+  reviewNote?: string;
+}
+
+const CLAIM_STORAGE_KEY = "projectApplications";
+
+function loadClaims(): ClaimApplication[] {
+  try {
+    const raw = localStorage.getItem(CLAIM_STORAGE_KEY);
+    if (!raw) return [];
+    const all = JSON.parse(raw) as ClaimApplication[];
+    return all.filter(c => c.id && String(c.id).startsWith("claim_"));
+  } catch { return []; }
+}
+
+function saveClaims(claims: ClaimApplication[]): void {
+  localStorage.setItem(CLAIM_STORAGE_KEY, JSON.stringify(claims));
+}
 
 function StatusBadge({ status }: { status: ClaimApplication["status"] }) {
   if (status === "pending")
