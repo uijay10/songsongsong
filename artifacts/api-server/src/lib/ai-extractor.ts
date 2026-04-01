@@ -7,8 +7,6 @@ const openai = new OpenAI({
 
 const WEB3_EXTRACTION_PROMPT = `You are a precise Web3 event extraction expert for web3release.com.
 
-LANGUAGE RULE — CRITICAL: ALL output text (title, project_name, description, tags) MUST be written in natural, fluent, professional English — regardless of the source language. If content is in Chinese or any other language, translate it into native-sounding English suitable for a global Web3 audience. Keep proper nouns (project names, token symbols, platform names like Galxe, Solana, USDT, etc.) unchanged.
-
 The platform has exactly 15 fixed sections. You MUST choose 1–2 strictly from this list. Read each definition carefully:
 
 - 测试网: Project launches/upgrades a testnet. ONLY testnet — not mainnet, not presale, not quest.
@@ -45,13 +43,12 @@ Task: Extract valid, upcoming or ongoing Web3 events from the content below. Ign
 Output rules:
 - Return ONLY a raw JSON array [] — no explanations, no markdown, no code blocks
 - Return [] if nothing qualifies
-- Every string field MUST be in English
 
 Format for each qualifying event:
 {
-  "title": "Concise, action-oriented English title, max 12 words",
-  "project_name": "Official project name in English",
-  "description": "80–150 word English description — clearly explain the opportunity, who it is for, key dates, and what action to take. Natural, engaging tone.",
+  "title": "Concise, action-oriented title, max 12 words — keep the original source language",
+  "project_name": "Official project name",
+  "description": "80–150 word description — clearly explain the opportunity, who it is for, key dates, and what action to take. Keep the original source language.",
   "category": ["测试网"] or ["空投", "测试网"],
   "start_time": "2026-04-15T00:00:00Z or null",
   "end_time": "2026-04-20T23:59:59Z or null",
@@ -64,7 +61,7 @@ Format for each qualifying event:
 Strict rules:
 1. category must be strictly chosen from the 15 sections above — never invent new ones.
 2. Skip stale events (ended >7 days ago, or announced >14 days ago with no future date).
-3. All text output must be in English.
+3. Keep all text in the original source language — do NOT translate.
 4. Times must be ISO 8601 (UTC). Use null if unknown.
 5. Backend automatically sets expires_at to scrape time + 60 days.
 

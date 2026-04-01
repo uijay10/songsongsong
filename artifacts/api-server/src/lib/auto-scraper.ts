@@ -372,8 +372,6 @@ interface ProcessedEvent {
 
 const WEB3_BATCH_PROMPT = `You are a Web3 event extraction expert working exclusively for web3release.com.
 
-LANGUAGE RULE — CRITICAL: ALL output text (title, project_name, description) MUST be written in natural, fluent, professional English. This applies regardless of the source language. If the original content is in Chinese or any other language, translate it into native-sounding English that Web3 users worldwide can easily understand. Keep proper nouns (project names, token symbols, platform names like Galxe, Layer3, Solana, USDT, etc.) unchanged.
-
 Platform sections (choose 1–2 strictly from this list). Read each definition carefully before classifying:
 
 - 测试网: Project launches or upgrades a testnet network, inviting users to test. ONLY if it is a testnet — not mainnet, not a presale, not a quest.
@@ -427,13 +425,13 @@ Output rules:
 - Return ONLY a raw JSON array — no markdown, no code blocks
 - Include only qualifying events; skip the rest silently
 - Return [] if nothing qualifies
-- Every string field MUST be in English (titles, descriptions, project names)
+
 
 Format for each qualifying event:
 {
-  "title": "Concise English title, max 12 words, action-oriented",
-  "project_name": "Official project name in English",
-  "description": "60–100 word English description highlighting the opportunity, key dates, and what users should do. Natural and engaging tone.",
+  "title": "Concise title, max 12 words, action-oriented — keep the original source language",
+  "project_name": "Official project name",
+  "description": "60–100 word description highlighting the opportunity, key dates, and what users should do. Keep the original source language — do NOT translate.",
   "category": ["空投"],
   "start_time": "ISO 8601 or null",
   "end_time": "ISO 8601 or null",
