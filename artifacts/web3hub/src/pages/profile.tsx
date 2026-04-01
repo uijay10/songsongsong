@@ -633,7 +633,7 @@ export default function Profile() {
             <Coins className="w-4 h-4 text-amber-500 shrink-0" />
             <div>
               <p className="text-[10px] text-amber-600/70 dark:text-amber-400/70 font-medium">
-                {zh ? "我的积分" : "My Points"}
+                {zh ? "我的代币" : "My Tokens"}
               </p>
               <p className="text-sm font-extrabold text-amber-600 dark:text-amber-400">
                 {((me as any)?.points ?? 0).toLocaleString()} {zh ? "分" : "pts"}
