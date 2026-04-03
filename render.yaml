@@ -10,6 +10,9 @@
 #
 # SKIP_INSTALL_DEPS: Render must not run a separate `npm install` before this buildCommand
 # (would hit the same prepare / catalog issues).
+#
+# Build @workspace/api-client-react first (emit dist/*.d.ts) so project references resolve;
+# frontend uses `vite build` only (no separate `tsc` — Vite transpiles TS).
 
 services:
   - type: web
@@ -18,7 +21,7 @@ services:
     buildCommand: >-
       corepack enable && corepack install &&
       pnpm install --no-frozen-lockfile --ignore-scripts &&
-      pnpm --filter @workspace/frontend exec tsc &&
+      pnpm --filter @workspace/api-client-react run build &&
       pnpm --filter @workspace/frontend exec vite build
     staticPublishPath: ./frontend/dist/public
     envVars:

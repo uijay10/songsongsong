@@ -1,5 +1,5 @@
 import { useParams } from "wouter";
-import { useGetMe, useGetPosts } from "@workspace/api-client-react";
+import { useGetMe, useGetPosts, type Post } from "@workspace/api-client-react";
 import { generateGradient, truncateAddress } from "@/lib/utils";
 import { Twitter, Send, Hash, ArrowLeft, User } from "lucide-react";
 import { Link } from "wouter";
@@ -141,7 +141,7 @@ export default function PublicProfile() {
           </div>
         ) : (
           <div className="space-y-4">
-            {posts.map((post) => (
+            {posts.map((post: Post) => (
               <PostCard key={post.id} post={post as any} onRefresh={refetchPosts} showPin={viewerIsAdmin} />
             ))}
           </div>

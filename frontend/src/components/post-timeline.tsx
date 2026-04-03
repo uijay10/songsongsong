@@ -8,9 +8,16 @@ interface PostTimelineProps {
   posts: Post[];
   emptyMessage?: string;
   onRefresh?: () => void;
+  /** Tailwind border color class for avatar ring, e.g. `border-border` or `border-primary/50` */
+  avatarBorderColor?: string;
 }
 
-export function PostTimeline({ posts, emptyMessage = "暂无内容", onRefresh }: PostTimelineProps) {
+export function PostTimeline({
+  posts,
+  emptyMessage = "暂无内容",
+  onRefresh,
+  avatarBorderColor,
+}: PostTimelineProps) {
   const { address } = useWeb3Auth();
   const admin = isAdmin(address);
 
@@ -31,6 +38,7 @@ export function PostTimeline({ posts, emptyMessage = "暂无内容", onRefresh }
           post={post as any}
           onRefresh={onRefresh}
           showPin={admin}
+          avatarBorderClass={avatarBorderColor}
         />
       ))}
     </div>

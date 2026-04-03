@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "build:src": "tsc && vite build",
+    "build": "vite build",
+    "build:src": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --max-warnings 0"
   },

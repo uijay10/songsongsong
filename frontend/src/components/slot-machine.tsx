@@ -55,11 +55,20 @@ function DigitReel({ spinning, finalDigit, delay, speed }: {
           setCurrent(d => (d + 1) % 10);
         }, speed);
       }, delay);
-      return () => clearTimeout(start);
-    } else {
-      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-      setCurrent(finalDigit);
+      return () => {
+        clearTimeout(start);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      };
     }
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setCurrent(finalDigit);
+    return undefined;
   }, [spinning, finalDigit, delay, speed]);
 
   return (

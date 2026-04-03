@@ -348,8 +348,8 @@ ${typeInfo.tag} #${projectName} #Web3Release #Web3
   }
 
   const confirmText = withPin
-    ? (lang === "zh" ? `这将消耗 1 置顶次数。当前剩余：${pinCount} 次置顶` : `This will use 1 pin slot. Current balance: ${pinCount} pins`)
-    : (lang === "zh" ? "确认发布此内容？" : "Confirm to publish this post?");
+    ? (lang === "zh-CN" ? `这将消耗 1 置顶次数。当前剩余：${pinCount} 次置顶` : `This will use 1 pin slot. Current balance: ${pinCount} pins`)
+    : (lang === "zh-CN" ? "确认发布此内容？" : "Confirm to publish this post?");
 
   return (
     <>

@@ -34,9 +34,9 @@ const SECTION_KEY_MAP: Record<string, string> = {
   exchange: "sExchangeLabel", quest: "sQuestLabel",
 };
 import { formatDistanceToNow } from "date-fns";
-import { useLikePost } from "@workspace/api-client-react";
+import { useLikePost, type LikePost200 } from "@workspace/api-client-react";
 import { useWeb3Auth } from "@/lib/web3";
-import { generateGradient, truncateAddress } from "@/lib/utils";
+import { cn, generateGradient, truncateAddress } from "@/lib/utils";
 import { RoleBadge } from "@/components/role-badge";
 import { useLang } from "@/lib/i18n";
 import { Link } from "wouter";
@@ -89,6 +89,8 @@ interface PostCardProps {
   onRefresh?: () => void;
   showPin?: boolean;
   compact?: boolean;
+  /** Border color utility for avatar, e.g. `border-border` */
+  avatarBorderClass?: string;
 }
 
 const CONTENT_LIMIT = 260; // chars shown before "read more"
@@ -321,7 +323,7 @@ function UserInfoModal({ wallet, authorName, authorAvatar, authorType, authorTag
   );
 }
 
-export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
+export function PostCard({ post, onRefresh, showPin, compact, avatarBorderClass }: PostCardProps) {
   const { address, isConnected } = useWeb3Auth();
   const { t, lang } = useLang();
   const likeMutation = useLikePost();
@@ -384,7 +386,7 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
     likeMutation.mutate(
       { id: post.id, data: { wallet: address ?? "" } },
       {
-        onSuccess: (res) => {
+        onSuccess: (res: LikePost200) => {
           setLikes(res.likes);
           setLiked(true);
         },
@@ -549,7 +551,10 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
         )}
         <div className="flex items-start gap-3">
           <Link href={authorHref}>
-            <div className="w-8 h-8 rounded-full shrink-0 border border-border overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/40 bg-transparent"
+            <div className={cn(
+              "w-8 h-8 rounded-full shrink-0 border overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/40 bg-transparent",
+              avatarBorderClass ?? "border-border",
+            )}
               style={post.authorAvatar
                 ? { backgroundImage: `url(${post.authorAvatar})`, backgroundSize: "cover", backgroundPosition: "center" }
                 : { background: generateGradient(post.authorWallet) }}>
@@ -749,7 +754,10 @@ export function PostCard({ post, onRefresh, showPin, compact }: PostCardProps) {
       {/* Author header */}
       <div className="flex items-start gap-3 mb-4">
         <Link href={authorHref}>
-          <div className="w-10 h-10 rounded-full shrink-0 border border-border overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/40 bg-transparent"
+          <div className={cn(
+            "w-10 h-10 rounded-full shrink-0 border overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/40 bg-transparent",
+            avatarBorderClass ?? "border-border",
+          )}
             style={post.authorAvatar
               ? { backgroundImage: `url(${post.authorAvatar})`, backgroundSize: "cover", backgroundPosition: "center" }
               : { background: generateGradient(post.authorWallet) }}>

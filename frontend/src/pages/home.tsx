@@ -10,6 +10,7 @@ import { generateGradient } from "@/lib/utils";
 import { TagBadge } from "@/components/post-card";
 import { RoleBadge } from "@/components/role-badge";
 import { formatDistanceToNow } from "date-fns";
+import type { Locale } from "date-fns";
 import { enUS, zhCN } from "date-fns/locale";
 
 const DATE_LOCALES: Record<string, Locale> = {

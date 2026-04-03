@@ -10,6 +10,7 @@ import { cn, truncateAddress, generateGradient } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 import { useEventFilter, NAV_KEY_TO_CATEGORY } from "@/lib/event-filter-context";
 import { formatDistanceToNow } from "date-fns";
+import type { Locale } from "date-fns";
 import { enUS, zhCN } from "date-fns/locale";
 
 function getApiBase() {

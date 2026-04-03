@@ -41,7 +41,7 @@ export default function ProjectDetail() {
           </div>
           
           <div className="flex flex-wrap gap-2">
-            {project.tags?.split(',').map(tag => (
+            {project.tags?.split(',').map((tag: string) => (
               <span key={tag} className="px-3 py-1 bg-muted rounded-full text-sm text-foreground">
                 {tag.trim()}
               </span>
