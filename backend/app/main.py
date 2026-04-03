@@ -22,13 +22,26 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Web3 Extract API", version="1.0.0")
 
-_origins = os.getenv(
-    "CORS_ORIGINS",
-    "http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:3000,http://localhost:3000",
-)
+# 添加 CORS 中间件，允许前端调用后端提取功能。
+# 注意：浏览器规范不允许在 allow_credentials=True 时使用 allow_origins=["*"]。
+# 临时放宽来源请在 Render 环境变量 CORS_ORIGINS 中追加逗号分隔的 Origin，勿使用 "*"。
+_cors_base = [
+    "https://songsongsong-qian-duan.onrender.com",  # 前端生产地址
+    "http://localhost:3000",  # 本地开发
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+_cors_env = os.getenv("CORS_ORIGINS", "").strip()
+if _cors_env:
+    _extra = [o.strip() for o in _cors_env.split(",") if o.strip()]
+    _origins = list(dict.fromkeys(_cors_base + _extra))
+else:
+    _origins = _cors_base
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in _origins.split(",") if o.strip()],
+    allow_origins=_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
