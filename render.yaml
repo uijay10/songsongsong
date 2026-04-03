@@ -27,6 +27,9 @@ services:
     envVars:
       - key: SKIP_INSTALL_DEPS
         value: "true"
+      # Vite inlines VITE_* at build time — must be set before `vite build`.
+      - key: VITE_API_BASE_URL
+        value: https://songsongsong-3.onrender.com
 
   - type: web
     name: web3-extract-api
