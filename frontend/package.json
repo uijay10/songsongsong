@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --config vite.config.ts --host 0.0.0.0",
-    "build": "tsc -p tsconfig.json && vite build --config vite.config.ts",
-    "build:src": "tsc -p tsconfig.json && vite build --config vite.config.ts",
+    "build": "tsc && vite build",
+    "build:src": "tsc && vite build",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "preview": "vite preview --config vite.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
