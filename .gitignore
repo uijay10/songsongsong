@@ -62,6 +62,7 @@ __pycache__/
 .env
 .env.*
 !.env.example
+!frontend/.env.example
 .env.local
 
 # Local scratch / extraction output
