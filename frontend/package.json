@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "build:src": "tsc && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "lint": "eslint . --ext ts,tsx --max-warnings 0"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
