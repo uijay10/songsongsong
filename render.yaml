@@ -1,0 +1,14 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Create DEEPSEEK_API_KEY in the Render dashboard (Environment).
+
+services:
+  - type: web
+    name: web3-extract-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://your-frontend.example.com

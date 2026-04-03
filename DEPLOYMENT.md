@@ -104,10 +104,28 @@ Host the **FastAPI** service separately (Render / Railway / Fly.io / Docker).
 
 ## Render / Railway (FastAPI backend)
 
-- **Root directory:** `backend`
-- **Build:** `pip install uv && uv sync --no-dev`
-- **Start:** `uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- **Environment:** `DEEPSEEK_API_KEY`, `CORS_ORIGINS` (your Vercel origin)
+### Option A — Docker（推荐）
+
+仓库内 `backend/Dockerfile` 已修正为：**先复制 `app/` 与 `README.md`，再执行 `uv sync`**（否则在仅复制 `pyproject.toml` 时安装本地包会失败，出现 `uv sync` 退出码 1）。
+
+在 Render 创建 **Web Service** → **Docker**，指定：
+
+- **Dockerfile 路径：** `backend/Dockerfile`
+- **Docker build context：** `backend`（与 Dockerfile 同目录，包含 `app/`）
+
+也可使用根目录 `render.yaml` 作为 Blueprint 参考。
+
+镜像启动时使用环境变量 **`PORT`**（Render 注入）；本地默认 `8000`。
+
+### Option B — Native Python（不用 Docker）
+
+- **Root directory:** `backend`（必须为 `backend`，不要用仓库根目录，否则找不到 `pyproject.toml`）
+- **Runtime:** Python **3.12**（与 `uv.lock` / 轮子兼容）
+- **Build command:** `pip install uv && uv sync --no-dev`
+- **Start command:** `uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- **Environment:** `DEEPSEEK_API_KEY`, `CORS_ORIGINS`（你的前端域名）
+
+若 `uv sync` 仍失败：在 Dashboard **Shell** 里 `cd backend && uv sync -v` 查看完整日志。
 
 ---
 

@@ -5,13 +5,12 @@ WORKDIR /app
 
 RUN pip install --no-cache-dir uv
 
-COPY backend/pyproject.toml backend/uv.lock* ./
-RUN uv sync --no-dev
-
+COPY backend/pyproject.toml backend/uv.lock* backend/README.md ./
 COPY backend/app ./app
+RUN uv sync --no-dev
 
 ENV PYTHONPATH=/app
 ENV PORT=8000
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "exec uv run uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
