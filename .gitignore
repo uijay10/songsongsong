@@ -63,3 +63,7 @@ __pycache__/
 .env.*
 !.env.example
 .env.local
+
+# Local scratch / extraction output
+extraction_result.json
+backend/tmp/

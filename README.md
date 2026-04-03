@@ -2,6 +2,8 @@
 
 A one-stop free Web3 request posting and matching platform ([web3release.com](https://web3release.com/)). This repository is a **pnpm monorepo** with a **React/Vite frontend**, a **FastAPI extraction service** (DeepSeek-compatible), and an optional **Express API** under `artifacts/api-server/`.
 
+**Deployment, Docker, Vercel, and Render:** see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
 ## Repository layout
 
 ```text
@@ -18,7 +20,8 @@ A one-stop free Web3 request posting and matching platform ([web3release.com](ht
 ├── Dockerfile              # Python API (context: repo root)
 ├── Dockerfile.frontend     # Static build + Nginx
 ├── docker/frontend.nginx.conf
-└── package.json            # pnpm scripts (dev, backend, build)
+├── DEPLOYMENT.md           # pnpm dev, Docker, Vercel, Render
+└── package.json            # pnpm scripts (dev, frontend, backend, build)
 ```
 
 Legacy folder name **`artifacts/`** holds Node services; treat **`frontend/`** and **`backend/`** as the primary app surfaces for new work.
@@ -57,10 +60,11 @@ Legacy folder name **`artifacts/`** holds Node services; treat **`frontend/`** a
    - Vite: [http://localhost:5173](http://localhost:5173)
    - FastAPI: [http://localhost:8000](http://localhost:8000) (OpenAPI: `/docs`)
 
-4. **Run only the Python API**
+4. **Run processes separately**
 
    ```bash
-   pnpm backend
+   pnpm frontend   # Vite only
+   pnpm backend    # FastAPI only
    ```
 
 5. **Build only the frontend (production assets)**
@@ -69,7 +73,7 @@ Legacy folder name **`artifacts/`** holds Node services; treat **`frontend/`** a
    pnpm build
    ```
 
-   Output: `frontend/dist/public`.
+   Output: `frontend/dist/public`. (Nginx in Docker serves this build; FastAPI does not embed the SPA by default.)
 
 6. **Optional: frontend + Python + Express**
 
@@ -81,16 +85,17 @@ Legacy folder name **`artifacts/`** holds Node services; treat **`frontend/`** a
 
 ### Extract API (FastAPI)
 
-`POST /api/v1/extract` with JSON body:
+`POST /api/v1/extract` — send **either** `page_content` **or** `url` (if both are set, `url` is fetched and used).
 
 ```json
-{
-  "page_content": "plain text from the page",
-  "source_url": "https://example.com/article"
-}
+{ "page_content": "plain text from the page", "source_url": "https://example.com/article" }
 ```
 
-Returns a **JSON array** of structured events. The model prompt is **`WEB3_EXTRACTION_PROMPT`** in `backend/app/prompt.py`. Authentication uses **`DEEPSEEK_API_KEY`** (preferred) or **`OPENAI_API_KEY`** for any OpenAI-compatible endpoint.
+```json
+{ "url": "https://example.com/news" }
+```
+
+Returns a **JSON array** of structured events. The model prompt is **`WEB3_EXTRACTION_PROMPT`** in `backend/app/prompt.py`. Authentication uses **`DEEPSEEK_API_KEY`** (preferred) or **`OPENAI_API_KEY`** for any OpenAI-compatible endpoint (`https://api.deepseek.com/v1` by default).
 
 ---
 

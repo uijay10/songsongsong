@@ -5,10 +5,12 @@ description = "FastAPI service for Web3 event extraction via DeepSeek / OpenAI-c
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "beautifulsoup4>=4.12.0",
     "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.32.0",
+    "httpx>=0.28.0",
     "openai>=1.59.0",
     "pydantic>=2.10.0",
+    "uvicorn[standard]>=0.32.0",
 ]
 
 [build-system]

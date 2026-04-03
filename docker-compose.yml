@@ -6,7 +6,7 @@
 # Development (Vite + uvicorn --reload, bind mount):
 #   docker compose --profile dev up --build
 #
-# Pass secrets: docker compose --env-file .env --profile prod up
+# Requires a project .env (copy from .env.example) for secrets.
 
 services:
   backend:
@@ -14,6 +14,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    env_file:
+      - .env
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     environment:
@@ -50,6 +52,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    env_file:
+      - .env
     command:
       [
         "uv",
@@ -80,6 +84,8 @@ services:
     profiles: [dev]
     image: node:24-bookworm
     working_dir: /repo
+    env_file:
+      - .env
     volumes:
       - .:/repo
     extra_hosts:
