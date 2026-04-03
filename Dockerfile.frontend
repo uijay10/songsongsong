@@ -10,8 +10,9 @@ COPY tsconfig.base.json tsconfig.json ./
 COPY frontend ./frontend
 COPY lib ./lib
 
-RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @workspace/frontend run build
+# Skip dependency lifecycle scripts (@hookform/resolvers prepare uses run-s without npm-run-all).
+RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm --filter @workspace/frontend exec tsc && pnpm --filter @workspace/frontend exec vite build
 
 FROM nginx:1.27-alpine
 

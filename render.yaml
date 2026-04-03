@@ -1,16 +1,25 @@
 # Render Blueprint — https://render.com/docs/blueprint-spec
-# Create DEEPSEEK_API_KEY in the Render dashboard (Environment).
 #
-# Static site (pnpm monorepo + catalog:): set SKIP_INSTALL_DEPS so Render does NOT
-# run `npm install` before build (npm fails on catalog:). Root Directory must be
-# repo root (not `frontend`). Publish: frontend/dist/public
+# Frontend static site (pnpm monorepo):
+# - Root Directory in dashboard MUST stay empty (repo root) so pnpm-workspace.yaml applies.
+# - Do NOT set rootDir to `frontend` alone — pnpm --filter needs the workspace root.
+#
+# @hookform/resolvers ships "prepare": "run-s build:src" (expects npm-run-all). That script
+# runs during install and breaks CI with "run-s: not found". Use `pnpm install --ignore-scripts`;
+# the published package already includes dist/ — no need to build from source.
+#
+# SKIP_INSTALL_DEPS: Render must not run a separate `npm install` before this buildCommand
+# (would hit the same prepare / catalog issues).
 
 services:
   - type: web
     name: songsongsong-frontend
     runtime: static
-    # Do not use `npm run build` here if dashboard caches old scripts; call tsc + vite directly.
-    buildCommand: 'corepack enable && corepack install && pnpm install --no-frozen-lockfile && pnpm --filter @workspace/frontend exec tsc && pnpm --filter @workspace/frontend exec vite build'
+    buildCommand: >-
+      corepack enable && corepack install &&
+      pnpm install --no-frozen-lockfile --ignore-scripts &&
+      pnpm --filter @workspace/frontend exec tsc &&
+      pnpm --filter @workspace/frontend exec vite build
     staticPublishPath: ./frontend/dist/public
     envVars:
       - key: SKIP_INSTALL_DEPS
