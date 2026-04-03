@@ -2,7 +2,7 @@
   "name": "@workspace/frontend",
   "version": "0.0.0",
   "private": true,
-  "description": "Vite + TypeScript frontend; build scripts use tsc && vite build only (no npm-run-all / run-s).",
+  "description": "Vite + TypeScript frontend (pnpm workspace @workspace/frontend).",
   "type": "module",
   "scripts": {
     "dev": "vite",

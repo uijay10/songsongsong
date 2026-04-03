@@ -9,7 +9,8 @@ services:
   - type: web
     name: songsongsong-frontend
     runtime: static
-    buildCommand: 'corepack enable && corepack install && pnpm install --no-frozen-lockfile && pnpm --filter @workspace/frontend run build'
+    # Do not use `npm run build` here if dashboard caches old scripts; call tsc + vite directly.
+    buildCommand: 'corepack enable && corepack install && pnpm install --no-frozen-lockfile && pnpm --filter @workspace/frontend exec tsc && pnpm --filter @workspace/frontend exec vite build'
     staticPublishPath: ./frontend/dist/public
     envVars:
       - key: SKIP_INSTALL_DEPS
