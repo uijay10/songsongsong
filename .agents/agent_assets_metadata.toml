@@ -1,8 +1,0 @@
-uploads = []
-generated = []
-
-[[outputs]]
-id = "rBmoe4Ax562ZuMCqxSDmV"
-uri = "file://frontend/public/hero-banner.png"
-type = "image"
-title = "Web3 Release — 4K 横幅图"

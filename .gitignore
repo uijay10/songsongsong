@@ -48,6 +48,9 @@ Thumbs.db
 .cache/
 .local/
 
+# Tooling / IDE artifacts (do not commit)
+.agents/
+
 # Python
 .venv/
 **/.venv/

@@ -5,7 +5,7 @@ WORKDIR /app
 
 RUN pip install --no-cache-dir uv
 
-COPY backend/pyproject.toml ./
+COPY backend/pyproject.toml backend/uv.lock* ./
 RUN uv sync --no-dev
 
 COPY backend/app ./app

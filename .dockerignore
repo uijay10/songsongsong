@@ -30,5 +30,6 @@ __pycache__
 # Misc
 *.md
 !backend/README.md
-attached_assets
 coverage
+.agents
+attached_assets
