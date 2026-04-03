@@ -12,10 +12,10 @@ packages:
   "react-hook-form": "For form state management"
 
 images:
-  - path: "artifacts/web3hub/public/images/hero-mesh.png"
+  - path: "frontend/public/images/hero-mesh.png"
     description: "Very subtle light gray and white 3D geometric mesh background, clean minimal style, abstract professional web3"
     aspect_ratio: "21:9"
-  - path: "artifacts/web3hub/public/images/default-avatar.png"
+  - path: "frontend/public/images/default-avatar.png"
     description: "Minimalist abstract gradient circle avatar, modern blue and pink hues"
     aspect_ratio: "1:1"
 

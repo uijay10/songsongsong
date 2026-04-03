@@ -312,7 +312,7 @@ importers:
         specifier: 'catalog:'
         version: 3.25.76
 
-  artifacts/web3hub:
+  frontend:
     dependencies:
       '@web3modal/wagmi':
         specifier: ^5.1.11

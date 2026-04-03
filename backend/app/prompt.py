@@ -1,4 +1,3 @@
-# prompt.py
 # Web3 Release AI Event Extraction Prompt (English Version)
 
 WEB3_EXTRACTION_PROMPT = """

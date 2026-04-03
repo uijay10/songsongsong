@@ -1,0 +1,100 @@
+# Unified frontend + backend (FastAPI)
+#
+# Production (static Nginx + uvicorn):
+#   docker compose --profile prod up --build
+#
+# Development (Vite + uvicorn --reload, bind mount):
+#   docker compose --profile dev up --build
+#
+# Pass secrets: docker compose --env-file .env --profile prod up
+
+services:
+  backend:
+    profiles: [prod]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      PORT: "8000"
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://127.0.0.1}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  frontend:
+    profiles: [prod]
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  backend-dev:
+    profiles: [dev]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command:
+      [
+        "uv",
+        "run",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+      ]
+    volumes:
+      - ./backend/app:/app/app
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      PORT: "8000"
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:5173,http://localhost:5173}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+
+  frontend-dev:
+    profiles: [dev]
+    image: node:24-bookworm
+    working_dir: /repo
+    volumes:
+      - .:/repo
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command:
+      [
+        "sh",
+        "-c",
+        "corepack enable && corepack prepare pnpm@9.15.0 --activate && cd /repo && pnpm install && pnpm --filter @workspace/frontend run dev",
+      ]
+    ports:
+      - "${FRONTEND_DEV_PORT:-5173}:5173"
+    environment:
+      PORT: "5173"
+      VITE_EXTRACT_PROXY_TARGET: http://backend-dev:8000
+      VITE_API_PROXY_TARGET: ${VITE_API_PROXY_TARGET:-http://host.docker.internal:8080}
+    depends_on:
+      - backend-dev
