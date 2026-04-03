@@ -1,7 +1,20 @@
 # Render Blueprint — https://render.com/docs/blueprint-spec
 # Create DEEPSEEK_API_KEY in the Render dashboard (Environment).
+#
+# Static site (pnpm monorepo + catalog:): set SKIP_INSTALL_DEPS so Render does NOT
+# run `npm install` before build (npm fails on catalog:). Root Directory must be
+# repo root (not `frontend`). Publish: frontend/dist/public
 
 services:
+  - type: web
+    name: songsongsong-frontend
+    runtime: static
+    buildCommand: 'corepack enable && corepack install && pnpm install --no-frozen-lockfile && pnpm --filter @workspace/frontend run build'
+    staticPublishPath: ./frontend/dist/public
+    envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
+
   - type: web
     name: web3-extract-api
     runtime: docker
