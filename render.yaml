@@ -24,6 +24,11 @@ services:
       pnpm --filter @workspace/api-client-react run build &&
       pnpm --filter @workspace/frontend exec vite build
     staticPublishPath: ./frontend/dist/public
+    # SPA client-side routing (also see frontend/public/_redirects for Netlify-style hosts)
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: SKIP_INSTALL_DEPS
         value: "true"
