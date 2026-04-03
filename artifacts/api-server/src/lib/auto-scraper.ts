@@ -6,8 +6,8 @@ import https from "node:https";
 import http from "node:http";
 
 const openrouter = new OpenAI({
-  baseURL: process.env.AI_INTEGRATIONS_OPENROUTER_BASE_URL,
-  apiKey: process.env.AI_INTEGRATIONS_OPENROUTER_API_KEY ?? "dummy",
+  baseURL: process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY ?? "dummy",
 });
 
 const DEEPSEEK_MODEL = "deepseek/deepseek-v3.2";
