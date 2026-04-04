@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLang } from "@/lib/i18n";
 import { canPullSlot, SLOT_COOLDOWN_MS } from "@/lib/slot-cooldown";
 
@@ -116,6 +117,7 @@ function slotApiDeniedText(raw: string | undefined, t: (key: string) => string):
 
 export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMachineProps) {
   const { t } = useLang();
+  const queryClient = useQueryClient();
   const { playTick, playWin } = useAudio();
 
   // Local token state so display updates immediately after winning,
@@ -217,6 +219,7 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
             ? slotApiDeniedText(data.message, t)
             : `Request failed (${res.status})`,
         );
+        void queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
         return;
       }
 
@@ -224,6 +227,7 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
         stopAll();
         setSpinning(false);
         setError(slotApiDeniedText(data.message, t));
+        void queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
         return;
       }
 

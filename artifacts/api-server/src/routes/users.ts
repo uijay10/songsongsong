@@ -9,6 +9,24 @@ const router: IRouter = Router();
 /** 与前端 `DEFAULT_SLOT_COOLDOWN_MS` / `VITE_SLOT_COOLDOWN_MS` 一致 */
 const SLOT_PULL_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
+/** Drizzle/pg 有时返回 Date，少数配置为 string；统一成 Date，避免 GET /me 漏掉 lastSlotPull */
+function coerceToDate(raw: unknown): Date | null {
+  if (raw == null) return null;
+  if (raw instanceof Date) {
+    return Number.isNaN(raw.getTime()) ? null : raw;
+  }
+  if (typeof raw === "string" || typeof raw === "number") {
+    const d = new Date(raw);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
+
+function timestampToIso(raw: unknown): string | null {
+  const d = coerceToDate(raw);
+  return d ? d.toISOString() : null;
+}
+
 function generateInviteCode(): string {
   return randomBytes(5).toString("hex").toUpperCase();
 }
@@ -22,21 +40,21 @@ function fmtUser(u: typeof usersTable.$inferSelect) {
     points: u.points,
     energy: u.energy,
     tokens: (u as any).tokens ?? 0,
-    lastSlotPull: (u as any).lastSlotPull?.toISOString() ?? null,
-    lastPostAt: (u as any).lastPostAt?.toISOString() ?? null,
+    lastSlotPull: timestampToIso((u as any).lastSlotPull),
+    lastPostAt: timestampToIso((u as any).lastPostAt),
     spaceStatus: u.spaceStatus,
     spaceType: u.spaceType,
     inviteCode: u.inviteCode,
     inviteCount: u.inviteCount,
     invitedBy: u.invitedBy,
-    lastCheckin: u.lastCheckin?.toISOString() ?? null,
+    lastCheckin: timestampToIso(u.lastCheckin),
     twitter: u.twitter,
     website: u.website,
     contact: (u as any).contact ?? null,
     contactPublic: (u as any).contactPublic ?? false,
     language: u.language,
     pinCount: u.pinCount,
-    spaceRejectedAt: (u as any).spaceRejectedAt?.toISOString() ?? null,
+    spaceRejectedAt: timestampToIso((u as any).spaceRejectedAt),
     spaceRejectReason: (u as any).spaceRejectReason ?? null,
     dailyApplyCount: (u as any).dailyApplyCount ?? 0,
     lastApplyDate: (u as any).lastApplyDate ?? null,
@@ -203,7 +221,7 @@ router.post("/slot-pull", async (req, res) => {
 
   const u = users[0];
   const now = new Date();
-  const lastPull = (u as any).lastSlotPull as Date | null;
+  const lastPull = coerceToDate((u as any).lastSlotPull);
 
   const skipCooldown =
     process.env.SLOT_PULL_SKIP_COOLDOWN === "1" ||
