@@ -18,9 +18,9 @@ services:
   - type: web
     name: songsongsong-qian-duan
     runtime: static
-    rootDir: .
+    # Omit rootDir (repo root). Must match Vite outDir: frontend/dist — full word "dist", not "dis".
     buildCommand: corepack enable && corepack prepare pnpm@10.12.0 --activate && pnpm install --no-frozen-lockfile --ignore-scripts && pnpm --filter @workspace/frontend exec vite build
-    staticPublishPath: ./frontend/dist
+    staticPublishPath: frontend/dist
     routes:
       - type: rewrite
         source: /*
