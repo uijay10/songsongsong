@@ -104,6 +104,9 @@ interface SlotMachineProps {
   wallet: string;
   tokens: number;
   lastSlotPull: string | null;
+  /** 来自 GET /users/me，与接口一致时可消除「能点却不能抽」的假阳性 */
+  canSlotPull?: boolean | null;
+  nextSlotPullAt?: string | null;
   onSuccess: (newTokens: number, earned: number) => void;
 }
 
@@ -115,7 +118,14 @@ function slotApiDeniedText(raw: string | undefined, t: (key: string) => string):
   return raw;
 }
 
-export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMachineProps) {
+export function SlotMachine({
+  wallet,
+  tokens,
+  lastSlotPull,
+  canSlotPull: canSlotPullServer,
+  nextSlotPullAt: nextSlotPullAtServer,
+  onSuccess,
+}: SlotMachineProps) {
   const { t } = useLang();
   const queryClient = useQueryClient();
   const { playTick, playWin } = useAudio();
@@ -138,29 +148,43 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const canPull = canPullSlot(lastSlotPull);
+  const clientCanPull = canPullSlot(lastSlotPull);
+  const canPull =
+    typeof canSlotPullServer === "boolean" ? canSlotPullServer : clientCanPull;
 
   useEffect(() => {
     setError(null);
   }, [lastSlotPull, wallet]);
 
   useEffect(() => {
-    if (!lastSlotPull || SLOT_COOLDOWN_MS <= 0 || canPull) {
+    if (!canPull) setError(null);
+  }, [canPull]);
+
+  const cooldownEndMs =
+    nextSlotPullAtServer && String(nextSlotPullAtServer).trim() !== ""
+      ? (() => {
+          const x = new Date(nextSlotPullAtServer).getTime();
+          return Number.isNaN(x) ? null : x;
+        })()
+      : lastSlotPull && SLOT_COOLDOWN_MS > 0
+        ? (() => {
+            const t0 = new Date(lastSlotPull).getTime();
+            return Number.isNaN(t0) ? null : t0 + SLOT_COOLDOWN_MS;
+          })()
+        : null;
+
+  useEffect(() => {
+    if (!cooldownEndMs || SLOT_COOLDOWN_MS <= 0 || canPull) {
       setCooldownRemainMs(0);
       return;
     }
     const tick = () => {
-      const t0 = new Date(lastSlotPull).getTime();
-      if (Number.isNaN(t0)) {
-        setCooldownRemainMs(0);
-        return;
-      }
-      setCooldownRemainMs(Math.max(0, t0 + SLOT_COOLDOWN_MS - Date.now()));
+      setCooldownRemainMs(Math.max(0, cooldownEndMs - Date.now()));
     };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [lastSlotPull, canPull]);
+  }, [cooldownEndMs, canPull]);
 
   const nextPullStr = formatRemainHms(cooldownRemainMs);
 
@@ -321,13 +345,13 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
       {showPullUi && (
         <button
           onClick={handlePull}
-          disabled={spinning}
+          disabled={spinning || !canPull}
           style={{
             width: "100%", padding: "10px 0", borderRadius: 9, border: "none",
-            background: spinning ? "rgba(255,255,255,0.06)" : "rgba(124,58,237,0.7)",
-            color: spinning ? "rgba(255,255,255,0.4)" : "#fff",
+            background: spinning || !canPull ? "rgba(255,255,255,0.06)" : "rgba(124,58,237,0.7)",
+            color: spinning || !canPull ? "rgba(255,255,255,0.4)" : "#fff",
             fontWeight: 600, fontSize: 14,
-            cursor: spinning ? "not-allowed" : "pointer",
+            cursor: spinning || !canPull ? "not-allowed" : "pointer",
             transition: "all 0.2s",
           }}
         >

@@ -76,7 +76,13 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const { data: meData } = useGetMe(
     { wallet: address ?? "" },
-    { query: { enabled: !!address } }
+    {
+      query: {
+        enabled: !!address,
+        staleTime: 15_000,
+        refetchOnWindowFocus: true,
+      },
+    },
   );
   const fileRef = useRef<HTMLInputElement>(null);
   const admin = isAdmin(address);
@@ -675,6 +681,8 @@ export default function Profile() {
               wallet={address ?? ""}
               tokens={me?.tokens ?? 0}
               lastSlotPull={(me as any)?.lastSlotPull ?? null}
+              canSlotPull={(me as any)?.canSlotPull}
+              nextSlotPullAt={(me as any)?.nextSlotPullAt ?? null}
               onSuccess={() => { queryClient.invalidateQueries({ queryKey: ["/api/users/me"] }); }}
             />
           </div>

@@ -27,11 +27,40 @@ function timestampToIso(raw: unknown): string | null {
   return d ? d.toISOString() : null;
 }
 
+function slotPullSkipCooldown(): boolean {
+  return (
+    process.env.SLOT_PULL_SKIP_COOLDOWN === "1" ||
+    process.env.SLOT_PULL_SKIP_COOLDOWN === "true"
+  );
+}
+
+/** 与 POST /slot-pull 使用同一套规则，供 GET /me 返回，避免客户端自行推算导致不同步 */
+function computeSlotPullEligibility(
+  lastPullRaw: unknown,
+  now: Date,
+): { canSlotPull: boolean; nextSlotPullAt: string | null } {
+  if (slotPullSkipCooldown()) {
+    return { canSlotPull: true, nextSlotPullAt: null };
+  }
+  const lastPull = coerceToDate(lastPullRaw);
+  if (!lastPull) {
+    return { canSlotPull: true, nextSlotPullAt: null };
+  }
+  const diff = now.getTime() - lastPull.getTime();
+  if (diff >= SLOT_PULL_COOLDOWN_MS) {
+    return { canSlotPull: true, nextSlotPullAt: null };
+  }
+  const next = new Date(lastPull.getTime() + SLOT_PULL_COOLDOWN_MS);
+  return { canSlotPull: false, nextSlotPullAt: next.toISOString() };
+}
+
 function generateInviteCode(): string {
   return randomBytes(5).toString("hex").toUpperCase();
 }
 
 function fmtUser(u: typeof usersTable.$inferSelect) {
+  const now = new Date();
+  const slotElig = computeSlotPullEligibility((u as any).lastSlotPull, now);
   return {
     id: u.id,
     wallet: u.wallet,
@@ -41,6 +70,10 @@ function fmtUser(u: typeof usersTable.$inferSelect) {
     energy: u.energy,
     tokens: (u as any).tokens ?? 0,
     lastSlotPull: timestampToIso((u as any).lastSlotPull),
+    /** 是否可抽 — 以服务端为准，客户端勿仅用 lastSlotPull 自行判断 */
+    canSlotPull: slotElig.canSlotPull,
+    /** 下次可抽的 UTC 时间；可抽时为 null */
+    nextSlotPullAt: slotElig.nextSlotPullAt,
     lastPostAt: timestampToIso((u as any).lastPostAt),
     spaceStatus: u.spaceStatus,
     spaceType: u.spaceType,
@@ -221,23 +254,23 @@ router.post("/slot-pull", async (req, res) => {
 
   const u = users[0];
   const now = new Date();
-  const lastPull = coerceToDate((u as any).lastSlotPull);
 
-  const skipCooldown =
-    process.env.SLOT_PULL_SKIP_COOLDOWN === "1" ||
-    process.env.SLOT_PULL_SKIP_COOLDOWN === "true";
-
-  if (!skipCooldown && lastPull) {
-    const diff = now.getTime() - lastPull.getTime();
-    if (diff < SLOT_PULL_COOLDOWN_MS) {
-      const next = new Date(lastPull.getTime() + SLOT_PULL_COOLDOWN_MS);
-      return res.json({ success: false, tokens: (u as any).tokens ?? 0, nextPull: next.toISOString(), message: "Already pulled today" });
-    }
+  const elig = computeSlotPullEligibility((u as any).lastSlotPull, now);
+  if (!elig.canSlotPull && elig.nextSlotPullAt) {
+    return res.json({
+      success: false,
+      tokens: (u as any).tokens ?? 0,
+      nextPull: elig.nextSlotPullAt,
+      nextSlotPullAt: elig.nextSlotPullAt,
+      canSlotPull: false,
+      message: "Already pulled today",
+    });
   }
 
   const earned = rollTokenPrize();
   const newTokens = ((u as any).tokens ?? 0) + earned;
   const nextPull = new Date(now.getTime() + SLOT_PULL_COOLDOWN_MS);
+  const nextPullIso = nextPull.toISOString();
 
   await db.update(usersTable)
     .set({ tokens: newTokens, lastSlotPull: now } as any)
@@ -246,7 +279,14 @@ router.post("/slot-pull", async (req, res) => {
   // Award inviter 15% of slot prize (fire-and-forget)
   awardInviterBonus(lw, earned);
 
-  res.json({ success: true, tokens: newTokens, earned, nextPull: nextPull.toISOString() });
+  res.json({
+    success: true,
+    tokens: newTokens,
+    earned,
+    nextPull: nextPullIso,
+    nextSlotPullAt: slotPullSkipCooldown() ? null : nextPullIso,
+    canSlotPull: slotPullSkipCooldown(),
+  });
 });
 
 router.post("/checkin", async (req, res) => {

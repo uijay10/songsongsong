@@ -64,21 +64,44 @@ function getSlotCountdown(lastPull: string): string {
   return `${String(h).padStart(2,"0")}.${String(m).padStart(2,"0")}.${String(s).padStart(2,"0")}`;
 }
 
-function DailyLuckyBtn({ lastSlotPull, label }: { lastSlotPull: string | null; label: string }) {
+function getSlotCountdownFromServer(lastPull: string | null, nextAt: string | null | undefined): string {
+  if (nextAt && String(nextAt).trim() !== "") {
+    const diff = new Date(nextAt).getTime() - Date.now();
+    if (diff <= 0 || Number.isNaN(diff)) return "";
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    return `${String(h).padStart(2,"0")}.${String(m).padStart(2,"0")}.${String(s).padStart(2,"0")}`;
+  }
+  if (!lastPull) return "";
+  return getSlotCountdown(lastPull);
+}
+
+function DailyLuckyBtn({
+  lastSlotPull,
+  nextSlotPullAt,
+  canSlotPull: canSlotFromServer,
+  label,
+}: {
+  lastSlotPull: string | null;
+  nextSlotPullAt?: string | null;
+  canSlotPull?: boolean;
+  label: string;
+}) {
   const { t } = useLang();
-  const [cd, setCd] = useState(() => lastSlotPull ? getSlotCountdown(lastSlotPull) : "");
+  const [cd, setCd] = useState(() => getSlotCountdownFromServer(lastSlotPull, nextSlotPullAt ?? null));
 
   useEffect(() => {
-    if (!lastSlotPull) { setCd(""); return; }
-    const tick = () => setCd(getSlotCountdown(lastSlotPull));
+    const tick = () => setCd(getSlotCountdownFromServer(lastSlotPull, nextSlotPullAt ?? null));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [lastSlotPull]);
+  }, [lastSlotPull, nextSlotPullAt]);
 
-  const canPull = canPullSlot(lastSlotPull);
+  const canPull =
+    typeof canSlotFromServer === "boolean" ? canSlotFromServer : canPullSlot(lastSlotPull);
 
-  if (!canPull && cd) {
+  if (!canPull) {
     return (
       <span className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm select-none cursor-default"
         style={{
@@ -89,7 +112,7 @@ function DailyLuckyBtn({ lastSlotPull, label }: { lastSlotPull: string | null; l
           fontWeight: 400,
           letterSpacing: "0.02em",
         }}>
-        {t("slotCooldown")} · {cd}
+        {t("slotCooldown")}{cd ? ` · ${cd}` : ""}
       </span>
     );
   }
@@ -295,7 +318,12 @@ export default function Home() {
     <div className="space-y-6 pb-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-end gap-3 pt-2">
-        <DailyLuckyBtn lastSlotPull={me?.lastSlotPull ?? null} label={t("dailyLucky")} />
+        <DailyLuckyBtn
+          lastSlotPull={me?.lastSlotPull ?? null}
+          nextSlotPullAt={me?.nextSlotPullAt ?? null}
+          canSlotPull={me?.canSlotPull}
+          label={t("dailyLucky")}
+        />
         {isConnected && address && (
           <button
             type="button"

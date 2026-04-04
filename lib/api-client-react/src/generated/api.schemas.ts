@@ -20,6 +20,10 @@ export interface User {
   tokens?: number;
   /** 上次抽奖时间 ISO 字符串，未抽过为 null */
   lastSlotPull?: string | null;
+  /** 服务端计算：当前是否可抽奖（与 POST /slot-pull 一致） */
+  canSlotPull?: boolean;
+  /** 下次可抽的 UTC 时间；可抽时为 null */
+  nextSlotPullAt?: string | null;
   spaceStatus?: string | null;
   spaceType?: string | null;
   inviteCode?: string | null;
