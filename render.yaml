@@ -12,6 +12,7 @@
 # (would hit the same prepare / catalog issues).
 #
 # Install → frontend `vite build` (frontend tsconfig no longer project-references api-client-react).
+# `--ignore-scripts`: @hookform/resolvers `prepare` needs `run-s` (not installed) — published package has dist/.
 
 services:
   # `runtime: static` (not `type: static`). Keep repo root as build cwd — no `rootDir: frontend`
@@ -19,7 +20,7 @@ services:
   - type: web
     name: songsongsong-frontend
     runtime: static
-    buildCommand: pnpm install --no-frozen-lockfile && pnpm --filter @workspace/frontend exec vite build
+    buildCommand: pnpm install --no-frozen-lockfile --ignore-scripts && pnpm --filter @workspace/frontend exec vite build
     staticPublishPath: ./frontend/dist/public
     routes:
       - type: rewrite
