@@ -167,7 +167,23 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ wallet }),
       });
-      const data = await res.json();
+      const raw = await res.text();
+      let data: { success?: boolean; message?: string; earned?: number; tokens?: number };
+      try {
+        data = raw ? (JSON.parse(raw) as typeof data) : {};
+      } catch {
+        stopAll();
+        setSpinning(false);
+        setError(res.ok ? "Invalid response" : `Request failed (${res.status})`);
+        return;
+      }
+
+      if (!res.ok) {
+        stopAll();
+        setSpinning(false);
+        setError(data.message || `Request failed (${res.status})`);
+        return;
+      }
 
       if (!data.success) {
         stopAll();
@@ -176,7 +192,7 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
         return;
       }
 
-      const earned: number = data.earned;
+      const earned: number = data.earned ?? 0;
       // Pad to 4 digits
       const digits = String(earned).padStart(4, "0").split("").map(Number);
       setFinalDigits(digits);
@@ -187,8 +203,8 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
         setSpinning(false);
         setResult({ earned });
         playWin(earned);
-        setLocalTokens(data.tokens);   // update immediately, don't wait for parent refetch
-        onSuccess(data.tokens, earned);
+        setLocalTokens(data.tokens ?? 0);
+        onSuccess(data.tokens ?? 0, earned);
       }, SPIN_DURATION);
 
     } catch {

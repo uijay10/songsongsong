@@ -77,16 +77,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [unread, setUnread] = useState(0);
   const apiBase = getApiBase();
 
+  /** Set true when backend exposes GET/POST /api/notifications (see artifacts/api-server). */
+  const NOTIFICATIONS_API_ENABLED = false;
+
   useEffect(() => {
-    if (!address) return;
+    if (!address || !NOTIFICATIONS_API_ENABLED) return;
     const fetchNotifs = async () => {
       try {
         const res = await fetch(`${apiBase}/notifications?wallet=${address}`);
         if (!res.ok) return;
+        const ct = res.headers.get("content-type") ?? "";
+        if (!ct.includes("application/json")) return;
         const d = await res.json();
         setNotifList(d.notifications ?? []);
         setUnread(d.unread ?? 0);
-      } catch {}
+      } catch {
+        /* ignore: endpoint may be missing */
+      }
     };
     fetchNotifs();
     const id = setInterval(fetchNotifs, 30000);
@@ -95,6 +102,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const openBell = async () => {
     setNotifOpen(v => !v);
+    if (!NOTIFICATIONS_API_ENABLED) return;
     if (!notifOpen && unread > 0 && address) {
       try {
         await fetch(`${apiBase}/notifications/mark-read`, {

@@ -26,6 +26,9 @@ function getApiBase() {
 }
 const apiBase = getApiBase();
 
+/** Set true when backend exposes GET/POST /api/notifications. */
+const NOTIFICATIONS_API_ENABLED = false;
+
 type NavTab =
   | "subscriptions"
   | "notifications"
@@ -126,20 +129,26 @@ export default function Profile() {
 
 
   const fetchNotifs = useCallback(async () => {
-    if (!address) return;
+    if (!address || !NOTIFICATIONS_API_ENABLED) return;
     try {
       const res = await fetch(`${apiBase}/notifications?wallet=${address}`);
       if (!res.ok) return;
+      const ct = res.headers.get("content-type") ?? "";
+      if (!ct.includes("application/json")) return;
       const data = await res.json();
       setNotifications(data.notifications ?? []);
       setNotifUnread(data.unread ?? 0);
-    } catch {}
+    } catch {
+      /* ignore */
+    }
   }, [address]);
 
-  useEffect(() => { fetchNotifs(); }, [fetchNotifs]);
+  useEffect(() => {
+    if (NOTIFICATIONS_API_ENABLED) fetchNotifs();
+  }, [fetchNotifs]);
 
   const markRead = async () => {
-    if (!address || notifUnread === 0) return;
+    if (!NOTIFICATIONS_API_ENABLED || !address || notifUnread === 0) return;
     try {
       await fetch(`${apiBase}/notifications/mark-read`, {
         method: "POST",
