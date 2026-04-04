@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLang } from "@/lib/i18n";
+import { canPullSlot, SLOT_COOLDOWN_MS } from "@/lib/slot-cooldown";
 
 function useAudio() {
   const ctx = useRef<AudioContext | null>(null);
@@ -120,15 +121,18 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const canPull = !lastSlotPull || Date.now() - new Date(lastSlotPull).getTime() >= 24 * 60 * 60 * 1000;
+  const canPull = canPullSlot(lastSlotPull);
 
   let nextPullStr = "";
-  if (!canPull && lastSlotPull) {
-    const next = new Date(new Date(lastSlotPull).getTime() + 24 * 60 * 60 * 1000);
-    const diff = next.getTime() - Date.now();
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    nextPullStr = `${h}h ${m}m`;
+  if (!canPull && lastSlotPull && SLOT_COOLDOWN_MS > 0) {
+    const t = new Date(lastSlotPull).getTime();
+    if (!Number.isNaN(t)) {
+      const next = new Date(t + SLOT_COOLDOWN_MS);
+      const diff = next.getTime() - Date.now();
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      nextPullStr = `${h}h ${m}m`;
+    }
   }
 
   function stopAll() {

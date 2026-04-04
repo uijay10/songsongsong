@@ -8,6 +8,7 @@ import { Link, useLocation } from "wouter";
 import { useLang } from "@/lib/i18n";
 import { generateGradient } from "@/lib/utils";
 import { TagBadge } from "@/components/post-card";
+import { canPullSlot, SLOT_COOLDOWN_MS } from "@/lib/slot-cooldown";
 import { RoleBadge } from "@/components/role-badge";
 import { formatDistanceToNow } from "date-fns";
 import type { Locale } from "date-fns";
@@ -51,7 +52,10 @@ function useCountdownStr(until: string | null | undefined) {
 }
 
 function getSlotCountdown(lastPull: string): string {
-  const next = new Date(new Date(lastPull).getTime() + 24 * 60 * 60 * 1000);
+  if (SLOT_COOLDOWN_MS <= 0) return "";
+  const t = new Date(lastPull).getTime();
+  if (Number.isNaN(t)) return "";
+  const next = new Date(t + SLOT_COOLDOWN_MS);
   const diff = next.getTime() - Date.now();
   if (diff <= 0) return "";
   const h = Math.floor(diff / 3600000);
@@ -72,7 +76,7 @@ function DailyLuckyBtn({ lastSlotPull, label }: { lastSlotPull: string | null; l
     return () => clearInterval(id);
   }, [lastSlotPull]);
 
-  const canPull = !lastSlotPull || Date.now() - new Date(lastSlotPull).getTime() >= 24 * 60 * 60 * 1000;
+  const canPull = canPullSlot(lastSlotPull);
 
   if (!canPull && cd) {
     return (
