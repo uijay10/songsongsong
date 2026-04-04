@@ -4,6 +4,8 @@ import json
 import logging
 import os
 import re
+import uuid
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
@@ -99,6 +101,51 @@ def _parse_events_json(raw: str) -> list[Any]:
     return data
 
 
+def _normalize_events_for_api(
+    raw_events: list[Any],
+    canonical_url: str | None,
+) -> list[dict[str, Any]]:
+    """Map LLM event objects (see prompt.py) to the API `events` shape for the frontend."""
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    out: list[dict[str, Any]] = []
+    for i, item in enumerate(raw_events):
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or "").strip() or f"Event {i + 1}"
+        desc = str(item.get("description") or "").strip()
+        src = str(item.get("source_url") or "").strip() or (canonical_url or "")
+        cat = item.get("category")
+        if isinstance(cat, list) and len(cat) > 0:
+            event_type = str(cat[0])
+        elif isinstance(cat, str) and cat.strip():
+            event_type = cat.strip()
+        else:
+            event_type = "web3_event"
+        ts = item.get("start_time") or item.get("end_time")
+        if ts is None or str(ts).strip().lower() in ("null", ""):
+            ts = now_iso
+        else:
+            ts = str(ts)
+        ev_id = str(item.get("id") or f"event_{i + 1}")
+        tags = item.get("tags")
+        if isinstance(tags, list) and tags:
+            platform = " / ".join(str(t) for t in tags[:5])
+        else:
+            platform = str(item.get("project_name") or "").strip() or "Web3"
+        out.append(
+            {
+                "id": ev_id,
+                "title": title,
+                "description": desc,
+                "source_url": src,
+                "timestamp": ts,
+                "type": event_type,
+                "platform": platform,
+            }
+        )
+    return out
+
+
 def _fetch_page_text_with_httpx(url: str) -> str:
     """Fetch URL with httpx, strip HTML to plain text. Raises ValueError / httpx.HTTPError."""
     u = url.strip()
@@ -179,7 +226,9 @@ def root() -> dict[str, str]:
 def extract_events(request: Request, body: ExtractRequest) -> Any:
     """
     Extract Web3 events from `page_content` or from a page fetched via `source_url`.
-    Always returns JSON (array on success, object with error fields on failure).
+
+    Success: JSON object with `events`, `muid`, `guid`, `sid`, `count`, `message`.
+    Failure: JSON object with `ok: false`, `error`, `message` (unchanged).
     """
     try:
         # Resolve text: URL fetch takes precedence when both are sent (same as typical "refresh" behavior).
@@ -242,7 +291,18 @@ def extract_events(request: Request, body: ExtractRequest) -> Any:
         except ValueError as e:
             return _error_json(502, "invalid_model_output", str(e))
 
-        return events
+        normalized = _normalize_events_for_api(events, canonical)
+        muid = str(uuid.uuid4())
+        guid = str(uuid.uuid4())
+        sid = str(uuid.uuid4())
+        return {
+            "events": normalized,
+            "muid": muid,
+            "guid": guid,
+            "sid": sid,
+            "count": len(normalized),
+            "message": "提取成功" if normalized else "未发现符合条件的事件",
+        }
 
     except Exception as e:
         logger.exception("unexpected error in /api/v1/extract")
