@@ -68,7 +68,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const bellRef = useRef<HTMLDivElement>(null);
   const admin = isAdmin(address);
   const meLoading = !address || (!!address && meData === undefined);
-  const isSpaceOwner = meData?.user?.spaceStatus === "approved" || meData?.user?.spaceStatus === "active";
+  const isSpaceOwner =
+    meData?.spaceStatus === "approved" || meData?.spaceStatus === "active";
 
   // Notification state
   const [notifOpen, setNotifOpen] = useState(false);

@@ -46,6 +46,15 @@ type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+/** queryFn is injected by get*QueryOptions; queryKey defaults from params but may be overridden. */
+type QueryHookOptions<
+  TQueryFnData,
+  TError = ErrorType<unknown>,
+  TData = TQueryFnData,
+> = Omit<UseQueryOptions<TQueryFnData, TError, TData>, "queryKey" | "queryFn"> & {
+  queryKey?: UseQueryOptions<TQueryFnData, TError, TData>["queryKey"];
+};
+
 /**
  * @summary Health check
  */
@@ -70,7 +79,7 @@ export const getHealthCheckQueryOptions = <
   TData = Awaited<ReturnType<typeof healthCheck>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: QueryHookOptions<
     Awaited<ReturnType<typeof healthCheck>>,
     TError,
     TData
@@ -105,7 +114,7 @@ export function useHealthCheck<
   TData = Awaited<ReturnType<typeof healthCheck>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: QueryHookOptions<
     Awaited<ReturnType<typeof healthCheck>>,
     TError,
     TData
@@ -160,7 +169,7 @@ export const getGetMeQueryOptions = <
 >(
   params: GetMeParams,
   options?: {
-    query?: UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>;
+    query?: QueryHookOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
@@ -192,7 +201,7 @@ export function useGetMe<
 >(
   params: GetMeParams,
   options?: {
-    query?: UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>;
+    query?: QueryHookOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>;
     request?: SecondParameter<typeof customFetch>;
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
@@ -416,7 +425,7 @@ export const getGetProjectsQueryOptions = <
 >(
   params?: GetProjectsParams,
   options?: {
-    query?: UseQueryOptions<
+    query?: QueryHookOptions<
       Awaited<ReturnType<typeof getProjects>>,
       TError,
       TData
@@ -454,7 +463,7 @@ export function useGetProjects<
 >(
   params?: GetProjectsParams,
   options?: {
-    query?: UseQueryOptions<
+    query?: QueryHookOptions<
       Awaited<ReturnType<typeof getProjects>>,
       TError,
       TData
@@ -581,7 +590,7 @@ export const getGetPinnedProjectsQueryOptions = <
   TData = Awaited<ReturnType<typeof getPinnedProjects>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: QueryHookOptions<
     Awaited<ReturnType<typeof getPinnedProjects>>,
     TError,
     TData
@@ -616,7 +625,7 @@ export function useGetPinnedProjects<
   TData = Awaited<ReturnType<typeof getPinnedProjects>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: QueryHookOptions<
     Awaited<ReturnType<typeof getPinnedProjects>>,
     TError,
     TData
@@ -659,7 +668,7 @@ export const getGetProjectQueryOptions = <
 >(
   id: number,
   options?: {
-    query?: UseQueryOptions<
+    query?: QueryHookOptions<
       Awaited<ReturnType<typeof getProject>>,
       TError,
       TData
@@ -702,7 +711,7 @@ export function useGetProject<
 >(
   id: number,
   options?: {
-    query?: UseQueryOptions<
+    query?: QueryHookOptions<
       Awaited<ReturnType<typeof getProject>>,
       TError,
       TData
@@ -758,7 +767,7 @@ export const getGetPostsQueryOptions = <
 >(
   params?: GetPostsParams,
   options?: {
-    query?: UseQueryOptions<
+    query?: QueryHookOptions<
       Awaited<ReturnType<typeof getPosts>>,
       TError,
       TData
@@ -796,7 +805,7 @@ export function useGetPosts<
 >(
   params?: GetPostsParams,
   options?: {
-    query?: UseQueryOptions<
+    query?: QueryHookOptions<
       Awaited<ReturnType<typeof getPosts>>,
       TError,
       TData
