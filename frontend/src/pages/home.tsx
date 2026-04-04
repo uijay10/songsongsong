@@ -91,7 +91,8 @@ function DailyLuckyBtn({ lastSlotPull, label }: { lastSlotPull: string | null; l
   }
 
   return (
-    <a href="/web3hub/profile"
+    <Link
+      href="/profile"
       className="daily-lucky-btn shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all"
       style={{
         background: "rgba(239,68,68,0.08)",
@@ -99,9 +100,10 @@ function DailyLuckyBtn({ lastSlotPull, label }: { lastSlotPull: string | null; l
         border: "1px solid rgba(239,68,68,0.3)",
         textDecoration: "none",
         fontWeight: 600,
-      }}>
+      }}
+    >
       {t("slotPull")}
-    </a>
+    </Link>
   );
 }
 
