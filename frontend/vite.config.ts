@@ -1,7 +1,22 @@
+import fs from "node:fs";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+
+/** Some static hosts serve 404.html for unknown paths; SPA shell then runs the client router. */
+function spaFallback404Plugin(): import("vite").Plugin {
+  return {
+    name: "spa-fallback-404-html",
+    closeBundle() {
+      const indexHtml = path.resolve(import.meta.dirname, "dist/index.html");
+      const notFound = path.resolve(import.meta.dirname, "dist/404.html");
+      if (fs.existsSync(indexHtml)) {
+        fs.copyFileSync(indexHtml, notFound);
+      }
+    },
+  };
+}
 
 const port = Number(process.env.PORT ?? 5173);
 const basePath = process.env.BASE_PATH ?? "/";
@@ -11,6 +26,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    spaFallback404Plugin(),
   ],
   resolve: {
     alias: {

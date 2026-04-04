@@ -21,6 +21,7 @@ services:
     # Omit rootDir (repo root). Must match Vite outDir: frontend/dist — full word "dist", not "dis".
     buildCommand: corepack enable && corepack prepare pnpm@10.12.0 --activate && pnpm install --no-frozen-lockfile --ignore-scripts && pnpm --filter @workspace/frontend exec vite build
     staticPublishPath: frontend/dist
+    # SPA: unknown paths must serve index.html (also copy dist/404.html in Vite build as fallback).
     routes:
       - type: rewrite
         source: /*

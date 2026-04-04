@@ -1,4 +1,5 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
+import { useHashLocation } from "wouter/use-hash-location";
 import { Web3Provider } from "@/lib/web3";
 import { LanguageProvider } from "@/lib/i18n";
 import { Layout } from "@/components/layout";
@@ -20,6 +21,14 @@ import AdminPage from "@/pages/admin";
 import MembersPage from "@/pages/members";
 import AboutPage from "@/pages/about";
 import NotFound from "@/pages/not-found";
+
+/** Relative `base` (e.g. `./`) breaks wouter path matching; root must be `""` not `"/"`. */
+function routerBase(): string {
+  const raw = import.meta.env.BASE_URL ?? "/";
+  if (raw.startsWith(".")) return "";
+  if (raw === "/" || raw === "") return "";
+  return raw.replace(/\/$/, "");
+}
 
 function Router() {
   return (
@@ -45,11 +54,17 @@ function Router() {
 }
 
 function App() {
+  const useHash =
+    import.meta.env.VITE_SPA_HASH_ROUTER === "1" ||
+    import.meta.env.VITE_SPA_HASH_ROUTER === "true";
   return (
     <Web3Provider>
       <LanguageProvider>
         <EventFilterProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <WouterRouter
+            {...(useHash ? { hook: useHashLocation } : {})}
+            base={routerBase()}
+          >
             <Layout>
               <Router />
             </Layout>
