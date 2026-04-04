@@ -11,18 +11,13 @@
 # SKIP_INSTALL_DEPS: Render must not run a separate `npm install` before this buildCommand
 # (would hit the same prepare / catalog issues).
 #
-# Build @workspace/api-client-react first (emit dist/*.d.ts) so project references resolve;
-# frontend uses `vite build` only (no separate `tsc` — Vite transpiles TS).
+# Install → api-client-react `tsc` (emit dist/index.d.ts) → frontend `vite build` (no root tsc).
 
 services:
   - type: web
     name: songsongsong-frontend
     runtime: static
-    buildCommand: >-
-      corepack enable && corepack install &&
-      pnpm install --no-frozen-lockfile --ignore-scripts &&
-      pnpm --filter @workspace/api-client-react run build &&
-      pnpm --filter @workspace/frontend exec vite build
+    buildCommand: pnpm install --no-frozen-lockfile && pnpm --filter @workspace/api-client-react exec tsc && pnpm --filter @workspace/frontend exec vite build
     staticPublishPath: ./frontend/dist/public
     # SPA client-side routing (also see frontend/public/_redirects for Netlify-style hosts)
     routes:
