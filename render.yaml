@@ -11,16 +11,16 @@
 # SKIP_INSTALL_DEPS: Render must not run a separate `npm install` before this buildCommand
 # (would hit the same prepare / catalog issues).
 #
-# Frontend static: repo root = build cwd (omit rootDir or use repo root — never `rootDir: frontend`
-# alone or pnpm --filter breaks). Vite `outDir` is frontend/dist/public (see frontend/vite.config.ts).
-# Corepack + --ignore-scripts: Render often has no global pnpm; @hookform/resolvers prepare needs run-s.
+# Frontend static: repo root for build; Vite outDir is frontend/dist (see frontend/vite.config.ts).
+# Corepack + --ignore-scripts: global pnpm often missing; @hookform/resolvers prepare needs run-s.
 
 services:
   - type: web
     name: songsongsong-qian-duan
     runtime: static
+    rootDir: .
     buildCommand: corepack enable && corepack prepare pnpm@10.12.0 --activate && pnpm install --no-frozen-lockfile --ignore-scripts && pnpm --filter @workspace/frontend exec vite build
-    staticPublishPath: ./frontend/dist/public
+    staticPublishPath: ./frontend/dist
     routes:
       - type: rewrite
         source: /*

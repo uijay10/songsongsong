@@ -20,7 +20,8 @@ export default defineConfig({
   },
   root: path.resolve(import.meta.dirname),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    // Relative to `root` — outputs to frontend/dist (matches Render staticPublishPath: frontend/dist)
+    outDir: "dist",
     emptyOutDir: true,
   },
   server: {
