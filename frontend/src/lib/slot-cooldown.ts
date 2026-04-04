@@ -1,13 +1,16 @@
+/** 与后端 `artifacts/api-server` slot-pull 的 24h 窗口一致 */
+export const DEFAULT_SLOT_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
 /**
- * Daily slot pull cooldown window.
- * - `0` = no cooldown (always allow pull) — testing / debugging.
- * - Production: set `VITE_SLOT_COOLDOWN_MS=86400000` (24h) in the build env.
+ * Daily slot pull cooldown window (must match server logic).
+ * - 未设置或空：默认 24h（`DEFAULT_SLOT_COOLDOWN_MS`）。
+ * - `0`：关闭前端冷却展示（仅本地/调试；服务端仍可能拒绝）。
  */
 function readCooldownMs(): number {
   const raw = import.meta.env.VITE_SLOT_COOLDOWN_MS;
-  if (raw === undefined || raw === "") return 0;
+  if (raw === undefined || raw === "") return DEFAULT_SLOT_COOLDOWN_MS;
   const n = Number(raw);
-  return Number.isFinite(n) ? Math.max(0, n) : 0;
+  return Number.isFinite(n) ? Math.max(0, n) : DEFAULT_SLOT_COOLDOWN_MS;
 }
 
 export const SLOT_COOLDOWN_MS = readCooldownMs();

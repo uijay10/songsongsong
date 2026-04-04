@@ -16,6 +16,10 @@ export interface User {
   avatar?: string | null;
   points: number;
   energy: number;
+  /** $WBR 等，服务端 fmtUser 返回 */
+  tokens?: number;
+  /** 上次抽奖时间 ISO 字符串，未抽过为 null */
+  lastSlotPull?: string | null;
   spaceStatus?: string | null;
   spaceType?: string | null;
   inviteCode?: string | null;

@@ -2,6 +2,14 @@ import { useState, useRef, useEffect } from "react";
 import { useLang } from "@/lib/i18n";
 import { canPullSlot, SLOT_COOLDOWN_MS } from "@/lib/slot-cooldown";
 
+function formatRemainHms(ms: number): string {
+  if (ms <= 0) return "";
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  return `${h}h ${m}m ${s}s`;
+}
+
 function useAudio() {
   const ctx = useRef<AudioContext | null>(null);
   function getCtx(): AudioContext {
@@ -100,9 +108,9 @@ interface SlotMachineProps {
 
 const SPIN_DURATION = 5000; // 5 seconds
 
-function slotPullErrorText(raw: string | undefined, t: (key: string) => string): string {
-  if (!raw) return t("slotCooldown");
-  if (raw === "Already pulled today") return t("slotCooldown");
+/** 接口拒绝（与「冷却条」区分，避免未开冷却 UI 时仍显示「今日已抽」） */
+function slotApiDeniedText(raw: string | undefined, t: (key: string) => string): string {
+  if (!raw || raw === "Already pulled today") return t("slotApiDenied");
   return raw;
 }
 
@@ -123,23 +131,36 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
   const [finalDigits, setFinalDigits] = useState([0, 0, 0, 0]);
   // reel speeds (fast early, slow near end)
   const [reelSpeed, setReelSpeed] = useState(60);
+  const [cooldownRemainMs, setCooldownRemainMs] = useState(0);
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const canPull = canPullSlot(lastSlotPull);
 
-  let nextPullStr = "";
-  if (!canPull && lastSlotPull && SLOT_COOLDOWN_MS > 0) {
-    const t = new Date(lastSlotPull).getTime();
-    if (!Number.isNaN(t)) {
-      const next = new Date(t + SLOT_COOLDOWN_MS);
-      const diff = next.getTime() - Date.now();
-      const h = Math.floor(diff / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      nextPullStr = `${h}h ${m}m`;
+  useEffect(() => {
+    setError(null);
+  }, [lastSlotPull, wallet]);
+
+  useEffect(() => {
+    if (!lastSlotPull || SLOT_COOLDOWN_MS <= 0 || canPull) {
+      setCooldownRemainMs(0);
+      return;
     }
-  }
+    const tick = () => {
+      const t0 = new Date(lastSlotPull).getTime();
+      if (Number.isNaN(t0)) {
+        setCooldownRemainMs(0);
+        return;
+      }
+      setCooldownRemainMs(Math.max(0, t0 + SLOT_COOLDOWN_MS - Date.now()));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [lastSlotPull, canPull]);
+
+  const nextPullStr = formatRemainHms(cooldownRemainMs);
 
   function stopAll() {
     if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
@@ -193,7 +214,7 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
         setSpinning(false);
         setError(
           data.message != null && data.message !== ""
-            ? slotPullErrorText(data.message, t)
+            ? slotApiDeniedText(data.message, t)
             : `Request failed (${res.status})`,
         );
         return;
@@ -202,7 +223,7 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
       if (!data.success) {
         stopAll();
         setSpinning(false);
-        setError(slotPullErrorText(data.message, t));
+        setError(slotApiDeniedText(data.message, t));
         return;
       }
 

@@ -6,6 +6,9 @@ import { awardInviterBonus } from "../lib/invite-bonus";
 
 const router: IRouter = Router();
 
+/** 与前端 `DEFAULT_SLOT_COOLDOWN_MS` / `VITE_SLOT_COOLDOWN_MS` 一致 */
+const SLOT_PULL_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
 function generateInviteCode(): string {
   return randomBytes(5).toString("hex").toUpperCase();
 }
@@ -208,15 +211,15 @@ router.post("/slot-pull", async (req, res) => {
 
   if (!skipCooldown && lastPull) {
     const diff = now.getTime() - lastPull.getTime();
-    if (diff < 24 * 60 * 60 * 1000) {
-      const next = new Date(lastPull.getTime() + 24 * 60 * 60 * 1000);
+    if (diff < SLOT_PULL_COOLDOWN_MS) {
+      const next = new Date(lastPull.getTime() + SLOT_PULL_COOLDOWN_MS);
       return res.json({ success: false, tokens: (u as any).tokens ?? 0, nextPull: next.toISOString(), message: "Already pulled today" });
     }
   }
 
   const earned = rollTokenPrize();
   const newTokens = ((u as any).tokens ?? 0) + earned;
-  const nextPull = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const nextPull = new Date(now.getTime() + SLOT_PULL_COOLDOWN_MS);
 
   await db.update(usersTable)
     .set({ tokens: newTokens, lastSlotPull: now } as any)
