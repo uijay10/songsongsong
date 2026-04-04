@@ -100,6 +100,12 @@ interface SlotMachineProps {
 
 const SPIN_DURATION = 5000; // 5 seconds
 
+function slotPullErrorText(raw: string | undefined, t: (key: string) => string): string {
+  if (!raw) return t("slotCooldown");
+  if (raw === "Already pulled today") return t("slotCooldown");
+  return raw;
+}
+
 export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMachineProps) {
   const { t } = useLang();
   const { playTick, playWin } = useAudio();
@@ -185,14 +191,18 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
       if (!res.ok) {
         stopAll();
         setSpinning(false);
-        setError(data.message || `Request failed (${res.status})`);
+        setError(
+          data.message != null && data.message !== ""
+            ? slotPullErrorText(data.message, t)
+            : `Request failed (${res.status})`,
+        );
         return;
       }
 
       if (!data.success) {
         stopAll();
         setSpinning(false);
-        setError(data.message || t("slotCooldown"));
+        setError(slotPullErrorText(data.message, t));
         return;
       }
 
@@ -218,7 +228,9 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
     }
   }
 
-  const isDone = !canPull && !spinning;
+  /** 仅当启用前端冷却且当前在冷却窗口内时显示「今日已抽」；`SLOT_COOLDOWN_MS===0` 时永不显示 */
+  const showCooldownBanner = SLOT_COOLDOWN_MS > 0 && !canPull && !spinning;
+  const showPullUi = !showCooldownBanner || spinning;
 
   return (
     <div style={{
@@ -242,7 +254,7 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
       </div>
 
       {/* Number reels — shown only when spinning or not yet pulled */}
-      {(!isDone || spinning) && (
+      {showPullUi && (
         <div style={{ marginBottom: 14 }}>
           <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center" }}>
             <DigitReel spinning={spinning} finalDigit={finalDigits[0]} delay={0} speed={reelSpeed} />
@@ -281,7 +293,7 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
       )}
 
       {/* Pull button */}
-      {!isDone && (
+      {showPullUi && (
         <button
           onClick={handlePull}
           disabled={spinning}
@@ -299,7 +311,7 @@ export function SlotMachine({ wallet, tokens, lastSlotPull, onSuccess }: SlotMac
       )}
 
       {/* Cooldown */}
-      {isDone && (
+      {showCooldownBanner && (
         <div style={{ fontSize: 12, color: "var(--muted-foreground)", textAlign: "center" }}>
           <span>{t("slotCooldown")}</span>
           {nextPullStr && (

@@ -202,7 +202,11 @@ router.post("/slot-pull", async (req, res) => {
   const now = new Date();
   const lastPull = (u as any).lastSlotPull as Date | null;
 
-  if (lastPull) {
+  const skipCooldown =
+    process.env.SLOT_PULL_SKIP_COOLDOWN === "1" ||
+    process.env.SLOT_PULL_SKIP_COOLDOWN === "true";
+
+  if (!skipCooldown && lastPull) {
     const diff = now.getTime() - lastPull.getTime();
     if (diff < 24 * 60 * 60 * 1000) {
       const next = new Date(lastPull.getTime() + 24 * 60 * 60 * 1000);
