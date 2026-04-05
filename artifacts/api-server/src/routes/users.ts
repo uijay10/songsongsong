@@ -34,10 +34,16 @@ function slotPullSkipCooldown(): boolean {
   );
 }
 
-/** 与 POST /slot-pull 使用同一套规则，供 GET /me 返回，避免客户端自行推算导致不同步 */
+type SlotEligOpts = { tokens?: number; createdAtRaw?: unknown };
+
+/**
+ * 与 POST /slot-pull 使用同一套规则，供 GET /me 返回。
+ * 若库里 `last_slot_pull` 因错误 DEFAULT（与注册时间几乎相同）且用户从未获得抽奖代币，则视为「从未抽过」。
+ */
 function computeSlotPullEligibility(
   lastPullRaw: unknown,
   now: Date,
+  opts?: SlotEligOpts,
 ): { canSlotPull: boolean; nextSlotPullAt: string | null } {
   if (slotPullSkipCooldown()) {
     return { canSlotPull: true, nextSlotPullAt: null };
@@ -46,6 +52,17 @@ function computeSlotPullEligibility(
   if (!lastPull) {
     return { canSlotPull: true, nextSlotPullAt: null };
   }
+
+  const created = coerceToDate(opts?.createdAtRaw);
+  const tokens = opts?.tokens ?? 0;
+  if (
+    tokens === 0 &&
+    created &&
+    Math.abs(lastPull.getTime() - created.getTime()) < 60_000
+  ) {
+    return { canSlotPull: true, nextSlotPullAt: null };
+  }
+
   const diff = now.getTime() - lastPull.getTime();
   if (diff >= SLOT_PULL_COOLDOWN_MS) {
     return { canSlotPull: true, nextSlotPullAt: null };
@@ -60,7 +77,10 @@ function generateInviteCode(): string {
 
 function fmtUser(u: typeof usersTable.$inferSelect) {
   const now = new Date();
-  const slotElig = computeSlotPullEligibility((u as any).lastSlotPull, now);
+  const slotElig = computeSlotPullEligibility((u as any).lastSlotPull, now, {
+    tokens: (u as any).tokens ?? 0,
+    createdAtRaw: u.createdAt,
+  });
   return {
     id: u.id,
     wallet: u.wallet,
@@ -164,6 +184,8 @@ router.post("/upsert", async (req, res) => {
       twitter: twitter ?? null,
       website: website ?? null,
       language: language ?? "en",
+      /** 显式 NULL，避免数据库列上误设 DEFAULT now() 导致新用户被当成「已抽过」 */
+      lastSlotPull: null,
     } as any).returning();
     return res.json(fmtUser(inserted[0]));
   }
@@ -255,7 +277,10 @@ router.post("/slot-pull", async (req, res) => {
   const u = users[0];
   const now = new Date();
 
-  const elig = computeSlotPullEligibility((u as any).lastSlotPull, now);
+  const elig = computeSlotPullEligibility((u as any).lastSlotPull, now, {
+    tokens: (u as any).tokens ?? 0,
+    createdAtRaw: u.createdAt,
+  });
   if (!elig.canSlotPull && elig.nextSlotPullAt) {
     return res.json({
       success: false,
