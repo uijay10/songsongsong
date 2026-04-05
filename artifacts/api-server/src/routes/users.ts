@@ -34,11 +34,12 @@ function slotPullSkipCooldown(): boolean {
   );
 }
 
-type SlotEligOpts = { tokens?: number; createdAtRaw?: unknown };
+type SlotEligOpts = { tokens?: number; createdAtRaw?: unknown; slotPullCount?: number };
 
 /**
  * 与 POST /slot-pull 使用同一套规则，供 GET /me 返回。
- * 若库里 `last_slot_pull` 因错误 DEFAULT（与注册时间几乎相同）且用户从未获得抽奖代币，则视为「从未抽过」。
+ * - slot_pull_count===0 且 tokens===0 且仍有 last_slot_pull：视为孤儿脏数据（旧库误写），允许再抽；成功后会递增 slot_pull_count。
+ * - tokens===0 且 last 与注册时间极近：旧版误 DEFAULT 兼容。
  */
 function computeSlotPullEligibility(
   lastPullRaw: unknown,
@@ -53,8 +54,13 @@ function computeSlotPullEligibility(
     return { canSlotPull: true, nextSlotPullAt: null };
   }
 
-  const created = coerceToDate(opts?.createdAtRaw);
+  const cnt = opts?.slotPullCount ?? 0;
   const tokens = opts?.tokens ?? 0;
+  if (cnt === 0 && tokens === 0) {
+    return { canSlotPull: true, nextSlotPullAt: null };
+  }
+
+  const created = coerceToDate(opts?.createdAtRaw);
   if (
     tokens === 0 &&
     created &&
@@ -80,6 +86,7 @@ function fmtUser(u: typeof usersTable.$inferSelect) {
   const slotElig = computeSlotPullEligibility((u as any).lastSlotPull, now, {
     tokens: (u as any).tokens ?? 0,
     createdAtRaw: u.createdAt,
+    slotPullCount: (u as any).slotPullCount ?? 0,
   });
   return {
     id: u.id,
@@ -186,6 +193,7 @@ router.post("/upsert", async (req, res) => {
       language: language ?? "en",
       /** 显式 NULL，避免数据库列上误设 DEFAULT now() 导致新用户被当成「已抽过」 */
       lastSlotPull: null,
+      slotPullCount: 0,
     } as any).returning();
     return res.json(fmtUser(inserted[0]));
   }
@@ -280,6 +288,7 @@ router.post("/slot-pull", async (req, res) => {
   const elig = computeSlotPullEligibility((u as any).lastSlotPull, now, {
     tokens: (u as any).tokens ?? 0,
     createdAtRaw: u.createdAt,
+    slotPullCount: (u as any).slotPullCount ?? 0,
   });
   if (!elig.canSlotPull && elig.nextSlotPullAt) {
     return res.json({
@@ -294,11 +303,16 @@ router.post("/slot-pull", async (req, res) => {
 
   const earned = rollTokenPrize();
   const newTokens = ((u as any).tokens ?? 0) + earned;
+  const prevCount = (u as any).slotPullCount ?? 0;
   const nextPull = new Date(now.getTime() + SLOT_PULL_COOLDOWN_MS);
   const nextPullIso = nextPull.toISOString();
 
   await db.update(usersTable)
-    .set({ tokens: newTokens, lastSlotPull: now } as any)
+    .set({
+      tokens: newTokens,
+      lastSlotPull: now,
+      slotPullCount: prevCount + 1,
+    } as any)
     .where(eq(usersTable.wallet, lw));
 
   // Award inviter 15% of slot prize (fire-and-forget)

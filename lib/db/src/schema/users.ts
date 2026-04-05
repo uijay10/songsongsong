@@ -30,6 +30,8 @@ export const usersTable = pgTable("users", {
   dailyCommentCount: integer("daily_comment_count").notNull().default(0),
   lastInteractionDate: text("last_interaction_date"),
   tokens: integer("tokens").notNull().default(0),
+  /** 成功完成抽奖次数；仅当 >0 时信任 last_slot_pull 冷却 */
+  slotPullCount: integer("slot_pull_count").notNull().default(0),
   lastSlotPull: timestamp("last_slot_pull"),
   dailyTokensEarned: integer("daily_tokens_earned").notNull().default(0),
   lastTokenDate: text("last_token_date"),
