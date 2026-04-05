@@ -74,7 +74,10 @@ export default function Profile() {
   const { address, isConnected, disconnect } = useWeb3Auth() as any;
   const upsertMutation = useUpsertUser();
   const queryClient = useQueryClient();
-  const { data: meData } = useGetMe(
+  const { t, lang } = useLang();
+  /** 避免 GET /me 404（库中尚无该钱包）时抽奖/资料不同步；自动 upsert 创建用户行 */
+  const autoUpsertedFor = useRef<string | null>(null);
+  const { data: meData, error: meError, isError: meIsError, isFetched: meFetched } = useGetMe(
     { wallet: address ?? "" },
     {
       query: {
@@ -84,10 +87,29 @@ export default function Profile() {
       },
     },
   );
+
+  useEffect(() => {
+    if (!address || !meFetched || !meIsError) return;
+    const status = (meError as { status?: number } | null)?.status;
+    if (status !== 404) return;
+    if (autoUpsertedFor.current === address) return;
+    autoUpsertedFor.current = address;
+    upsertMutation.mutate(
+      { data: { wallet: address, language: lang } as any },
+      {
+        onSuccess: () => {
+          void queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
+        },
+        onError: () => {
+          autoUpsertedFor.current = null;
+        },
+      },
+    );
+  }, [address, meFetched, meIsError, meError, lang, queryClient, upsertMutation]);
+
   const fileRef = useRef<HTMLInputElement>(null);
   const admin = isAdmin(address);
   const me = (meData as any)?.user ?? meData;
-  const { t, lang } = useLang();
   const zh = lang === "zh-CN";
 
   const isSpaceOwner = me?.spaceStatus === "approved" || me?.spaceStatus === "active";
